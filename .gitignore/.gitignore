@@ -1,0 +1,12 @@
+# Ignore miscellaneous files
+cscope.*
+*.swp
+*.patch
+*~
+.project
+.cproject
+*.o*
+#Ignore build directory
+build/
+linux-acs/
+ffa-acs-drv/
