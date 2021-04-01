@@ -1,0 +1,164 @@
+/*
+ * Copyright (c) 2021, Arm Limited or its affliates. All rights reserved.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
+ */
+
+#ifndef _VAL_H_
+#define _VAL_H_
+
+#include "pal_interfaces.h"
+#include "val_def.h"
+
+/* Various test status codes, Max value = 0xff */
+#define  VAL_SUCCESS            0
+#define  VAL_ERROR              1
+#define  VAL_ERROR_POINT(n)     n
+#define  VAL_TEST_INIT_FAILED   101
+#define  VAL_STATUS_INVALID     102
+#define  VAL_SKIP_CHECK         103
+#define  VAL_SIM_ERROR          104
+#define  VAL_STATUS_ERROR_MAX   255
+
+/* NVM Indext size */
+#define VAL_NVM_BLOCK_SIZE         4
+#define VAL_NVM_OFFSET(nvm_idx)    (nvm_idx * VAL_NVM_BLOCK_SIZE)
+
+#define VAL_INVALID_TEST_NUM 0xFFFFFFFF
+
+/* Struture to capture test state */
+typedef struct {
+    uint16_t reserved;
+    uint8_t  state;
+    uint8_t  status_code;
+} test_status_buffer_t;
+
+/* Verbosity enums, Lower the value, higher the verbosity */
+typedef enum {
+    INFO    = 1,
+    DBG     = 2,
+    TEST    = 3,
+    WARN    = 4,
+    ERROR   = 5,
+    ALWAYS  = 9
+} print_verbosity_t;
+
+typedef struct {
+    uint32_t total_pass;
+    uint32_t total_fail;
+    uint32_t total_skip;
+    uint32_t total_error;
+} regre_report_t;
+
+typedef struct {
+    uint32_t suite_num;
+    uint32_t test_num;
+    uint32_t test_progress;
+} test_info_t;
+
+typedef enum {
+    NVM_PLATFORM_RESERVE_INDEX         = 0x0,
+    NVM_CUR_SUITE_NUM_INDEX            = 0x1,
+    NVM_CUR_TEST_NUM_INDEX             = 0x2,
+    NVM_TEST_PROGRESS_INDEX            = 0x3,
+    NVM_TOTAL_PASS_INDEX               = 0x4,
+    NVM_TOTAL_FAIL_INDEX               = 0x5,
+    NVM_TOTAL_SKIP_INDEX               = 0x6,
+    NVM_TOTAL_ERROR_INDEX              = 0x7,
+} nvm_map_index_t;
+
+/* SP3 SERVICE INDEX */
+#define NVM_WRITE_SERVICE  0xFFAA
+#define NVM_READ_SERVICE   0xFFBB
+#define WD_ENABLE_SERVICE  0xFFCC
+#define WD_DISABLE_SERVICE 0xFFDD
+
+/* Test state macros */
+#define TEST_START                 0x01
+#define TEST_PASS                  0x02
+#define TEST_FAIL                  0x03
+#define TEST_SKIP                  0x04
+#define TEST_ERROR                 0x05
+#define TEST_END                   0x06
+#define TEST_REBOOTING             0x07
+#define TEST_PASS_WITH_SKIP        0x10
+
+#define TEST_STATE_SHIFT           8
+#define TEST_STATUS_CODE_SHIFT     0
+
+#define TEST_STATE_MASK            0xFF
+#define TEST_STATUS_CODE_MASK      0xFF
+
+#define RESULT_PASS(status)     (((TEST_PASS) << TEST_STATE_SHIFT) |\
+                                    ((status) << TEST_STATUS_CODE_SHIFT))
+#define RESULT_FAIL(status)     (((TEST_FAIL) << TEST_STATE_SHIFT) |\
+                                    ((status) << TEST_STATUS_CODE_SHIFT))
+#define RESULT_SKIP(status)     (((TEST_SKIP) << TEST_STATE_SHIFT) |\
+                                    ((status) << TEST_STATUS_CODE_SHIFT))
+#define RESULT_ERROR(status)     (((TEST_ERROR) << TEST_STATE_SHIFT) |\
+                                    ((status) << TEST_STATUS_CODE_SHIFT))
+
+#define IS_TEST_FAIL(status)    (((status >> TEST_STATE_SHIFT) &\
+                                    TEST_STATE_MASK) == TEST_FAIL)
+#define IS_STATUS_FAIL(status)  ((status & TEST_STATUS_CODE_MASK) ? 1 : 0)
+
+/* Print char limit for val_printf caller */
+#define PRINT_LIMIT       80
+#define TOTAL_PRINT_LIMIT 90
+
+/* 32 Bit field to capture current test run information
+ * Reserved [31:23],
+ * test_type[22:19],
+ * server_logic_id[19:15],
+ * client_logic_id[14:11],
+ * test_num[10:0]
+*/
+#define TEST_RUN_DATA(test_num,                         \
+                     client_logic_id,                   \
+                     server_logic_id,                   \
+                     test_type)                         \
+                                                        \
+                    ((uint32_t)test_num)       |        \
+                    (client_logic_id << 11)    |        \
+                    (server_logic_id << 15)    |        \
+                    (test_type << 19) | 0
+
+#define GET_TEST_NUM(x)          (x & 0x3ff)
+#define GET_CLIENT_LOGIC_ID(x)   ((x >> 11) & 0xf)
+#define GET_SERVER_LOGIC_ID(x)   ((x >> 15) & 0xf)
+#define GET_TEST_TYPE(x)         ((x >> 19) & 0xf)
+#define ADD_TEST_TYPE(y, x)      (uint32_t)((y & ~(0xful << 19)) \
+                                  |   ((x & 0xf) << 19))
+
+/* Macro to print the message and control the verbosity */
+#define LOG(print_verbosity, x, y, z)               \
+   do {                                             \
+    if (print_verbosity >= VERBOSITY)               \
+        val_printf(x, y, z);                        \
+    if (print_verbosity == ERROR)                   \
+    {                                               \
+        val_printf("\t(Check failed at:", 0, 0);    \
+        pal_printf(__FILE__, 0, 0);                 \
+        pal_printf(" ,line:%d)\n", __LINE__, 0);    \
+    }                                               \
+   } while (0);
+
+/* Terminate simulation for unexpected events */
+#define VAL_PANIC(x)                               \
+   do {                                             \
+        LOG(ERROR, x, 0, 0);                        \
+        pal_terminate_simulation();                 \
+   } while (0);
+
+/* Assert macros */
+#define TEST_ASSERT_EQUAL(arg1, arg2)                                       \
+    do {                                                                    \
+        if ((arg1) != arg2)                                                 \
+        {                                                                   \
+            LOG(ERROR, "\tActual: %x, Expected: %x\n", arg1, arg2);         \
+            return 1;                                                       \
+        }                                                                   \
+    } while (0);
+
+#endif /* _VAL_H_ */

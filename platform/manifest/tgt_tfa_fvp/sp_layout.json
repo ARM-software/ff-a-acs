@@ -1,0 +1,16 @@
+{
+    "sp1" : {
+         "image": "../../../build/output/sp1.bin",
+         "pm": "sp1.dts"
+    },
+
+    "sp2" : {
+         "image": "../../../build/output/sp2.bin",
+         "pm": "sp2.dts"
+     },
+
+    "sp3" : {
+         "image": "../../../build/output/sp3.bin",
+         "pm": "sp3.dts"
+     }
+}
