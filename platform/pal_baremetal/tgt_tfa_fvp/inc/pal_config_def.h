@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affliates. All rights reserved.
+ * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -35,6 +35,14 @@
 #define PAGE_SIZE_4K        0x1000
 #define PAGE_SIZE_16K       (4 * 0x1000)
 #define PAGE_SIZE_64K       (16 * 0x1000)
+
+/*
+ * Retrieving of memory region by specifying address ranges.
+ * this is about retrieving memory without handle value and
+ * specifying the offset field in the endpoint memory access descriptor.
+ * Supported values: 0(NOT_SUPPORTED), 1(SUPPORTED)
+ */
+#define PLATFORM_MEM_RETRIEVE_USING_ADDRESS_RANGES 0
 
 /*
  * Device Info.
@@ -81,10 +89,19 @@
 #define PLATFORM_SP2_ID             (2 | (1 << 15))
 #define PLATFORM_SP3_ID             (3 | (1 << 15))
 
+#define PLATFORM_PRIMARY_SCHEDULER_EL  1
+
 #if (PLATFORM_NS_HYPERVISOR_PRESENT == 1)
-#define PLATFORM_VM1_ID              1
-#define PLATFORM_VM2_ID              2
-#define PLATFORM_VM3_ID              3
+    #if (PLATFORM_PRIMARY_SCHEDULER_EL == 2)
+        #define PLATFORM_VM1_ID              1
+        #define PLATFORM_VM2_ID              2
+        #define PLATFORM_VM3_ID              3
+    #elif (PLATFORM_PRIMARY_SCHEDULER_EL == 1)
+        // Assuming Primary scheduler ID   = 1
+        #define PLATFORM_VM1_ID              2
+        #define PLATFORM_VM2_ID              3
+        #define PLATFORM_VM3_ID              4
+    #endif
 #endif
 
 /*

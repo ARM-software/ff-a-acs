@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affliates. All rights reserved.
+ * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -7,7 +7,7 @@
 
 #include "pal_interfaces.h"
 
-#define BUFFER_COUNT 4
+#define BUFFER_COUNT 5
 uint32_t is_buffer_in_use[BUFFER_COUNT] = {0};
 
 /* Memory granularity and alignment:
@@ -63,6 +63,18 @@ void *pal_memory_alloc(uint64_t size)
             }
         }
     }
+    else if (size == PAGE_SIZE_4K * 2)
+    {
+        for (i = 0; i < BUFFER_COUNT ; i++)
+        {
+            if ((!is_buffer_in_use[i]) && (i != BUFFER_COUNT - 1))
+            {
+                is_buffer_in_use[i] = 1;
+                is_buffer_in_use[i+1] = 1;
+                return &pal_buffer_4k[i][0];
+            }
+        }
+    }
     else
     {
         /* TBD: Need to add logic for 16K and 64K pages */
@@ -78,9 +90,15 @@ uint32_t pal_memory_free(void *address, uint64_t size)
 
     for (i = 0; i < BUFFER_COUNT ; i++)
     {
-        if (&pal_buffer_4k[i][0] == address)
+        if (&pal_buffer_4k[i][0] == address && size == PAGE_SIZE_4K)
         {
             is_buffer_in_use[i] = 0;
+            return PAL_SUCCESS;
+        }
+        if (&pal_buffer_4k[i][0] == address && size == PAGE_SIZE_4K * 2)
+        {
+            is_buffer_in_use[i] = 0;
+            is_buffer_in_use[i+1] = 0;
             return PAL_SUCCESS;
         }
     }

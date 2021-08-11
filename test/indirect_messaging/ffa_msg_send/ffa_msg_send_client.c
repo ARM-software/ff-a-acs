@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affliates. All rights reserved.
+ * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -20,9 +20,11 @@ uint32_t ffa_msg_send_client(uint32_t test_run_data)
     uint32_t status = VAL_SUCCESS, i;
     uint32_t client_logical_id = GET_CLIENT_LOGIC_ID(test_run_data);
     uint32_t server_logical_id = GET_SERVER_LOGIC_ID(test_run_data);
-    const char message[] = "FFA ACS suite";
+    const char message[] = "FFA ACS suite is running";
+    const char message1[] = "FFA ACS suite";
     mb_buf_t mb;
-    uint32_t output_reserve_count = 7, size = PAGE_SIZE_4K;
+    uint32_t output_reserve_count = 7;
+    uint32_t size = PAGE_SIZE_4K;
 
     if (val_is_ffa_feature_supported(FFA_MSG_SEND_32))
     {
@@ -42,7 +44,7 @@ uint32_t ffa_msg_send_client(uint32_t test_run_data)
     }
 
     /* Map TX and RX buffers */
-    if (val_rxtx_map_64((uint64_t)mb.send, (uint64_t)mb.recv, PAGE_SIZE_4K))
+    if (val_rxtx_map_64((uint64_t)mb.send, (uint64_t)mb.recv, (size/PAGE_SIZE_4K)))
     {
         LOG(ERROR, "\tRxTx Map failed\n", 0, 0);
         status = VAL_ERROR_POINT(2);
@@ -50,6 +52,19 @@ uint32_t ffa_msg_send_client(uint32_t test_run_data)
     }
 
     val_memcpy(mb.send, message, sizeof(message));
+
+   /* A message larger than the mailbox size should not be able to be sent */
+   val_memset(&payload, 0, sizeof(ffa_args_t));
+   payload.arg1 = ((uint32_t)val_get_endpoint_id(client_logical_id) << 16) |
+                               val_get_endpoint_id(server_logical_id);
+   payload.arg3 = size + 1;
+   payload.arg4 = 0;
+   val_ffa_msg_send(&payload);
+   if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
+   {
+        status = VAL_ERROR_POINT(3);
+        goto free_memory;
+   }
 
     /* Fill the payload and send messgae to server
      * Executing the below squence twice, one for
@@ -62,7 +77,10 @@ retry_send:
         val_memset(&payload, 0, sizeof(ffa_args_t));
         payload.arg1 = ((uint32_t)val_get_endpoint_id(client_logical_id) << 16) |
                                     val_get_endpoint_id(server_logical_id);
-        payload.arg3 = sizeof(message);
+        /* Pass message1 size to test only the amount of data as
+         * specified by the length is sent */
+        /* To avoid NULL character, pass message size (msg_size - 0x1) */
+        payload.arg3 = sizeof(message1) - 0x1;
         payload.arg4 = 0;
         val_ffa_msg_send(&payload);
         if (payload.arg2 == FFA_ERROR_BUSY)
@@ -77,7 +95,7 @@ retry_send:
             if (payload.fid != FFA_SUCCESS_64)
             {
                 LOG(ERROR, "\tFFA_MSG_SEND failed err %x\n", payload.arg2, 0);
-                status = VAL_ERROR_POINT(3);
+                status = VAL_ERROR_POINT(4);
             }
         }
 
@@ -86,21 +104,21 @@ retry_send:
         {
             LOG(ERROR, "\tReceived non-zero value for reserved registers\n",
                     0, 0);
-            return VAL_ERROR_POINT(4);
+            return VAL_ERROR_POINT(5);
         }
     }
 
     if (val_rxtx_unmap(val_get_endpoint_id(client_logical_id)))
     {
         LOG(ERROR, "\tRXTX_UNMAP failed\n", 0, 0);
-        status = status ? status : VAL_ERROR_POINT(5);
+        status = status ? status : VAL_ERROR_POINT(6);
     }
 
 free_memory:
     if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
     {
         LOG(ERROR, "\tfree_rxtx_buffers failed\n", 0, 0);
-        status = status ? status : VAL_ERROR_POINT(6);
+        status = status ? status : VAL_ERROR_POINT(7);
     }
 
     /* Collect the server status in payload.arg3 */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affliates. All rights reserved.
+ * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -23,17 +23,20 @@ static uint32_t validate_test_config(uint32_t client_logical_id __UNUSED,
         || server_logical_id == VM2 || server_logical_id == VM3)
     {
         LOG(TEST,
-            "\t  No support for ns-hyp, hence skipping the check\n",
+            "\tNo support for ns-hyp, skipping the check\n",
             0, 0);
         return VAL_SKIP_CHECK;
     }
 #endif
 
-#if (PLATFORM_DEPLOYING_SP_SUPPORT == 0)
-    if (client_logical_id <= SP3 || server_logical_id <= SP3)
+// PLATFORM doesn't support deploying FFA based SPs
+#if (PLATFORM_SP_EL == -1)
+    if (client_logical_id == SP1 || server_logical_id == SP1
+        || client_logical_id == SP2 || server_logical_id == SP2
+        || client_logical_id == SP3 || server_logical_id == SP3)
     {
         LOG(TEST,
-            "\t  No support for FFA S-ENDPOINT, hence skipping the check\n",
+            "\tNo support for FFA S-ENDPOINT, skipping the check\n",
             0, 0);
         return VAL_SKIP_CHECK;
     }
@@ -44,7 +47,7 @@ static uint32_t validate_test_config(uint32_t client_logical_id __UNUSED,
         || server_logical_id == SP2 || server_logical_id == SP3)
     {
         LOG(TEST,
-            "\t  Both SP & SPMC at EL1 config isn't supported, hence skipping the check\n",
+            "\tBoth SP & SPMC at EL1 config isn't supported, skipping the check\n",
             0, 0);
         return VAL_SKIP_CHECK;
     }
@@ -56,7 +59,7 @@ static uint32_t validate_test_config(uint32_t client_logical_id __UNUSED,
         || server_logical_id == SP2 || server_logical_id == SP3)
     {
         LOG(TEST,
-            "\t  Test SP isn't support VHE config, hence skipping the check\n",
+            "\tSP isn't support VHE config, skipping the check\n",
             0, 0);
         return VAL_SKIP_CHECK;
     }
@@ -66,8 +69,7 @@ static uint32_t validate_test_config(uint32_t client_logical_id __UNUSED,
     if (client_logical_id <= SP3 && server_logical_id != NO_SERVER_EP)
     {
         LOG(TEST,
-            "\t  S-ENDPOINT doesn't support DIRECT_REQ,\
-                 hence skipping the check\n",
+            "\tSP doesn't support DIRECT_REQ, skipping the check\n",
             0, 0);
         return VAL_SKIP_CHECK;
     }
@@ -77,8 +79,8 @@ static uint32_t validate_test_config(uint32_t client_logical_id __UNUSED,
     if (server_logical_id > SP3 && server_logical_id != NO_SERVER_EP)
     {
         LOG(TEST,
-            "\t  NS-ENDPOINT doesn't support DIRECT_RESP,\
-                 hence skipping the check\n",
+            "\tNS-ENDPOINT doesn't support DIRECT_RESP,\
+                 skipping the check\n",
             0, 0);
         return VAL_SKIP_CHECK;
     }
@@ -195,7 +197,7 @@ void val_test_dispatch(void)
 
     if (val_get_last_run_test_info(&test_info))
     {
-        LOG(ERROR, "Unable to read last test_info\n", 0, 0);
+        LOG(ERROR, "\tUnable to read last test_info\n", 0, 0);
         return;
     }
 
@@ -253,7 +255,7 @@ void val_test_dispatch(void)
                 (val_nvm_write(VAL_NVM_OFFSET(NVM_CUR_TEST_NUM_INDEX),
                     &test_num, sizeof(test_num))))
             {
-                LOG(ERROR, "Unable to write nvm\n", 0, 0);
+                LOG(ERROR, "\tUnable to write nvm\n", 0, 0);
                 return;
             }
 
@@ -285,7 +287,7 @@ void val_test_dispatch(void)
                  &regre_report.total_error, sizeof(uint32_t)))
 
         {
-            LOG(ERROR, "Unable to read regre_report\n", 0, 0);
+            LOG(ERROR, "\tUnable to read regre_report\n", 0, 0);
             return;
         }
 
@@ -314,7 +316,7 @@ void val_test_dispatch(void)
             val_nvm_write(VAL_NVM_OFFSET(NVM_TOTAL_ERROR_INDEX),
                  &regre_report.total_error, sizeof(uint32_t)))
         {
-            LOG(ERROR, "Unable to write regre_report\n", 0, 0);
+            LOG(ERROR, "\tUnable to write regre_report\n", 0, 0);
             return;
         }
     }
@@ -610,6 +612,7 @@ static void val_secondary_cpu_sp_service(void)
     ffa_args_t payload;
 
     /* Recieve direct request using secondary cpu */
+    val_memset(&payload, 0, sizeof(ffa_args_t));
     val_ffa_msg_wait(&payload);
     for ( ; ; )
     {

@@ -1,11 +1,21 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affliates. All rights reserved.
+ * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
  */
 
 #include "test_database.h"
+
+#if (PLATFORM_NS_HYPERVISOR_PRESENT == 1 && PLATFORM_SP_EL == -1)
+#define EP_ID1 VM1
+#define EP_ID2 VM2
+#define EP_ID3 VM3
+#else
+#define EP_ID1 SP1
+#define EP_ID2 SP2
+#define EP_ID3 SP3
+#endif
 
 static ffa_args_t ffa_partition_info_get(const uint32_t uuid[4])
 {
@@ -85,13 +95,27 @@ static uint32_t is_matching_endpoint_found(const val_endpoint_info_t *expected_e
             return 0;
         }
 
-        if (expected_ep[0].ep_properties != info_get[i].properties)
+        if (VAL_IS_ENDPOINT_SECURE(val_get_curr_endpoint_logical_id()))
         {
-            LOG(ERROR, "\tData mismatch for endpoint id: info.id=%x\n",
-                expected_ep[0].id, 0);
-            LOG(ERROR, "\texpected_ep[0].ep_properties=%x, info.properties=%x\n",
-                expected_ep[0].ep_properties,  info_get[i].properties);
-            return 0;
+            if (expected_ep[0].ep_properties != info_get[i].properties)
+            {
+                LOG(ERROR, "\tData mismatch for endpoint id: info.id=%x\n",
+                    expected_ep[0].id, 0);
+                LOG(ERROR, "\texpected_ep[0].ep_properties=%x, info.properties=%x\n",
+                    expected_ep[0].ep_properties,  info_get[i].properties);
+                return 0;
+            }
+        }
+        else
+        {
+            if (expected_ep[0].ep_properties < info_get[i].properties)
+            {
+                LOG(ERROR, "\tData mismatch for endpoint id: info.id=%x\n",
+                    expected_ep[0].id, 0);
+                LOG(ERROR, "\texpected_ep[0].ep_properties=%x, info.properties=%x\n",
+                    expected_ep[0].ep_properties,  info_get[i].properties);
+                return 0;
+            }
         }
         return 1;
     }
@@ -205,19 +229,19 @@ uint32_t ffa_partition_info_get_client(uint32_t test_run_data)
     /* Endpoint can request information for a subset of partitions in the
      * system by specifying the non-Nil UUID.
      */
-    if (ffa_partition_info_helper(rx_buff, ep_info[SP1].uuid, &ep_info[SP1], 1))
+    if (ffa_partition_info_helper(rx_buff, ep_info[EP_ID1].uuid, &ep_info[EP_ID1], 1))
     {
         status = VAL_ERROR_POINT(14);
         goto unmap_rxtx;
     }
 
-    if (ffa_partition_info_helper(rx_buff, ep_info[SP2].uuid, &ep_info[SP2], 1))
+    if (ffa_partition_info_helper(rx_buff, ep_info[EP_ID2].uuid, &ep_info[EP_ID2], 1))
     {
         status = VAL_ERROR_POINT(15);
         goto unmap_rxtx;
     }
 
-    if (ffa_partition_info_helper(rx_buff, ep_info[SP3].uuid, &ep_info[SP3], 1))
+    if (ffa_partition_info_helper(rx_buff, ep_info[EP_ID3].uuid, &ep_info[EP_ID3], 1))
     {
         status = VAL_ERROR_POINT(16);
         goto unmap_rxtx;
@@ -239,11 +263,11 @@ uint32_t ffa_partition_info_get_client(uint32_t test_run_data)
     {
         /* Expect VM info only when NS-hyp is present */
         if (VAL_NS_EP_COUNT > 0x1)
-            count = VAL_NS_EP_COUNT + VAL_S_EP_COUNT;
+            count = VAL_TOTAL_EP_COUNT;
         else
             count = VAL_S_EP_COUNT;
 
-        if (ffa_partition_info_helper(rx_buff, null_uuid, &ep_info[SP1], count))
+        if (ffa_partition_info_helper(rx_buff, null_uuid, &ep_info[EP_ID1], count))
         {
             status = VAL_ERROR_POINT(18);
             goto unmap_rxtx;

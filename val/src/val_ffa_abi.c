@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affliates. All rights reserved.
+ * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -103,6 +103,8 @@ void val_ffa_version(ffa_args_t *args)
 
 static void ffa_msg_send_direct_req(ffa_args_t *args, bool arch64)
 {
+    ffa_args_t  payload;
+
     if (arch64)
     {
         *args = ffa_smccc(FFA_MSG_SEND_DIRECT_REQ_64, args->arg1, args->arg2,
@@ -114,6 +116,14 @@ static void ffa_msg_send_direct_req(ffa_args_t *args, bool arch64)
         *args = ffa_smccc(FFA_MSG_SEND_DIRECT_REQ_32, args->arg1, args->arg2,
                           args->arg3, args->arg4, args->arg5, args->arg6,
                           args->arg7);
+    }
+
+    while (args->fid == FFA_INTERRUPT_32)
+    {
+        val_memset(&payload, 0, sizeof(ffa_args_t));
+        payload.arg1 = args->arg1;
+        val_ffa_run(&payload);
+        *args = payload;
     }
 }
 
@@ -661,28 +671,19 @@ void val_ffa_secondary_ep_register_64(void)
 uint32_t val_rxtx_map_64(uint64_t tx_buf, uint64_t rx_buf, uint32_t page_count)
 {
     ffa_args_t payload;
-    static bool is_registered = false;
 
 
-    /* TODO: TF-A is not supporting FFA_RXTX_UNMAP, so the endpoint must register only once.
-     *       Remove this work-around once feature is available.
-     */
-    if (!is_registered)
+    val_memset(&payload, 0, sizeof(ffa_args_t));
+    payload.arg1 = (uint64_t)val_mem_virt_to_phys((void *)tx_buf);
+    payload.arg2 = (uint64_t)val_mem_virt_to_phys((void *)rx_buf);
+    payload.arg3 = page_count;
+
+    val_ffa_rxtx_map_64(&payload);
+
+    if (payload.fid == FFA_ERROR_32)
     {
-        val_memset(&payload, 0, sizeof(ffa_args_t));
-        payload.arg1 = (uint64_t)val_mem_virt_to_phys((void *)tx_buf);
-        payload.arg2 = (uint64_t)val_mem_virt_to_phys((void *)rx_buf);
-        payload.arg3 = page_count;
-
-        val_ffa_rxtx_map_64(&payload);
-
-        if (payload.fid == FFA_ERROR_32)
-        {
-            LOG(ERROR, "\tRXTX_MAP failed err 0x%x\n", payload.arg2, 0);
-            return VAL_ERROR;
-        }
-
-        is_registered = true;
+        LOG(ERROR, "\tRXTX_MAP failed err 0x%x\n", payload.arg2, 0);
+        return VAL_ERROR;
     }
 
     return VAL_SUCCESS;
@@ -718,20 +719,14 @@ uint32_t val_rxtx_map_32(uint64_t tx_buf, uint64_t rx_buf, uint32_t page_count)
 /**
  * @brief - Unmaps an endpoint's RX/TX buffer pair from the callee's
             translation regime.
- * @param id - Endpoint id.
+ * @param id - Endpoint id. Currently unused.
  * @return - Returns status code.
 **/
 uint32_t val_rxtx_unmap(ffa_endpoint_id_t id)
 {
     ffa_args_t payload;
 
-    /* TODO: TF-A is not supporting this feature, so return success.
-     *       Remove this work-around once this feature is available.
-     */
-    return VAL_SUCCESS;
-
     val_memset(&payload, 0, sizeof(ffa_args_t));
-    payload.arg1 = (uint32_t)(id << 16);
     val_ffa_rxtx_unmap(&payload);
 
     if (payload.fid == FFA_ERROR_32)
@@ -739,6 +734,7 @@ uint32_t val_rxtx_unmap(ffa_endpoint_id_t id)
         LOG(ERROR, "RXTX_UNMAP failed err 0x%x\n", payload.arg2, 0);
         return VAL_ERROR;
     }
+    (void)id;
     return VAL_SUCCESS;
 }
 

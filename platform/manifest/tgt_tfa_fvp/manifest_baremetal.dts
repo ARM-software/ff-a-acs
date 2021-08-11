@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affliates. All rights reserved.
+ * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -31,6 +31,8 @@
         vm1 {
             debug_name = "dispatcher_vm";
             kernel_filename = "dispatcher_vm";
+            messaging_method = <0x7>;
+            smc_whitelist_permissive;
         };
         vm2 {
             debug_name = "vm2";
@@ -38,7 +40,7 @@
             vcpu_count = <1>;
             mem_size = <0x100000>;
             uuid = <0x0 0x0 0x0 0x2>;
-            messaging_method = <0x2>;
+            messaging_method = <0x7>;
             smc_whitelist_permissive;
         };
         vm3 {
@@ -47,7 +49,7 @@
             vcpu_count = <1>;
             mem_size = <0x100000>;
             uuid = <0x0 0x0 0x0 0x3>;
-            messaging_method = <0x2>;
+            messaging_method = <0x4>;
             smc_whitelist_permissive;
         };
     };

@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# Copyright (c) 2021, Arm Limited or its affliates. All rights reserved.
+# Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
@@ -33,7 +33,7 @@ include(${ROOT_DIR}/tools/cmake/toolchain/default.cmake)
 
 list(APPEND VERBOSE_LIST 1 2 3 4 5)
 list(APPEND PLATFORM_SPMC_EL_LIST 1 2 3)
-list(APPEND PLATFORM_SP_EL_LIST 0 1)
+list(APPEND PLATFORM_SP_EL_LIST -1 0 1)
 list(APPEND PLATFORM_NS_HYPERVISOR_PRESENT_LIST 0 1)
 list(APPEND ENABLE_PIE_LIST ON OFF)
 list(APPEND CMAKE_BUILD_TYPE_LIST Release Debug)
@@ -183,11 +183,17 @@ foreach(clean_item ${CLEAN_LIST})
 endforeach()
 ###
 
+if(NOT(${PLATFORM_SP_EL} STREQUAL -1))
 add_subdirectory(${ROOT_DIR}/tools/cmake/endpoints/sp1)
 add_subdirectory(${ROOT_DIR}/tools/cmake/endpoints/sp2)
 add_subdirectory(${ROOT_DIR}/tools/cmake/endpoints/sp3)
+endif()
 add_subdirectory(${ROOT_DIR}/tools/cmake/endpoints/vm1)
 if(${PLATFORM_NS_HYPERVISOR_PRESENT} STREQUAL 1)
 add_subdirectory(${ROOT_DIR}/tools/cmake/endpoints/vm2)
 add_subdirectory(${ROOT_DIR}/tools/cmake/endpoints/vm3)
+else()
+   if(${PLATFORM_SP_EL} STREQUAL -1)
+        message(FATAL_ERROR "[ACS] : Invalid combination PLATFORM_NS_HYPERVISOR_PRESENT=0 and PLATFORM_SP_EL=-1")
+   endif()
 endif()

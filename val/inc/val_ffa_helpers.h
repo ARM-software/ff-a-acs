@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affliates. All rights reserved.
+ * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -118,6 +118,7 @@ ATTR_FUNCTION_GET(memory_shareability, ffa_memory_attributes_t,
     ((ffa_memory_handle_t)(UINT64_C(1) << 63))
 #define FFA_MEMORY_HANDLE_INVALID (~UINT64_C(0))
 
+#define FFA_MAX_MULTI_ENDPOINT_SUPPORT 2
 /**
  * A set of contiguous pages which is part of a memory region. This corresponds
  * to table "Constituent memory region descriptor" of the FFA 1.0 specification.
@@ -182,13 +183,13 @@ typedef uint32_t ffa_memory_region_flags_t;
  * Clear memory region contents after unmapping it from the sender and before
  * mapping it for any receiver.
  */
-#define FFA_MEMORY_REGION_FLAG_CLEAR 0x1U
+#define FFA_MEMORY_REGION_FLAG_CLEAR 0x1
 
 /**
  * Whether the hypervisor may time slice the memory sharing or retrieval
  * operation.
  */
-#define FFA_MEMORY_REGION_FLAG_TIME_SLICE 0x2U
+#define FFA_MEMORY_REGION_FLAG_TIME_SLICE 0x2
 
 /**
  * Whether the hypervisor should clear the memory region after the receiver
@@ -283,6 +284,9 @@ typedef struct {
     enum ffa_memory_shareability shareability;
     uint32_t total_length;
     uint32_t fragment_length;
+    bool multi_share;
+    uint32_t receiver_count;
+    struct ffa_memory_access receivers[FFA_MAX_MULTI_ENDPOINT_SUPPORT];
 } mem_region_init_t;
 
 static inline ffa_memory_handle_t ffa_assemble_handle(uint32_t h1, uint32_t h2)
@@ -318,11 +322,11 @@ ffa_memory_region_get_composite(struct ffa_memory_region *memory_region,
 static inline uint32_t ffa_mem_relinquish_init(
     struct ffa_mem_relinquish *relinquish_request,
     ffa_memory_handle_t handle, ffa_memory_region_flags_t flags,
-    ffa_endpoint_id_t sender)
+    ffa_endpoint_id_t sender, uint32_t endpoint_count)
 {
     relinquish_request->handle = handle;
     relinquish_request->flags = flags;
-    relinquish_request->endpoint_count = 1;
+    relinquish_request->endpoint_count = endpoint_count;
     relinquish_request->endpoints[0] = sender;
     return sizeof(struct ffa_mem_relinquish) + sizeof(ffa_endpoint_id_t);
 }
@@ -334,4 +338,6 @@ uint32_t val_ffa_memory_retrieve_request_init(mem_region_init_t *mem_region_init
                                 ffa_memory_handle_t handle);
 uint32_t val_is_ffa_feature_supported(uint32_t fid);
 
+uint32_t val_ffa_mem_handle_share(ffa_endpoint_id_t sender, ffa_endpoint_id_t recipient,
+                                  ffa_memory_handle_t handle);
 #endif /* VAL_FFA_HELPERS_H */

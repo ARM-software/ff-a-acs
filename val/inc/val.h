@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affliates. All rights reserved.
+ * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -130,6 +130,16 @@ typedef enum {
 #define GET_TEST_TYPE(x)         ((x >> 19) & 0xf)
 #define ADD_TEST_TYPE(y, x)      (uint32_t)((y & ~(0xful << 19)) \
                                   |   ((x & 0xf) << 19))
+
+/* Set server logic_id[19:15] */
+#define SET_SERVER_LOGIC_ID(test_run_data, x)  (((uint32_t)(~0 & ~(0x1f << 15)) & test_run_data) \
+                                                  | (x << 15))
+
+#define VAL_BIT_MASK(len) ((1 << len) - 1)
+/* Set the value in given position */
+#define VAL_SET_BITS(data, pos, len, val) (((uint32_t)(~(uint32_t)0 & ~(uint32_t)(VAL_BIT_MASK(len) << pos)) & data) \
+                                             | (val << pos))
+
 
 /* Macro to print the message and control the verbosity */
 #define LOG(print_verbosity, x, y, z)               \
