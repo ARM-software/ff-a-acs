@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affliates. All rights reserved.
+ * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -14,6 +14,8 @@ uint32_t ffa_msg_send_server(ffa_args_t args)
     uint32_t output_reserve_count = 2, size = PAGE_SIZE_4K;
     ffa_endpoint_id_t sender = (args.arg1 >> 16) & 0xFFFF;
     char message[] = "FFA ACS suite";
+    char message1[] = "FFA ACS suite is running";
+    uint32_t msg_size = sizeof(message) - 0x1;
     mb_buf_t mb;
 
     mb.send = val_memory_alloc(size);
@@ -26,7 +28,7 @@ uint32_t ffa_msg_send_server(ffa_args_t args)
     }
 
     /* Map TX and RX buffers */
-    if (val_rxtx_map_64((uint64_t)mb.send, (uint64_t)mb.recv, PAGE_SIZE_4K))
+    if (val_rxtx_map_64((uint64_t)mb.send, (uint64_t)mb.recv, (size/PAGE_SIZE_4K)))
     {
         LOG(ERROR, "\tRxTx Map failed\n", 0, 0);
         status = VAL_ERROR_POINT(2);
@@ -34,7 +36,7 @@ uint32_t ffa_msg_send_server(ffa_args_t args)
     }
 
     val_memset(&payload, 0, sizeof(ffa_args_t));
-    payload = val_resp_client_fn_direct((uint32_t)args.arg1, 0, 0, 0, 0, 0);
+    payload = val_resp_client_fn_direct((uint32_t)args.arg3, 0, 0, 0, 0, 0);
 
     /* ffa_msg_send_direct_resp(): Blocks the caller until message is
      * available in the caller's RX buffer */
@@ -54,15 +56,17 @@ uint32_t ffa_msg_send_server(ffa_args_t args)
     }
 
     /* Check the message size */
-    if (payload.arg3 != sizeof(message))
+    if (payload.arg3 != msg_size)
     {
-        LOG(ERROR, "\tmsg size mismatch actual=%x but expected\n",
-            payload.arg3, sizeof(message));
+        LOG(ERROR, "\tmsg size mismatch actual=%x but expected=%x\n",
+            payload.arg3, msg_size);
         status = VAL_ERROR_POINT(5);
     }
 
-    /* Check the message content */
-    if (val_memcmp(mb.recv, message, sizeof(message)))
+    /* Check that only the amount of data as specified
+     * by the length is sent */
+    if (val_memcmp(mb.recv, message, msg_size) ||
+        !val_memcmp(mb.recv, message1, sizeof(message1)))
     {
         LOG(ERROR, "\tmsg content mismatched\n", 0, 0);
         status = VAL_ERROR_POINT(6);
@@ -104,15 +108,15 @@ uint32_t ffa_msg_send_server(ffa_args_t args)
     }
 
     /* Check the message size */
-    if (payload.arg3 != sizeof(message))
+    if (payload.arg3 != msg_size)
     {
-        LOG(ERROR, "\tmsg size mismatch actual=%x but expected\n",
-            payload.arg3, sizeof(message));
+        LOG(ERROR, "\tmsg size mismatch actual=%x but expected=%x\n",
+            payload.arg3, msg_size);
         status = VAL_ERROR_POINT(11);
     }
 
     /* Check the message content */
-    if (val_memcmp(mb.recv, message, sizeof(message)))
+    if (val_memcmp(mb.recv, message, msg_size))
     {
         LOG(ERROR, "\tmsg content mismatched\n", 0, 0);
         status = VAL_ERROR_POINT(12);
@@ -158,6 +162,11 @@ uint32_t ffa_msg_send_server(ffa_args_t args)
         LOG(ERROR, "\tffa_msg_wait didn't fail\n", 0, 0);
         status = VAL_ERROR_POINT(16);
     }
+
+    val_memset(&payload, 0, sizeof(ffa_args_t));
+    /* ffa_msg_wait(): Blocks the caller until message is
+     * available in the caller's RX buffer */
+    val_ffa_msg_wait(&payload);
 
     if (val_rxtx_unmap(sender))
     {

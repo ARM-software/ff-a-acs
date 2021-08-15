@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affliates. All rights reserved.
+ * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -13,6 +13,34 @@
  * composite memory region offset.
  */
 static void ffa_memory_region_init_header(mem_region_init_t *mem_region_init,
+                    ffa_memory_attributes_t attributes,
+                    ffa_memory_handle_t handle,
+                    ffa_memory_access_permissions_t permissions)
+{
+    struct ffa_memory_region *memory_region = mem_region_init->memory_region;
+
+    memory_region->sender = mem_region_init->sender;
+    memory_region->attributes = attributes;
+    memory_region->reserved_0 = 0;
+    memory_region->flags = mem_region_init->flags;
+    memory_region->handle = handle;
+    memory_region->tag = mem_region_init->tag;
+    memory_region->reserved_1 = 0;
+    if (!mem_region_init->multi_share)
+    {
+        memory_region->receiver_count = 1;
+        memory_region->receivers[0].receiver_permissions.receiver = mem_region_init->receiver;
+        memory_region->receivers[0].receiver_permissions.permissions = permissions;
+        memory_region->receivers[0].receiver_permissions.flags = 0;
+        memory_region->receivers[0].reserved_0 = 0;
+    }
+}
+
+/**
+ * Initialises the header of the given `ffa_memory_region`, not including the
+ * composite memory region offset.
+ */
+static void ffa_memory_region_retrieve_init_header(mem_region_init_t *mem_region_init,
                     ffa_memory_attributes_t attributes,
                     ffa_memory_handle_t handle,
                     ffa_memory_access_permissions_t permissions)
@@ -53,6 +81,7 @@ uint32_t val_ffa_memory_region_init(mem_region_init_t *mem_region_init,
     uint32_t count_to_copy;
     uint32_t i;
     uint32_t constituents_offset;
+    struct ffa_memory_region *memory_region = mem_region_init->memory_region;
 
     /* Set memory region's permissions. */
     ffa_set_data_access_attr(&permissions, mem_region_init->data_access);
@@ -64,7 +93,20 @@ uint32_t val_ffa_memory_region_init(mem_region_init_t *mem_region_init,
     ffa_set_memory_shareability_attr(&attributes, mem_region_init->shareability);
 
     ffa_memory_region_init_header(mem_region_init, attributes, 0, permissions);
-
+    if (mem_region_init->multi_share)
+    {
+        memory_region->receiver_count = mem_region_init->receiver_count;
+        for(i=0; i < mem_region_init->receiver_count; i++)
+        {
+            memory_region->receivers[i].receiver_permissions.receiver =
+                              mem_region_init->receivers[i].receiver_permissions.receiver;
+            memory_region->receivers[i].receiver_permissions.permissions =
+                              mem_region_init->receivers[i].receiver_permissions.permissions;
+            memory_region->receivers[i].receiver_permissions.flags =
+                              mem_region_init->receivers[i].receiver_permissions.flags;
+            memory_region->receivers[i].reserved_0 = 0;
+        }
+    }
     /*
      * Note that `sizeof(struct_ffa_memory_region)` and `sizeof(struct
      * ffa_memory_access)` must both be multiples of 16 (as verified by the
@@ -140,7 +182,7 @@ uint32_t val_ffa_memory_retrieve_request_init(mem_region_init_t *mem_region_init
     ffa_set_memory_cacheability_attr(&attributes, mem_region_init->cacheability);
     ffa_set_memory_shareability_attr(&attributes, mem_region_init->shareability);
 
-    ffa_memory_region_init_header(mem_region_init, attributes, handle, permissions);
+    ffa_memory_region_retrieve_init_header(mem_region_init, attributes, handle, permissions);
 
     /*
      * Offset 0 in this case means that the hypervisor should allocate the
@@ -168,6 +210,32 @@ uint32_t val_is_ffa_feature_supported(uint32_t fid)
     val_ffa_features(&payload);
     if (payload.fid == FFA_ERROR_32)
         return VAL_ERROR;
+    else
+        return VAL_SUCCESS;
+}
+
+/**
+ * @brief - Send memory handle to the server using direct message.
+ * @param sender - Sender id.
+ * @param recipient - Receiver id.
+ * @param handle - Memory handle.
+ * @return - Returns success/error status code.
+**/
+uint32_t val_ffa_mem_handle_share(ffa_endpoint_id_t sender, ffa_endpoint_id_t recipient,
+                                  ffa_memory_handle_t handle)
+{
+    ffa_args_t payload;
+
+    /* Pass memory handle to the server using direct message */
+    val_memset(&payload, 0, sizeof(ffa_args_t));
+    payload.arg1 =  ((uint32_t)sender << 16) | recipient;
+    payload.arg3 =  handle;
+    val_ffa_msg_send_direct_req_64(&payload);
+    if (payload.fid == FFA_ERROR_32)
+    {
+        LOG(ERROR, "\tDirect request failed err %x\n", payload.arg2, 0);
+        return VAL_ERROR;
+    }
     else
         return VAL_SUCCESS;
 }

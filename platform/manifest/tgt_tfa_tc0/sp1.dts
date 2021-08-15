@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affliates. All rights reserved.
+ * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -17,14 +17,14 @@
     id = <1>;
     auxiliary-id = <0xae>;
     stream-endpoint-ids = <0 1 2 3>;
-    execution-ctx-count = <4>; /* Must be equal to no. of pe in system for EL1SP, otherwise set to 1 */
+    execution-ctx-count = <8>; /* Must be equal to no. of pe in system for EL1SP, otherwise set to 1 */
     exception-level = <2>; /* S-EL1 */
     execution-state = <0>; /* AARCH64 */
     load-address = <0xfe000000>;
     entrypoint-offset = <0x1000>;
     xlat-granule = <0>; /* 4KiB */
     boot-order = <0>;
-    messaging-method = <0>; /* Direct messaging only */
+    messaging-method = <3>; /* Direct messaging only */
     run-time-model = <0>; /* Run to completion */
 
     /* Boot protocol */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affliates. All rights reserved.
+ * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -13,19 +13,20 @@
 #define FFA_RECEIPT_DIRECT_REQUEST_SUPPORT 0x1
 #define FFA_DIRECT_REQUEST_SEND            0x2
 #define FFA_INDIRECT_MESSAGE_SUPPORT       0x4
+#define FFA_MESSAGING_MASK                 0x7
 
 #define PLATFORM_VM1_EP_PROPERTIES (FFA_RECEIPT_DIRECT_REQUEST_SUPPORT | \
                                     FFA_DIRECT_REQUEST_SEND | \
                                     FFA_INDIRECT_MESSAGE_SUPPORT)
-#define PLATFORM_VM1_UUID {0, 0, 0, 1}
+#define PLATFORM_VM1_UUID {0, 0, 0, 0}
 
 #define PLATFORM_VM2_EP_PROPERTIES (FFA_RECEIPT_DIRECT_REQUEST_SUPPORT | \
                                     FFA_DIRECT_REQUEST_SEND | \
                                     FFA_INDIRECT_MESSAGE_SUPPORT)
-#define PLATFORM_VM2_UUID {0, 0, 0, 2}
+#define PLATFORM_VM2_UUID {0, 0, 0, 1}
 
 #define PLATFORM_VM3_EP_PROPERTIES (FFA_INDIRECT_MESSAGE_SUPPORT)
-#define PLATFORM_VM3_UUID {0, 0, 0, 3}
+#define PLATFORM_VM3_UUID {0, 0, 0, 2}
 
 #define PLATFORM_SP1_EP_PROPERTIES (FFA_RECEIPT_DIRECT_REQUEST_SUPPORT | \
                                     FFA_DIRECT_REQUEST_SEND)

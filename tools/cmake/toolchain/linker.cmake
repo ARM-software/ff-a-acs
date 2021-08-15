@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# Copyright (c) 2021, Arm Limited or its affliates. All rights reserved.
+# Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
@@ -49,13 +49,13 @@ function (create_executable EXE_NAME)
     # Create the dump info
     add_custom_command(OUTPUT ${EXE_NAME}.dump
                     COMMAND ${GNUARM_OBJDUMP} ${GNUARM_OBJDUMP_FLAGS} ${EXE_NAME}.elf > ${EXE_NAME}.dump
-                    DEPENDS ${EXE_NAME}.elf)
+                    DEPENDS ${EXE_NAME}_elf)
     add_custom_target(${EXE_NAME}_dump ALL DEPENDS ${EXE_NAME}.dump)
 
     # Create the binary
     add_custom_command(OUTPUT ${EXE_NAME}.bin
                     COMMAND ${GNUARM_OBJCOPY} ${GNUARM_OBJCOPY_FLAGS} ${EXE_NAME}.elf ${EXE_NAME}.bin
-                    DEPENDS ${EXE_NAME}.elf)
+                    DEPENDS ${EXE_NAME}_dump)
     add_custom_target(${EXE_NAME}_bin ALL DEPENDS ${EXE_NAME}.bin)
 
     # Copy the binary to common output dir
