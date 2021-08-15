@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affliates. All rights reserved.
+ * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -7,64 +7,131 @@
 
 #include "test_database.h"
 
+static ffa_args_t ffa_partition_info_get(const uint32_t uuid[4])
+{
+    ffa_args_t args = {
+                .arg1 = uuid[0],
+                .arg2 = uuid[1],
+                .arg3 = uuid[2],
+                .arg4 = uuid[3],
+    };
+
+    val_ffa_partition_info_get(&args);
+
+    return args;
+}
+
 uint32_t ffa_direct_message_error_client(uint32_t test_run_data)
 {
-    val_endpoint_info_t *ep_info;
+    ffa_partition_info_t *info;
+    void *rx_buff, *tx_buff;
     uint32_t client_logical_id = GET_CLIENT_LOGIC_ID(test_run_data);
+    const uint32_t null_uuid[4] = {0};
+    uint64_t size = PAGE_SIZE_4K;
+    uint32_t count;
     ffa_args_t payload;
-    uint32_t data;
     uint32_t i;
+    uint32_t status = VAL_SUCCESS;
 
-    ep_info = val_get_endpoint_info();
-    if (!ep_info)
+    tx_buff = val_memory_alloc(size);
+    rx_buff = val_memory_alloc(size);
+    if (rx_buff == NULL || tx_buff == NULL)
     {
-        LOG(ERROR, "get_endpoint_info error!\n", 0, 0);
-        return VAL_ERROR_POINT(1);
+        LOG(ERROR, "\tFailed to allocate RxTx buffer\n", 0, 0);
+        status = VAL_ERROR_POINT(1);
+        goto free_memory;
     }
+
+    /* Map TX and RX buffers */
+    if (val_rxtx_map_64((uint64_t)tx_buff, (uint64_t)rx_buff, (uint32_t)(size/PAGE_SIZE_4K)))
+    {
+        LOG(ERROR, "\t  RxTx Map failed\n", 0, 0);
+        status = VAL_ERROR_POINT(2);
+        goto free_memory;
+    }
+
+    payload = ffa_partition_info_get(null_uuid);
+    if (payload.fid == FFA_ERROR_32)
+    {
+        LOG(ERROR, "\tInvalid fid received, fid=0x%x\n",
+            payload.fid, 0);
+        status = VAL_ERROR_POINT(3);
+        goto rx_release;
+    }
+
+    info = (ffa_partition_info_t *)rx_buff;
+    count = (uint32_t)payload.arg2;
 
     /* Relayer must ensure that target endpoint supports receipt of direct messages.
      * Invoke FFA_ERROR with DENIED as status if this is not the case.
      */
-    for (i = 1; i < (VAL_TOTAL_EP_COUNT + 1); i++)
+    for (i = 0; i < count; i++)
     {
-        if (i == client_logical_id)
+        if (info[i].id == val_get_curr_endpoint_id())
             continue;
 
-        data = VAL_EXTRACT_BITS(ep_info[i].ep_properties, 0, 0);
-        if (data != FFA_RECEIPT_DIRECT_REQUEST_SUPPORT)
+        if ((info[i].properties & FFA_RECEIPT_DIRECT_REQUEST_SUPPORT) == 0)
             break;
     }
 
-    if (i == (VAL_TOTAL_EP_COUNT + 1))
+    if (i == count)
     {
         LOG(TEST, "\tSkipping the check, required endpoint not found\n", 0, 0);
-        return VAL_SKIP_CHECK;
+        status = VAL_SKIP_CHECK;
+        goto rx_release;
     }
 
     if (val_is_ffa_feature_supported(FFA_MSG_SEND_DIRECT_REQ_32) == VAL_SUCCESS)
     {
         val_memset(&payload, 0, sizeof(ffa_args_t));
-        payload.arg1 = val_get_endpoint_id(client_logical_id | (uint32_t)ep_info[i].id << 16);
-        LOG(DBG, "\tSending direct to epid=0x%x\n", ep_info[i].id, 0);
+        payload.arg1 = val_get_endpoint_id(client_logical_id | (uint32_t)info[i].id << 16);
+        LOG(TEST, "\tSending direct msg to epid=0x%x\n", info[i].id, 0);
         val_ffa_msg_send_direct_req_32(&payload);
         if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_DENIED))
         {
             LOG(ERROR, "\tUnexpected return status, fid=0x%x, err=0x%x\n",
                 payload.fid, payload.arg2);
-            return VAL_ERROR_POINT(2);
+            status = VAL_ERROR_POINT(4);
         }
     }
-
-    val_memset(&payload, 0, sizeof(ffa_args_t));
-    payload.arg1 = val_get_endpoint_id(client_logical_id | (uint32_t)ep_info[i].id << 16);
-    LOG(DBG, "\tSending direct to epid=0x%x\n", ep_info[i].id, 0);
-    val_ffa_msg_send_direct_req_64(&payload);
-    if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_DENIED))
+    else if (val_is_ffa_feature_supported(FFA_MSG_SEND_DIRECT_REQ_64) == VAL_SUCCESS)
     {
-        LOG(ERROR, "\tUnexpected return status, fid=0x%x, err=0x%x\n",
-            payload.fid, payload.arg2);
-        return VAL_ERROR_POINT(3);
+        val_memset(&payload, 0, sizeof(ffa_args_t));
+        payload.arg1 = val_get_endpoint_id(client_logical_id | (uint32_t)info[i].id << 16);
+        LOG(TEST, "\tSending direct msg to epid=0x%x\n", info[i].id, 0);
+        val_ffa_msg_send_direct_req_64(&payload);
+        if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_DENIED))
+        {
+            LOG(ERROR, "\tUnexpected return status, fid=0x%x, err=0x%x\n",
+                payload.fid, payload.arg2);
+            status = VAL_ERROR_POINT(5);
+        }
+    }
+    else
+    {
+        LOG(TEST, "\tSkipping the check, direct_msg_req is not supported\n", 0, 0);
+        status = VAL_SKIP_CHECK;
     }
 
-    return VAL_SUCCESS;
+rx_release:
+    /* Release the RX buffer */
+    if (val_rx_release())
+    {
+        LOG(ERROR, "\tRx release failed\n", 0, 0);
+        status = status ? status : VAL_ERROR_POINT(6);
+    }
+
+    if (val_rxtx_unmap(val_get_endpoint_id(client_logical_id)))
+    {
+        LOG(ERROR, "\tval_rxtx_unmap failed\n", 0, 0);
+        status = status ? status : VAL_ERROR_POINT(7);
+    }
+
+free_memory:
+    if (val_memory_free(rx_buff, size) || val_memory_free(tx_buff, size))
+    {
+        LOG(ERROR, "\tval_memory_free failed\n", 0, 0);
+        status = status ? status : VAL_ERROR_POINT(8);
+    }
+    return status;
 }

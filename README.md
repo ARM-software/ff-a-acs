@@ -5,48 +5,52 @@
 
 *Arm Firmware Framework for Armv8-A (FF-A)* describes a software architecture that achieves the following goals:
 
-1. Leverages the virtualization extension to isolate software images provided by an ecosystem of vendors from each other
-2. Describes interfaces that standardize communication between the various software images. This includes communication between images in the Secure world and Normal world.
+1. Applies the Virtualization Extension to isolate software images provided by different vendors.
+2. Describes the interfaces that standardize communication between the various software images. This includes communication between images in the Secure world and Normal world.
 
-The FF-A also goes beyond the above stated goals to ensure that the interfaces can be used to standardize communication:
+Arm FF-A also goes beyond the above stated goals to ensure that the interfaces can be used to standardize communication:
 - In the absence of the Virtualization Extensions in the Secure world. This provides a migration path for existing Secure world software images to a system that implements the Virtualization Extension in the Secure state.
-- Between VMs managed by a Hypervisor in the Normal world. The Virtualization Extensions in the Secure state mirrors its counterpart in the Non-secure state. So, a Hypervisor could use the firmware framework interfaces to enable communication between VMs it manages.
+- Between Virtual Machines (VMs) managed by a hypervisor in the Normal world. The Virtualization Extensions in the Secure state mirrors their counterparts in the Non-secure state. The hypervisor uses the firmware framework interfaces to enable communication between VMs that it manages.
 
-The following are the main components of FF-A:
-- A Partition Manager (PM) which manages partitions. It is the Hypervisor in Normal world and the Secure Partition Manager (SPM) in Secure world.
-- One or more partitions that are sandboxes created by the PM. These could be VMs in Normal world or Secure world. The VMs in Secure world are called Secure Partitions (SP). In this document, the term endpoint is used interchangeably with the term partition.
+The following are the main components of Arm FF-A:
+- A Partition Manager (PM), which manages partitions is the hypervisor in Normal world and the Secure Partition Manager (SPM) in Secure world.
+- One or more partitions that are sandboxes created by the PM could be VMs in Normal world or Secure world. The VMs in Secure world are called Secure Partitions (SP).
 - Application Binary Interfaces (ABIs) that partitions can invoke to communicate with other partitions.
 - A partition manifest that describes the system resources a partition needs, services that a partition implements, and other attributes of the partition that governs its runtime behavior.
+
+**Note** : In this document, the terms Endpoint (EP) and partition are used interchangeably.
 
 For more information, download the [Arm FF-A Specification](https://developer.arm.com/docs/den0077/latest)
 
 ### Architecture Compliance Suite
 
-The Architecture Compliance Suite (ACS) is a set of examples of the invariant behaviors that are specified by the Arm FF-A specification. Use this suite to verify whether these behaviors are implemented correctly in your system. This suite contains self-checking and portable C and assembly based tests with directed stimulus. The tests are available as open source. The tests and the corresponding abstraction layers are available with an BSD-3-Clause License allowing for external contribution.
+The Architecture Compliance Suite (ACS) contains a set of functional tests, demonstrating the invariant behaviors that are specified in the architecture specification. It is used to ensure architecture compliance of the implementations to Arm FF-A specification. The example implementations are SPMD(SPM Dispatcher) and SPMC(SPM Core) components in Secure world and hyperviosr in Normal World.
 
-This suite is not a substitute for design verification. To review the test logs, you can contact Arm directly through their partner managers.
+This suite contains self-checking, and portable C and assembly based tests with directed stimulus. These tests are available as open source. The tests and the corresponding abstraction layers are available with a BSD-3-Clause License allowing for external contribution.
 
-See [Validation Methodology](./docs/Arm_FF_A_ACS_Validation_Methodology.pdf) document for more information on Architecture Compliance Suite.
+This suite is not a substitute for design verification. To review the test logs, you can contact Arm directly through your partner managers.
+
+For more information on Architecture Compliance Suite see [Validation Methodology](./docs/Arm_FF_A_ACS_Validation_Methodology.pdf) document.
 
 ## This release
-- Release Version - v0.5
-- Code Quality: Alpha - Please use this opportunity to suggest enhancements and point out errors.
+- Release Version - v0.8
+- Code Quality: Beta - ACS is being developed, please use this opportunity to ameliorate.
 - The tests are written for Arm FF-A 1.0 specification version.
 - For information about the test coverage scenarios that are implemented in the current release of ACS and the scenarios that are planned for the future releases, see [Testcase checklist](./docs/testcase_checklist.md).
 
-## Github branch
+## GitHub branch
 - To pick up the release version of the code, checkout the release branch.
 - To get the latest version of the code with bug fixes and new features, use the main branch.
 
-## Software Requirements
+## Software requirements
 
-Following tools are required to build the ACS: <br />
-- Host Operating System     : Ubuntu 18.04
+The following tools are required to build the ACS: <br />
+- Host operating system: Ubuntu 18.04, RHEL 7
 - Git to download ACS repository
 - CMake 3.17
-- Cross-compiler toolchain supporting AArch64 target : GCC >= 9.2-2019.12 can be downloaded from [Arm Developer website](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-a/downloads)
+- Cross-compiler toolchain supporting AArch64 target: GCC >= 9.2-2019.12 can be downloaded from [Arm Developer website](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-a/downloads)
 
-**Note** : ACS can also be built using Arm Compiler 6 (Verified with 6.12) or Clang (Verified with 8.0.0) cross compiler toolchain. To compile and assemble sources using these toolchains, set -DCC=<compiler-path> with path pointing to the armclang or clang binary. Note that ACS still needs the GNU linker for generating the test binaries regardless of chosen toolchain.
+**Note** : ACS can also be compiled using Arm Compiler 6 (Verified with 6.12) or Clang (Verified with 8.0.0) Cross-compiler toolchain. To compile and assemble sources using these toolchains, set -DCC=<compiler-path> with path pointing to the armclang or clang binary. For linking, ACS needs the GNU linker for generating the test binaries regardless of chosen toolchain.
 
 ## Download source
 
@@ -57,7 +61,7 @@ git clone https://github.com/ARM-software/ff-a-acs.git
 
 ### Porting steps
 
-See [Arm FF-A ACS Porting Guide](./docs/porting_guide.md) document for porting steps required to run ACS for your target platform.
+For more information on porting steps to run ACS for the target platform, see [Arm FF-A ACS Porting Guide](./docs/porting_guide.md) document.
 
 ### Build steps
 
@@ -80,7 +84,7 @@ make
 -	-DARM_ARCH_MINOR=<major_version> The minor version of Arm Architecture to target when compiling test suite. Its value must be numeric, and defaults to 0.
 -	-DCMAKE_BUILD_TYPE=<build_type>: Chooses between a debug and release build. It can take either release or debug as values. The default value is release.
 -	-DPLATFORM_SPMC_EL=<el_num>: EL number where the target SPMC component runs. Supported values are 1 and 2. The default value is 2.
--	-DPLATFORM_SP_EL=<el_num>: EL number where the test secure endpoints are expected to run. Supported values are 0 and 1. The default value is 1.
+-	-DPLATFORM_SP_EL=<el_num>: EL number where the test secure endpoints are expected to run. Supported values are 0(EL0), 1(EL1), and -1(Platform doesn't support deploying FFA based SPs). The default value is 1.
 -	-DPLATFORM_NS_HYPERVISOR_PRESENT=<0|1>: Does the system support the non-secure hypervisor implementing FF-A features? 1 for yes, 0 for no. The default vaule is 1. System is expected to intergrate and load all the three of nonsecure test endpoints(vm1, vm2 and vm3) if the value is set to 1. Otherwise needs to use single non-secure test endpoint(vm1) which would act as NS OS kernel.
 
 *To compile tests for tgt_tfa_fvp platform*:<br />
@@ -91,10 +95,10 @@ cmake ../ -G"Unix Makefiles" -DCROSS_COMPILE=<path-to-aarch64-gcc>/bin/aarch64-n
 make
 ```
 **NOTE**
-	 The current release has been tested on **tgt_tfa_fvp** reference platform with build options set to -DPLATFORM_NS_HYPERVISOR_PRESENT=0, -DPLATFORM_SPMC_EL=2, -DPLATFORM_SP_EL=1. This represents system configuration where SPMD is at EL3, SPMC is at SEL2,  three test-SPs(sp1, sp2 and sp3) at SEL1 and one test NS-EP (vm1) runs at NSEL1 as an OS kernel. See [testcase_unverified](./docs/testcase_unverified.md) document to know list of unverified tests on reference platform.<br />
+	 The current release has been tested on **tgt_tfa_fvp** and **tgt_tfa_tc0** reference platforms with build options set to -DPLATFORM_NS_HYPERVISOR_PRESENT=0, -DPLATFORM_SPMC_EL=2, -DPLATFORM_SP_EL=1. These platform represents system configuration where SPMD and SMPC are implemented at EL3 and SEL2 respectively, and three test-SPs(sp1, sp2 and sp3) runs at SEL1 and one test NS-EP (vm1) runs as an OS kernel in normal world. For more information on the unverified tests on reference platform, see [testcase_unverified](./docs/testcase_unverified.md) document.<br />
 
 ### Build output
-The ACS build generates the binaries for following test endpoints:<br />
+The ACS build generates the binaries for the following test endpoints:<br />
 - build/output/sp1.bin
 - build/output/sp2.bin
 - build/output/sp3.bin
@@ -102,25 +106,10 @@ The ACS build generates the binaries for following test endpoints:<br />
 - build/output/vm2.bin (Generated when PLATFORM_NS_HYPERVISOR_PRESENT set to 1)
 - build/output/vm3.bin (Generated when PLATFORM_NS_HYPERVISOR_PRESENT set to 1)
 
-### Integrating the binaries into your target platform
-
-Test endpoint manifest describes the endpoint attributes as defined in the Arm FF-A specification which would help to intergrate, load and boot the test secure and non-secure endpoints with target partition manager components.
-1. Integrate test secure endpoint binaries sp1, sp2 and sp3 with your target SPMC component.
-2. If non-secure hypervisor is implemented, integrate test non-secure endpoint binaries vm1, vm2 and vm3 with it. Otherwise only vm1 needs to be integrate with the secure software stack and vm1 would act as NS OS kernel.
-
-## Test suite execution
-The following steps describe the execution flow before the test execution: <br />
-
-1. The target platform must load the above binaries into appropriate memory. <br />
-2. The *System Under Test* (SUT) software boots to an environment that initializes the test secure endpoints such that sp1, sp2 and sp3 are ready to accept FF-A message requests in val_wait_for_test_fn_req function on primary boot cpu. <br />
-3. On the Non-secure side, the SUT software(SPM or NS-hypervisor) boots test non-secure enpoints such that vm1 gets overall test suite control in val_test_dispatch function. And if NS-Hypervisor supported, vm2 and vm3 must be booted such that they are ready to accept FF-A message requests in val_wait_for_test_fn_req function.<br />
-4. vm1 executes each test sequentially in a loop in the val_test_dispatch function.<br />
-
-## Linux OS based tests
-FF-A tests can be executed through Linux application. This needs Linux kernel module files to load Test VM1 endpoint code at kernel level. These files are hosted at [linux-acs/ffa-acs-drv](https://git.gitlab.arm.com/linux-arm/linux-acs/-/tree/master/ffa-acs-drv). The procedure to build and run FF-A tests on this configuration is described in the README file of the module package.
+For information on integrating the binaries into the target platform, test suite execution flow, analysing the test results and more, see [Validation Methodology](./docs/Arm_FF_A_ACS_Validation_Methodology.pdf) document.
 
 ## Security implication
-This ACS may run at higher privilege level. An attacker can utilize these tests as a means to elevate privilege which can potentially reveal the platform secure attests. To prevent such security vulnerabilities into the production system, it is strongly recommended that Arm FF-A ACS  is run on development platforms. If it is run on production system, make sure system is scrubbed after running the tests.
+The ACS tests may run at higher privilege level. An attacker can utilize these tests to elevate privilege which can potentially reveal the platform secure attests. To prevent such security vulnerabilities into the production system, it is recommended that FF-A ACS is run on development platforms. If it is run on production system, ensure that the system is scrubbed after running the tests.
 
 ## License
 
@@ -136,4 +125,4 @@ Arm FF-A ACS is distributed under BSD-3-Clause License.
 
 --------------
 
-*Copyright (c) 2021, Arm Limited or its affliates. All rights reserved.*
+*Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.*

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affliates. All rights reserved.
+ * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -7,6 +7,18 @@
 
 #include "val_framework.h"
 #include "val_interfaces.h"
+
+#if (PLATFORM_SP_EL == -1)
+#define SKIP_WD_PROGRAMMING
+#define SKIP_NVM_PROGRAMMING
+#endif
+
+#ifdef SKIP_NVM_PROGRAMMING
+#define NVM_SIZE (1024)
+static uint8_t g_nvmem[NVM_SIZE];
+#else
+#define NVM_SIZE PLATFORM_NVM_SIZE
+#endif
 
 /* Global */
 test_status_buffer_t    g_status_buffer = {
@@ -198,10 +210,11 @@ void val_reprogram_watchdog(void)
       VAL_PANIC("\tWatchdog enable failed\n");
    }
 }
+
 /**
  *   @brief    - Check that an nvm access is within the bounds of the nvm
- *   @param    - base    : Base address of nvm (must be zero)
- *               offset  : Offset into nvm
+ *   @param    - offset  : Offset into nvm
+ *               buffer  : Buffer address
  *               size    : Number of bytes
  *   @return   - SUCCESS/FAILURE
 **/
@@ -209,9 +222,9 @@ static uint32_t nvm_check_bounds(uint32_t offset, void *buffer, size_t size)
 {
     if (buffer == NULL)
         return VAL_ERROR;
-    else if (offset > PLATFORM_NVM_SIZE)
+    else if (offset > NVM_SIZE)
         return VAL_ERROR;
-    else if (offset + size > PLATFORM_NVM_SIZE)
+    else if (offset + size > NVM_SIZE)
         return VAL_ERROR;
     else if (size != sizeof(uint32_t))
         return VAL_ERROR;
@@ -229,6 +242,7 @@ static uint32_t nvm_check_bounds(uint32_t offset, void *buffer, size_t size)
 **/
 uint32_t val_nvm_write(uint32_t offset, void *buffer, size_t size)
 {
+#ifndef SKIP_NVM_PROGRAMMING
    ffa_args_t  payload;
    uint32_t    data32 = *(uint32_t*)buffer;
 
@@ -257,6 +271,15 @@ uint32_t val_nvm_write(uint32_t offset, void *buffer, size_t size)
 
       return VAL_SUCCESS;
    }
+#else
+    if (nvm_check_bounds(offset, buffer, size))
+    {
+        return VAL_ERROR;
+    }
+
+    val_memcpy(g_nvmem + offset, buffer, size);
+    return VAL_SUCCESS;
+#endif
 }
 
 /**
@@ -268,6 +291,7 @@ uint32_t val_nvm_write(uint32_t offset, void *buffer, size_t size)
 **/
 uint32_t val_nvm_read(uint32_t offset, void *buffer, size_t size)
 {
+#ifndef SKIP_NVM_PROGRAMMING
    ffa_args_t  payload;
    if (nvm_check_bounds(offset, buffer, size))
         return VAL_ERROR;
@@ -294,6 +318,15 @@ uint32_t val_nvm_read(uint32_t offset, void *buffer, size_t size)
       *(uint32_t*)buffer = (uint32_t)payload.arg3;
       return VAL_SUCCESS;
    }
+#else
+    if (nvm_check_bounds(offset, buffer, size))
+    {
+        return VAL_ERROR;
+    }
+
+    val_memcpy(buffer, g_nvmem + offset, size);
+    return VAL_SUCCESS;
+#endif
 }
 
 /**
@@ -303,6 +336,7 @@ uint32_t val_nvm_read(uint32_t offset, void *buffer, size_t size)
 **/
 uint32_t val_watchdog_enable(void)
 {
+#ifndef SKIP_WD_PROGRAMMING
    ffa_args_t  payload;
 
    if (val_get_curr_endpoint_logical_id() == SP1)
@@ -324,6 +358,9 @@ uint32_t val_watchdog_enable(void)
 
       return VAL_SUCCESS;
    }
+#else
+    return VAL_SUCCESS;
+#endif
 }
 
 /**
@@ -333,6 +370,7 @@ uint32_t val_watchdog_enable(void)
 **/
 uint32_t val_watchdog_disable(void)
 {
+#ifndef SKIP_WD_PROGRAMMING
    ffa_args_t  payload;
 
    if (val_get_curr_endpoint_logical_id() == SP1)
@@ -354,6 +392,9 @@ uint32_t val_watchdog_disable(void)
 
       return VAL_SUCCESS;
    }
+#else
+    return VAL_SUCCESS;
+#endif
 }
 
 uint32_t val_smmu_device_configure(uint32_t stream_id, uint64_t source, uint64_t dest,

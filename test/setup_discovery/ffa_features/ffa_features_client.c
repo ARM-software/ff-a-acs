@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affliates. All rights reserved.
+ * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -349,10 +349,22 @@ uint32_t ffa_features_client(uint32_t test_run_data)
 
     /* Cross check with manifest field value. Following must be
      * supported if indirect messaging is supported */
-    if (messaging_type & FFA_INDIRECT_MESSAGE_SUPPORT)
+    if ((messaging_type & FFA_INDIRECT_MESSAGE_SUPPORT) &&
+            (val_get_curr_endpoint_id() != HYPERVISOR_ID))
     {
         if (status_1 || status_2 || status_3)
+        {
+            LOG(ERROR, "\tInvalid return code for indirect messaging ABIs\n", 0, 0)
             return VAL_ERROR_POINT(17);
+        }
+    }
+    else
+    {
+        if (!status_1 || !status_2 || !status_3)
+        {
+            LOG(ERROR, "\tInvalid return code for indirect messaging ABIs\n", 0, 0)
+            return VAL_ERROR_POINT(18);
+        }
     }
 
     val_reprogram_watchdog();
@@ -367,7 +379,18 @@ uint32_t ffa_features_client(uint32_t test_run_data)
     if (messaging_type & FFA_DIRECT_REQUEST_SEND)
     {
         if (status_2 && status_4)
-            return VAL_ERROR_POINT(18);
+        {
+            LOG(ERROR, "\tInvalid return code for direct messaging ABIs\n", 0, 0)
+            return VAL_ERROR_POINT(19);
+        }
+    }
+    else
+    {
+        if (!status_2 || !status_4)
+        {
+            LOG(ERROR, "\tInvalid return code for direct messaging ABIs\n", 0, 0)
+            return VAL_ERROR_POINT(20);
+        }
     }
 
     /* Cross check with manifest field value. Following must be
@@ -375,12 +398,26 @@ uint32_t ffa_features_client(uint32_t test_run_data)
     if (messaging_type & FFA_RECEIPT_DIRECT_REQUEST_SUPPORT)
     {
         if (status_3 && status_5)
-            return VAL_ERROR_POINT(19);
+        {
+            LOG(ERROR, "\tInvalid return code for direct messaging ABIs\n", 0, 0)
+            return VAL_ERROR_POINT(21);
+        }
+    }
+    else
+    {
+        if (!status_3 || !status_5)
+        {
+            LOG(ERROR, "\tInvalid return code for direct messaging ABIs\n", 0, 0)
+            return VAL_ERROR_POINT(22);
+        }
     }
 
     /* Either of the messaging method must be supported */
     if ((status_1 == VAL_SKIP_CHECK) && (status_2 == VAL_SKIP_CHECK))
-        return VAL_ERROR_POINT(20);
+    {
+        LOG(ERROR, "\tEither of the messaging method must be supported\n", 0, 0)
+        return VAL_ERROR_POINT(23);
+    }
 
     val_reprogram_watchdog();
 
@@ -390,7 +427,7 @@ uint32_t ffa_features_client(uint32_t test_run_data)
     val_ffa_features(&payload);
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_NOT_SUPPORTED))
     {
-        return VAL_ERROR_POINT(21);
+        return VAL_ERROR_POINT(24);
     }
 
     /* FFA_NORMAL_WORLD_RESUME_32 must be not supported at instances
@@ -401,13 +438,13 @@ uint32_t ffa_features_client(uint32_t test_run_data)
     val_ffa_features(&payload);
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_NOT_SUPPORTED))
     {
-        return VAL_ERROR_POINT(22);
+        return VAL_ERROR_POINT(25);
     }
 
     /* Check output w4-w7 reserved(MBZ) */
     output_reserve_count = 4;
     if (val_reserve_param_check(payload, output_reserve_count))
-        return VAL_ERROR_POINT(23);
+        return VAL_ERROR_POINT(26);
 
     (void)test_run_data;
     return VAL_SUCCESS;

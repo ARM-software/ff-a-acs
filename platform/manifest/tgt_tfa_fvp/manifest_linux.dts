@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affliates. All rights reserved.
+ * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -19,6 +19,13 @@
     #address-cells = <2>;
     #size-cells = <2>;
 
+    chosen {
+        linux,initrd-start = <0x84000000>;
+        linux,initrd-end = <0x86000000>;
+        stdout-path = "serial0:115200n8";
+        bootargs = "";
+    };
+
     hypervisor {
         compatible = "hafnium,hafnium";
         vm1 {
@@ -26,16 +33,25 @@
             kernel_filename = "dispatcher_vm";
             ramdisk_filename = "initrd.img";
             uuid = <0x0 0x0 0x0 0x1>;
-            messaging_method = <0x2>;
+            messaging_method = <0x7>;
             smc_whitelist_permissive;
         };
         vm2 {
-            debug_name = "dispatcher_vm1";
+            debug_name = "vm2";
             kernel_filename = "vm2.bin";
             vcpu_count = <1>;
-            mem_size = <0x10000>;
+            mem_size = <0x100000>;
             uuid = <0x0 0x0 0x0 0x2>;
-            messaging_method = <0x2>;
+            messaging_method = <0x7>;
+            smc_whitelist_permissive;
+        };
+        vm3 {
+            debug_name = "vm3";
+            kernel_filename = "vm3.bin";
+            vcpu_count = <1>;
+            mem_size = <0x100000>;
+            uuid = <0x0 0x0 0x0 0x3>;
+            messaging_method = <0x7>;
             smc_whitelist_permissive;
         };
 

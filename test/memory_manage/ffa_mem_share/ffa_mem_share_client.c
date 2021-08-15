@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affliates. All rights reserved.
+ * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -18,6 +18,7 @@ static uint32_t ffa_mem_share_helper(uint32_t test_run_data, uint32_t fid)
     mb_buf_t mb;
     uint32_t output_reserve_count = 4;
     uint8_t *pages = NULL;
+    uint32_t i;
     uint64_t size = 0x1000;
     ffa_memory_region_flags_t flags = 0;
     ffa_memory_handle_t handle;
@@ -53,7 +54,7 @@ static uint32_t ffa_mem_share_helper(uint32_t test_run_data, uint32_t fid)
 
     val_select_server_fn_direct(test_run_data, fid, 0, 0, 0);
 
-    val_memset(pages, 0xab, size);
+    val_memset(pages, 0x0, size);
     constituents[0].address = val_mem_virt_to_phys((void *)pages);
     constituents[0].page_count = 1;
 
@@ -67,6 +68,7 @@ static uint32_t ffa_mem_share_helper(uint32_t test_run_data, uint32_t fid)
     mem_region_init.type = FFA_MEMORY_NORMAL_MEM;
     mem_region_init.cacheability = FFA_MEMORY_CACHE_WRITE_BACK;
     mem_region_init.shareability = FFA_MEMORY_OUTER_SHAREABLE;
+    mem_region_init.multi_share = false;
 
     val_ffa_memory_region_init(&mem_region_init, constituents, constituents_count);
     val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -94,6 +96,9 @@ static uint32_t ffa_mem_share_helper(uint32_t test_run_data, uint32_t fid)
         goto rxtx_unmap;
     }
 
+    /* Check that lender can still the access the region after FFA_MEM_SHARE call */
+    val_memset(pages, 0xab, size);
+
     handle = ffa_mem_success_handle(payload);
 
     /* Pass memory handle to the server using direct message */
@@ -108,6 +113,32 @@ static uint32_t ffa_mem_share_helper(uint32_t test_run_data, uint32_t fid)
         goto rxtx_unmap;
     }
 
+
+    /* Check that sender can still access the
+     * memory after retrieve operation. Also check the
+     * content of memory equal to the data
+     * set by reciever. */
+    for (i = 0; i < size; ++i)
+    {
+        if (pages[i] != 1)
+        {
+            LOG(ERROR, "\tRegion data mismatch after retrieve\n", 0, 0);
+            status = VAL_ERROR_POINT(8);
+            goto rxtx_unmap;
+        }
+    }
+
+    /* Let reciever relinquish the memory */
+    val_memset(&payload, 0, sizeof(ffa_args_t));
+    payload.arg1 =  ((uint32_t)sender << 16) | recipient;
+    val_ffa_msg_send_direct_req_64(&payload);
+    if (payload.fid == FFA_ERROR_32)
+    {
+        LOG(ERROR, "\tDirect request failed err %x\n", payload.arg2, 0);
+        status = VAL_ERROR_POINT(9);
+        goto rxtx_unmap;
+    }
+
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 = (uint32_t)handle;
     payload.arg2 = (uint32_t)(handle >> 32);
@@ -116,27 +147,39 @@ static uint32_t ffa_mem_share_helper(uint32_t test_run_data, uint32_t fid)
     if (payload.fid == FFA_ERROR_32)
     {
         LOG(ERROR, "\tMem Reclaim failed err %x\n", payload.arg2, 0);
-        status = VAL_ERROR_POINT(7);
+        status = VAL_ERROR_POINT(10);
+        goto rxtx_unmap;
     }
 
+    /* Check that content of reclaimed memory is equal to the data
+     * set by reciever. */
+    for (i = 0; i < size; ++i)
+    {
+        if (pages[i] != 2)
+        {
+            LOG(ERROR, "\tRegion data mismatch after relinquish\n", 0, 0);
+            status = VAL_ERROR_POINT(11);
+            goto rxtx_unmap;
+        }
+    }
 rxtx_unmap:
     if (val_rxtx_unmap(sender))
     {
-        LOG(ERROR, "RXTX_UNMAP failed\n", 0, 0);
-        status = status ? status : VAL_ERROR_POINT(8);
+        LOG(ERROR, "\tRXTX_UNMAP failed\n", 0, 0);
+        status = status ? status : VAL_ERROR_POINT(12);
     }
 
 free_memory:
     if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
     {
         LOG(ERROR, "\tfree_rxtx_buffers failed\n", 0, 0);
-        status = status ? status : VAL_ERROR_POINT(9);
+        status = status ? status : VAL_ERROR_POINT(13);
     }
 
     if (val_memory_free(pages, size))
     {
         LOG(ERROR, "\tval_mem_free failed\n", 0, 0);
-        status = status ? status : VAL_ERROR_POINT(10);
+        status = status ? status : VAL_ERROR_POINT(14);
     }
 
     payload = val_select_server_fn_direct(test_run_data, 0, 0, 0, 0);
