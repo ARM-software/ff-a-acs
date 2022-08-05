@@ -32,6 +32,8 @@ Arm FF-A ACS also provides the partition manifests for its test partitions with 
 - Run-Time EL
 - Execution state
 - Messaging method
+- Managed exit (default is preemptable)
+- Notification support
 - Memory region - Page count
 - Memory region - Attributes
 - Device region - Physical base address
@@ -74,6 +76,16 @@ Since the test suite is agnostic to various system targets, you must port the fo
 | 19 | int pal_irq_register_handler(int irq_num, void *irq_handler); | Register an interrupt handler for a given interrupt number. This will fail if there is already an interrupt handler registered for the same interrupt.| irq_num: irq number. <br /> irq_handler:  irq handler pointer <br /> return: Return 0 on success, a negative value otherwise |
 | 20 | int pal_irq_unregister_handler(int irq_num); | Unregister an interrupt handler for a given interrupt number. This will fail if there is no an interrupt handler registered for the same interrupt.| irq_num: irq number. <br /> return: Return 0 on success, a negative value otherwise |
 | 21 | void pal_send_sgi(int sgi_id, unsigned int core_pos); | Send an SGI to a given core. | sgi_id: SGI interrupt number. <br />core_pos:  CPU core number. <br /> return: void |
+| 22 | uint32_t pal_twdog_enable(uint32_t ms); | Initializes and enable the hardware trusted watchdog timer | ms: timeout <br /> Return: SUCCESS/FAILURE|
+| 23 | uint32_t pal_twdog_disable(void); | Disable the hardware trusted watchdog timer | Input: void <br /> Return: SUCCESS/FAILURE|
+| 24 | void pal_twdog_intr_enable(void); | Enable the trusted watchdog timer interrupt | Input: void <br /> Return: void|
+| 25 | void pal_twdog_intr_disable(void); | Disable the trusted watchdog timer interrupt | Input: void <br /> Return: void|
+| 26 | void pal_ns_wdog_enable(uint32_t ms); | Initializes and enable the non-secure watchdog timer | ms: timeout <br /> Return: void|
+| 27 | void pal_ns_wdog_disable(void); | Disable the non-secure watchdog timer | Input: void <br /> Return: void|
+| 28 | void pal_ns_wdog_intr_enable(void); | Enable the non-secure watchdog timer interrupt | Input: void <br /> Return: void|
+| 29 | void pal_ns_wdog_intr_disable(void); | Disable the non-secure watchdog timer interrupt | Input: void <br /> Return: void|
+| 30 | void pal_secure_intr_disable(uint32_t int_id, enum interrupt_pin pin); | Disable the secure interrupt | ini_id: irq number. <br /> interrupt_pin pin <br /> Return: void|
+| 31 | void pal_secure_intr_enable(uint32_t int_id, enum interrupt_pin pin); | Enable the secure interrupt | ini_id: irq number. <br /> interrupt_pin pin <br /> Return: void|
 
 ## License
 
@@ -81,4 +93,4 @@ Arm FF-A ACS is distributed under BSD-3-Clause License.
 
 --------------
 
-*Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.*
+*Copyright (c) 2021-2022, Arm Limited or its affiliates. All rights reserved.*

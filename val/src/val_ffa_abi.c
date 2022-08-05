@@ -203,6 +203,14 @@ static void ffa_id_get(ffa_args_t *args)
                           (uint32_t)args->arg6, (uint32_t)args->arg7);
 }
 
+static void ffa_spm_id_get(ffa_args_t *args)
+{
+    *args = ffa_smccc(FFA_SPM_ID_GET_32, (uint32_t)args->arg1,
+                          (uint32_t)args->arg2, (uint32_t)args->arg3,
+                          (uint32_t)args->arg4, (uint32_t)args->arg5,
+                          (uint32_t)args->arg6, (uint32_t)args->arg7);
+}
+
 /**
  * @brief - Returns 16-bit ID of calling FF-A component.
  * @param id - Store the 16-bit ID.
@@ -223,12 +231,22 @@ ffa_endpoint_id_t val_get_curr_endpoint_id(void)
 
 /**
  * @brief - Returns 16-bit ID of calling FF-A component.
- * @param args - Input arguments to FFA_ID_GET_32 abi.
+ * @param args - Input arguments to FFA_SPM_ID_GET_32 abi.
  * @return - void.
 **/
 void val_ffa_id_get(ffa_args_t *args)
 {
     ffa_id_get(args);
+}
+
+/**
+ * @brief - Returns 16-bit ID of the SPMC or SPMD.
+ * @param args - Input arguments to FFA_SPM_ID_GET_32 abi.
+ * @return - void.
+**/
+void val_ffa_spm_id_get(ffa_args_t *args)
+{
+    ffa_spm_id_get(args);
 }
 
 static void ffa_rx_release(ffa_args_t *args)
@@ -658,6 +676,70 @@ void val_ffa_secondary_ep_register_64(void)
 
     val_memset(&args, 0, sizeof(ffa_args_t));
     ffa_secondary_ep_register_64(&args);
+}
+
+void val_ffa_notification_bitmap_create(ffa_args_t *args)
+{
+    *args = ffa_smccc(FFA_NOTIFICATION_BITMAP_CREATE, (uint32_t)args->arg1,
+                                    (uint32_t)args->arg2, (uint32_t)args->arg3,
+                                    (uint32_t)args->arg4, (uint32_t)args->arg5,
+                                    (uint32_t)args->arg6, (uint32_t)args->arg7);
+}
+
+void val_ffa_notification_bitmap_destroy(ffa_args_t *args)
+{
+    *args = ffa_smccc(FFA_NOTIFICATION_BITMAP_DESTROY, (uint32_t)args->arg1,
+                                    (uint32_t)args->arg2, (uint32_t)args->arg3,
+                                    (uint32_t)args->arg4, (uint32_t)args->arg5,
+                                    (uint32_t)args->arg6, (uint32_t)args->arg7);
+}
+
+void val_ffa_notification_bind(ffa_args_t *args)
+{
+    *args = ffa_smccc(FFA_NOTIFICATION_BIND, (uint32_t)args->arg1,
+                                    (uint32_t)args->arg2, (uint32_t)args->arg3,
+                                    (uint32_t)args->arg4, (uint32_t)args->arg5,
+                                    (uint32_t)args->arg6, (uint32_t)args->arg7);
+}
+
+void val_ffa_notification_unbind(ffa_args_t *args)
+{
+    *args = ffa_smccc(FFA_NOTIFICATION_UNBIND, (uint32_t)args->arg1,
+                                    (uint32_t)args->arg2, (uint32_t)args->arg3,
+                                    (uint32_t)args->arg4, (uint32_t)args->arg5,
+                                    (uint32_t)args->arg6, (uint32_t)args->arg7);
+}
+
+void val_ffa_notification_set(ffa_args_t *args)
+{
+    *args = ffa_smccc(FFA_NOTIFICATION_SET, (uint32_t)args->arg1,
+                                    (uint32_t)args->arg2, (uint32_t)args->arg3,
+                                    (uint32_t)args->arg4, (uint32_t)args->arg5,
+                                    (uint32_t)args->arg6, (uint32_t)args->arg7);
+}
+
+void val_ffa_notification_get(ffa_args_t *args)
+{
+    *args = ffa_smccc(FFA_NOTIFICATION_GET, (uint32_t)args->arg1,
+                                    (uint32_t)args->arg2, (uint32_t)args->arg3,
+                                    (uint32_t)args->arg4, (uint32_t)args->arg5,
+                                    (uint32_t)args->arg6, (uint32_t)args->arg7);
+}
+
+void val_ffa_notification_info_get_32(ffa_args_t *args)
+{
+    *args = ffa_smccc(FFA_NOTIFICATION_INFO_GET_32, (uint32_t)args->arg1,
+                                    (uint32_t)args->arg2, (uint32_t)args->arg3,
+                                    (uint32_t)args->arg4, (uint32_t)args->arg5,
+                                    (uint32_t)args->arg6, (uint32_t)args->arg7);
+}
+
+void val_ffa_notification_info_get_64(ffa_args_t *args)
+{
+    *args = ffa_smccc(FFA_NOTIFICATION_INFO_GET_64, args->arg1,
+                                    args->arg2, args->arg3,
+                                    args->arg4, args->arg5,
+                                    args->arg6, args->arg7);
 }
 
 /**

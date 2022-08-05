@@ -44,6 +44,13 @@
  */
 #define PLATFORM_MEM_RETRIEVE_USING_ADDRESS_RANGES 0
 
+/* INNER_SHAREBLE and OUTER_SHAREABLE flag support
+ * Supported values: 0(NOT_SUPPORTED), 1(SUPPORTED)
+ */
+#define PLATFORM_OUTER_SHAREABLE_SUPPORT_ONLY 0
+#define PLATFORM_INNER_SHAREABLE_SUPPORT_ONLY 1
+#define PLATFORM_INNER_OUTER_SHAREABLE_SUPPORT 0
+
 /*
  * Device Info.
  * The provided addresses must be in physical view of endpoint.
@@ -72,6 +79,27 @@
 #define PLATFORM_WDOG_LOAD_VALUE (0x3E7 * 10 * 1000) // 10sec
 #define PLATFORM_WD_INTR_NUM 32
 
+/* Base address of trusted watchdog (SP805) */
+#define PLATFORM_SP805_TWDOG_BASE    0x2A490000
+#define PLATFORM_TWDOG_SIZE          0x10000
+#define PLATFORM_TWDOG_INTID         56
+
+#define PLATFORM_NS_WD_BASE  0x2A440000
+#define PLATFORM_NS_WD_SIZE  0x1000
+#define PLATFORM_NS_WD_INTR  59
+
+#define ARM_SP805_TWDG_CLK_HZ   32768
+
+/*
+ * Base address of read only memory region
+ * TODO: Need to update read_only memory
+ */
+#define PLATFORM_MEM_READ_ONLY_BASE  0x00000000
+#define PLATFORM_MEM_READ_ONLY_SIZE  0x1000
+
+/* SMMU stream id */
+#define PLATFORM_SMMU_STREAM_ID   1
+
 /*******************************************************************************
  * GIC-600 & interrupt handling related constants
  ******************************************************************************/
@@ -79,6 +107,9 @@
 #define GICD_BASE       0x30000000
 #define GICR_BASE       0x30140000
 #define GICC_BASE       0x2C000000
+#define GICD_SIZE       0x10000
+#define GICR_SIZE       0x100000
+#define GICC_SIZE       0x2000
 
 /*
  * Secure Partition manifest info.

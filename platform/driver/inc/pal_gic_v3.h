@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2022, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -18,21 +18,21 @@
 /* GICD_CTLR bit definitions */
 #define GICD_CTLR_ENABLE_GRP1A        (1 << 1)
 #define GICD_CTLR_ARE_NS_SHIFT        4
-#define GICD_CTLR_ARE_NS_MASK         0x1
+#define GICD_CTLR_ARE_NS_MASK        0x1
 
 /* GICR_TYPER bit definitions */
 #define TYPER_AFF_VAL_SHIFT    32
-#define TYPER_PROC_NUM_SHIFT   8
-#define TYPER_LAST_SHIFT       4
+#define TYPER_PROC_NUM_SHIFT    8
+#define TYPER_LAST_SHIFT    4
 
 #define TYPER_AFF_VAL_MASK    0xffffffff
-#define TYPER_PROC_NUM_MASK   0xffff
-#define TYPER_LAST_MASK       0x1
+#define TYPER_PROC_NUM_MASK    0xffff
+#define TYPER_LAST_MASK        0x1
 
 #define TYPER_LAST_BIT        (1 << TYPER_LAST_SHIFT)
 
 /* GICD_IROUTER shifts and masks */
-#define IROUTER_IRM_SHIFT   31
+#define IROUTER_IRM_SHIFT    31
 #define IROUTER_IRM_MASK    0x1
 
 /*******************************************************************************
@@ -40,49 +40,49 @@
  ******************************************************************************/
 #define GICR_PCPUBASE_SHIFT    0x11
 #define GICR_SGIBASE_OFFSET    (1 << 0x10)    /* 64 KB */
-#define GICR_CTLR              0x0
-#define GICR_TYPER             0x08
-#define GICR_WAKER             0x14
-#define GICR_IGROUPR0          (GICR_SGIBASE_OFFSET + 0x80)
+#define GICR_CTLR        0x0
+#define GICR_TYPER        0x08
+#define GICR_WAKER        0x14
+#define GICR_IGROUPR0        (GICR_SGIBASE_OFFSET + 0x80)
 #define GICR_ISENABLER0        (GICR_SGIBASE_OFFSET + 0x100)
 #define GICR_ICENABLER0        (GICR_SGIBASE_OFFSET + 0x180)
-#define GICR_ISPENDR0          (GICR_SGIBASE_OFFSET + 0x200)
-#define GICR_ICPENDR0          (GICR_SGIBASE_OFFSET + 0x280)
+#define GICR_ISPENDR0        (GICR_SGIBASE_OFFSET + 0x200)
+#define GICR_ICPENDR0        (GICR_SGIBASE_OFFSET + 0x280)
 #define GICR_IPRIORITYR        (GICR_SGIBASE_OFFSET + 0x400)
-#define GICR_ICFGR0            (GICR_SGIBASE_OFFSET + 0xc00)
-#define GICR_ICFGR1            (GICR_SGIBASE_OFFSET + 0xc04)
-#define GICR_IGRPMODR0         (GICR_SGIBASE_OFFSET + 0xd00)
+#define GICR_ICFGR0        (GICR_SGIBASE_OFFSET + 0xc00)
+#define GICR_ICFGR1        (GICR_SGIBASE_OFFSET + 0xc04)
+#define GICR_IGRPMODR0        (GICR_SGIBASE_OFFSET + 0xd00)
 
 /*******************************************************************************
  * GICv3 CPU interface registers & constants
  ******************************************************************************/
 /* ICC_SRE bit definitions*/
-#define ICC_SRE_EN_BIT         (1 << 3)
+#define ICC_SRE_EN_BIT        (1 << 3)
 #define ICC_SRE_DIB_BIT        (1 << 2)
 #define ICC_SRE_DFB_BIT        (1 << 1)
 #define ICC_SRE_SRE_BIT        (1 << 0)
 
 /* ICC_IAR1_EL1 bit definitions */
 #define IAR1_EL1_INTID_SHIFT        0
-#define IAR1_EL1_INTID_MASK         0xffffff
+#define IAR1_EL1_INTID_MASK        0xffffff
 
 /* ICC_SGI1R bit definitions */
 #define SGI1R_TARGET_LIST_MASK        0xffff
-#define SGI1R_TARGET_LIST_SHIFT       0x0
-#define SGI1R_AFF_MASK                0xff
-#define SGI1R_AFF1_SHIFT              16ULL
-#define SGI1R_AFF2_SHIFT              32ULL
+#define SGI1R_TARGET_LIST_SHIFT        0x0
+#define SGI1R_AFF_MASK            0xff
+#define SGI1R_AFF1_SHIFT        16ULL
+#define SGI1R_AFF2_SHIFT        32ULL
 #ifdef __aarch64__
-#define SGI1R_AFF3_SHIFT              48ULL
+#define SGI1R_AFF3_SHIFT        48ULL
 #endif
 #define SGI1R_INTID_MASK        0xf
-#define SGI1R_INTID_SHIFT       24
-#define SGI1R_IRM_MASK          0x1
-#define SGI1R_IRM_SHIFT         0x40
+#define SGI1R_INTID_SHIFT        24
+#define SGI1R_IRM_MASK            0x1
+#define SGI1R_IRM_SHIFT            0x40
 
 /* ICC_IGRPEN1_EL1 bit definitions */
 #define IGRPEN1_EL1_ENABLE_SHIFT    0
-#define IGRPEN1_EL1_ENABLE_BIT      (1 << IGRPEN1_EL1_ENABLE_SHIFT)
+#define IGRPEN1_EL1_ENABLE_BIT        (1U << IGRPEN1_EL1_ENABLE_SHIFT)
 
 /* The highest affinity 0 that can be a SGI target*/
 #define SGI_TARGET_MAX_AFF0        16
@@ -133,46 +133,68 @@ void gicv3_set_icpendr(unsigned int interrupt_id);
  * Get the bit corresponding to `interrupt_id` in the ISPENDR register
  * at either Distributor or Re-distributor depending on the interrupt.
  */
-unsigned int gicv3_get_ispendr(int interrupt_id);
+unsigned int gicv3_get_ispendr(unsigned int interrupt_id);
 
 /*
  * Set the bit corresponding to `interrupt_id` in the ICENABLER register
  * at either Distributor or Re-distributor depending on the interrupt.
  */
-void gicv3_set_icenabler(int interrupt_id);
+void gicv3_set_icenabler(unsigned int interrupt_id);
 
 /*
  * Get the bit corresponding to `interrupt_id` in the ISENABLER register
  * at either Distributor or Re-distributor depending on the interrupt.
  */
-unsigned int gicv3_get_isenabler(int interrupt_id);
+unsigned int gicv3_get_isenabler(unsigned int interrupt_id);
 
 /*
  * Set the bit corresponding to `interrupt_id` in the ISENABLER register
  * at either Distributor or Re-distributor depending on the interrupt.
  */
-void gicv3_set_isenabler(int interrupt_id);
+void gicv3_set_isenabler(unsigned int interrupt_id);
 
 /*
  * Set the `route` corresponding to `interrupt_id` in the IROUTER register
  * at Distributor.
  */
-void gicv3_set_intr_route(int interrupt_id, unsigned int core_pos);
+void gicv3_set_intr_route(unsigned int interrupt_id, unsigned int core_pos);
 
 /*
  * Send SGI with ID `sgi_id` to core with index `core_pos`.
  */
-void gicv3_send_sgi(int sgi_id, unsigned int core_pos);
+void gicv3_send_sgi(unsigned int sgi_id, unsigned int core_pos);
 
 /*
  * Get the priority of the interrupt `interrupt_id`.
  */
-unsigned int gicv3_get_ipriorityr(int interrupt_id);
+unsigned int gicv3_get_ipriorityr(unsigned int interrupt_id);
 
 /*
  * Set the priority of the interrupt `interrupt_id` to `priority`.
  */
-void gicv3_set_ipriorityr(int interrupt_id, unsigned int priority);
+void gicv3_set_ipriorityr(unsigned int interrupt_id, unsigned int priority);
+
+/*
+ * Restore the GICv3 SGI and PPI context after powering up the
+ * GIC Re-distributor.
+ */
+void gicv3_restore_sgi_ppi_context(void);
+
+/*
+ * Save the GICv3 SGI and PPI context prior to powering down the
+ * GIC Re-distributor.
+ */
+void gicv3_save_sgi_ppi_context(void);
+
+/*
+ * Restore the GICv3 CPU interface after powering up the CPU interface.
+ */
+void gicv3_restore_cpuif_context(void);
+
+/*
+ * Save the GICv3 CPU interface prior to powering down the CPU interface.
+ */
+void gicv3_save_cpuif_context(void);
 
 /*
  * Disable the GIC CPU interface.

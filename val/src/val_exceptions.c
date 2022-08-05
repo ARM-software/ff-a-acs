@@ -19,16 +19,13 @@ static bool (*exception_callback)(void);
  */
 bool val_irq_current(void)
 {
-    if (irq_callback != NULL)
-    {
-        irq_callback();
-    }
-    else
+    if (pal_irq_handler_dispatcher())
     {
         LOG(ERROR, "Got unexpected interrupt.\n", 0, 0);
+        return false;
     }
 
-    return false;
+    return true;
 }
 
 static bool default_sync_current_exception(void)

@@ -1,15 +1,16 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2022, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
  */
 
-#include <string.h>
 #include <pal_arch_helpers.h>
 #include <pal_arm_gic.h>
 #include <pal_interfaces.h>
-#include <pal_irq.h>
+#include <platform.h>
+#include <pal_gic_common.h>
+#include <pal_spm_helpers.h>
 
 /*
  * On FVP, consider that the last SPI is the Trusted Random Number Generator
@@ -38,13 +39,13 @@ static spurious_desc spurious_desc_handler;
  */
 static s_lock_t spi_lock;
 
-static handler_irq_t *get_irq_handler(int irq_num)
+static handler_irq_t *get_irq_handler(unsigned int irq_num)
 {
     if (IS_PLAT_SPI(irq_num))
         return &spi_desc_table[irq_num - MIN_SPI_ID].handler;
 
     unsigned int mpid = (uint32_t)read_mpidr_el1();
-    unsigned int linear_id = pal_get_cpuid(mpid);
+    unsigned int linear_id = platform_get_core_pos(mpid);
 
     if (IS_PPI(irq_num))
         return &ppi_desc_table[linear_id][irq_num - MIN_PPI_ID].handler;
@@ -60,7 +61,7 @@ static handler_irq_t *get_irq_handler(int irq_num)
     return &spurious_desc_handler;
 }
 
-void pal_send_sgi(int sgi_id, unsigned int core_pos)
+void pal_send_sgi(unsigned int sgi_id, unsigned int core_pos)
 {
     assert(IS_SGI(sgi_id));
 
@@ -70,37 +71,49 @@ void pal_send_sgi(int sgi_id, unsigned int core_pos)
      */
     dsbish();
 
+    /*
+     * Don't send interrupts to CPUs that are powering down. That would be a
+     * violation of the PSCI CPU_OFF caller responsibilities. The PSCI
+     * specification explicitely says:
+     * "Asynchronous wake-ups on a core that has been switched off through a
+     * PSCI CPU_OFF call results in an erroneous state. When this erroneous
+     * state is observed, it is IMPLEMENTATION DEFINED how the PSCI
+     * implementation reacts."
+     */
+    //assert(pal_is_core_pos_online(core_pos));
     arm_gic_send_sgi(sgi_id, core_pos);
+    enable_irq();
 }
 
-void pal_irq_enable(int irq_num, uint8_t irq_priority)
+void pal_irq_enable(unsigned int irq_num, uint8_t irq_priority)
 {
+    disable_irq();
     if (IS_PLAT_SPI(irq_num)) {
         /*
          * Instruct the GIC Distributor to forward the interrupt to
          * the calling core
          */
-        arm_gic_set_intr_target(irq_num, pal_get_cpuid(read_mpidr_el1()));
+        arm_gic_set_intr_target(irq_num, platform_get_core_pos(read_mpidr_el1()));
     }
 
     arm_gic_set_intr_priority(irq_num, irq_priority);
     arm_gic_intr_enable(irq_num);
 
-    pal_printf("Enabled IRQ #%u\n", (uint64_t)irq_num, 0);
+    enable_irq();
+    enable_fiq();
 }
 
-void pal_irq_disable(int irq_num)
+void pal_irq_disable(unsigned int irq_num)
 {
     /* Disable the interrupt */
     arm_gic_intr_disable(irq_num);
 
-    pal_printf("Disabled IRQ #%u\n", (uint64_t)irq_num, 0);
 }
 
 #define HANDLER_VALID(handler, expect_handler)        \
     ((expect_handler) ? ((handler) != NULL) : ((handler) == NULL))
 
-static int pal_irq_update_handler(int irq_num,
+static int pal_irq_update_handler(unsigned int irq_num,
                    handler_irq_t irq_handler,
                    bool expect_handler)
 {
@@ -116,8 +129,7 @@ static int pal_irq_update_handler(int irq_num,
      * state
      */
     assert(HANDLER_VALID(*cur_handler, expect_handler));
-    if (HANDLER_VALID(*cur_handler, expect_handler))
-    {
+    if (HANDLER_VALID(*cur_handler, expect_handler)) {
         *cur_handler = irq_handler;
         ret = 0;
     }
@@ -128,68 +140,83 @@ static int pal_irq_update_handler(int irq_num,
     return ret;
 }
 
-int pal_irq_register_handler(int irq_num, void *irq_handler)
+int pal_irq_register_handler(unsigned int irq_num, handler_irq_t irq_handler)
 {
     int ret;
 
-    ret = pal_irq_update_handler(irq_num, (handler_irq_t)irq_handler, false);
-    if (ret == 0)
-        pal_printf("Registered IRQ handler for IRQ #%u\n", (uint64_t)irq_num, 0);
+    ret = pal_irq_update_handler(irq_num, irq_handler, false);
 
     return ret;
 }
 
-int pal_irq_unregister_handler(int irq_num)
+int pal_irq_unregister_handler(unsigned int irq_num)
 {
     int ret;
 
     ret = pal_irq_update_handler(irq_num, NULL, true);
-    if (ret == 0)
-        pal_printf("Unregistered IRQ handler for IRQ #%u\n", (uint64_t)irq_num, 0);
 
     return ret;
 }
 
-int pal_irq_handler_dispatcher(void)
+uint32_t pal_get_irq_num(void)
 {
     unsigned int raw_iar;
-    int irq_num;
+
+    return arm_gic_intr_ack(&raw_iar);
+}
+
+void pal_gic_end_of_intr(unsigned int irq_num)
+{
+    arm_gic_end_of_intr(irq_num);
+}
+
+int pal_irq_handler_dispatcher(void)
+{
+    unsigned int irq_num;
     sgi_data_t sgi_data;
     handler_irq_t *handler;
     void *irq_data = NULL;
-    int rc = 0;
-
     /* Acknowledge the interrupt */
-    irq_num = (int)arm_gic_intr_ack(&raw_iar);
+#if defined(VM1_COMPILE)
+    unsigned int raw_iar;
+    irq_num = arm_gic_intr_ack(&raw_iar);
+#else
+    irq_num = spm_interrupt_get();
+#endif
 
     handler = get_irq_handler(irq_num);
-    if (IS_PLAT_SPI(irq_num))
-    {
+    if (IS_PLAT_SPI(irq_num)) {
         irq_data = &irq_num;
-    } else if (IS_PPI(irq_num))
-    {
+    } else if (IS_PPI(irq_num)) {
         irq_data = &irq_num;
-    } else if (IS_SGI(irq_num))
-    {
-        sgi_data.irq_id = (uint32_t)irq_num;
+    } else if (IS_SGI(irq_num)) {
+        sgi_data.irq_id = irq_num;
         irq_data = &sgi_data;
     }
 
-    if (*handler != NULL)
-        rc = (*handler)(irq_data);
+    if (*handler != NULL) {
+        (*handler)(irq_data);
+    } else {
+        return PAL_ERROR;
+    }
 
+#if defined(VM1_COMPILE)
     /* Mark the processing of the interrupt as complete */
     if (irq_num != GIC_SPURIOUS_INTERRUPT)
         arm_gic_end_of_intr(raw_iar);
+#endif
 
-    return rc;
+    return PAL_SUCCESS;
 }
 
 void pal_irq_setup(void)
 {
-    memset(spi_desc_table, 0, sizeof(spi_desc_table));
-    memset(ppi_desc_table, 0, sizeof(ppi_desc_table));
-    memset(sgi_desc_table, 0, sizeof(sgi_desc_table));
-    memset(&spurious_desc_handler, 0, sizeof(spurious_desc_handler));
+    pal_printf("GIC Initialisation started \n", 0, 0);
+    arm_gic_init(GICC_BASE, GICD_BASE, GICR_BASE);
+    pal_memset(spi_desc_table, 0, sizeof(spi_desc_table));
+    pal_memset(ppi_desc_table, 0, sizeof(ppi_desc_table));
+    pal_memset(sgi_desc_table, 0, sizeof(sgi_desc_table));
+    pal_memset(&spurious_desc_handler, 0, sizeof(spurious_desc_handler));
     pal_init_spinlock(&spi_lock);
+    pal_printf("GIC Initialisation completed \n", 0, 0);
 }

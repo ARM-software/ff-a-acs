@@ -9,14 +9,16 @@
 if(${SUITE} STREQUAL "all")
 file(GLOB TEST_SRC
     "${ROOT_DIR}/test/*/*/*.h"
+    "${ROOT_DIR}/test/*/*/*/*.c"
     "${ROOT_DIR}/test/*/*/*.c"
-    "${ROOT_DIR}/test/*/*/*.S"
+    "${ROOT_DIR}/test/*/*/*/*.S"
 )
 else()
 file(GLOB TEST_SRC
     "${ROOT_DIR}/test/${SUITE}/*/*.h"
     "${ROOT_DIR}/test/${SUITE}/*/*.c"
-    "${ROOT_DIR}/test/${SUITE}/*/*.S"
+    "${ROOT_DIR}/test/${SUITE}/*/*/*.c"
+    "${ROOT_DIR}/test/${SUITE}/*/*/*.S"
 )
 endif()
 

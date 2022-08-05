@@ -197,14 +197,85 @@ typedef uint32_t ffa_memory_region_flags_t;
  */
 #define FFA_MEMORY_REGION_FLAG_CLEAR_RELINQUISH 0x4U
 
-#define FFA_MEMORY_REGION_TRANSACTION_TYPE_MASK ((0x3U) << 3)
-#define FFA_MEMORY_REGION_TRANSACTION_TYPE_UNSPECIFIED ((0x0U) << 3)
-#define FFA_MEMORY_REGION_TRANSACTION_TYPE_SHARE ((0x1U) << 3)
-#define FFA_MEMORY_REGION_TRANSACTION_TYPE_LEND ((0x2U) << 3)
-#define FFA_MEMORY_REGION_TRANSACTION_TYPE_DONATE ((0x3U) << 3)
+/* Memory management transaction type flag Bit[4:3] */
+#define FFA_MEMORY_REGION_TRANSACTION_TYPE_MASK        0x3
+#define FFA_MEMORY_REGION_TRANSACTION_TYPE_UNSPECIFIED 0x0
+#define FFA_MEMORY_REGION_TRANSACTION_TYPE_SHARE       0x1
+#define FFA_MEMORY_REGION_TRANSACTION_TYPE_LEND        0x2
+#define FFA_MEMORY_REGION_TRANSACTION_TYPE_DONATE      0x3
 
 /** The maximum number of recipients a memory region may be sent to. */
 #define MAX_MEM_SHARE_RECIPIENTS 1U
+
+/**
+ * FF-A Feature ID, to be used with interface FFA_FEATURES.
+ * As defined in the FF-A v1.1 Beta specification, table 13.10, in section
+ * 13.2.
+ */
+
+/** Query interrupt ID of Notification Pending Interrupt. */
+#define FFA_FEATURE_NPI 0x1U
+
+/** Query interrupt ID of Schedule Receiver Interrupt. */
+#define FFA_FEATURE_SRI 0x2U
+
+/** Query interrupt ID of the Managed Exit Interrupt. */
+#define FFA_FEATURE_MEI 0x3U
+
+/** Partition property: partition supports receipt of direct requests. */
+#define FFA_PARTITION_DIRECT_REQ_RECV 0x1
+
+/** Partition property: partition can send direct requests. */
+#define FFA_PARTITION_DIRECT_REQ_SEND 0x2
+
+/** Partition property: partition can send and receive indirect messages. */
+#define FFA_PARTITION_INDIRECT_MSG 0x4
+
+/** Partition property: partition can receive notifications. */
+#define FFA_PARTITION_NOTIFICATION 0x8
+
+typedef uint64_t ffa_notification_bitmap_t;
+
+#define FFA_NOTIFICATION(ID)        (1UL << ID)
+
+#define MAX_FFA_NOTIFICATIONS       64
+
+#define FFA_NOTIFICATIONS_FLAG_PER_VCPU (0x1U << 0)
+
+/** Flag to delay Schedule Receiver Interrupt. */
+#define FFA_NOTIFICATIONS_FLAG_DELAY_SRI    (0x1U << 1)
+
+#define FFA_NOTIFICATIONS_FLAGS_VCPU_ID(id) ((id & 0xFFFF) << 16)
+
+#define FFA_NOTIFICATIONS_FLAG_BITMAP_SP    (0x1U << 0)
+#define FFA_NOTIFICATIONS_FLAG_BITMAP_VM    (0x1U << 1)
+#define FFA_NOTIFICATIONS_FLAG_BITMAP_SPM   (0x1U << 2)
+#define FFA_NOTIFICATIONS_FLAG_BITMAP_HYP   (0x1U << 3)
+
+#define FFA_NOTIFICATIONS_LISTS_COUNT_SHIFT     0x7U
+#define FFA_NOTIFICATIONS_LISTS_COUNT_MASK      0x1FU
+
+/**
+ * The following is an SGI ID, that the SPMC configures as non-secure, as
+ * suggested by the FF-A v1.1 specification, in section 9.4.1.
+ */
+#define FFA_SCHEDULE_RECEIVER_INTERRUPT_ID 8
+
+#define FFA_NOTIFICATIONS_BITMAP(lo, hi)    \
+    (ffa_notification_bitmap_t)(lo) |   \
+    (((ffa_notification_bitmap_t)hi << 32) & 0xFFFFFFFF00000000ULL)
+
+
+static inline uint32_t ffa_feature_intid(ffa_args_t r)
+{
+    return (uint32_t)r.arg2;
+}
+
+static inline uint32_t ffa_notifications_info_get_lists_count(ffa_args_t r)
+{
+    return (uint32_t)(r.arg2 >> FFA_NOTIFICATIONS_LISTS_COUNT_SHIFT)
+           & FFA_NOTIFICATIONS_LISTS_COUNT_MASK;
+}
 
 /**
  * This corresponds to table "Endpoint memory access descriptor" of the FFA 1.0

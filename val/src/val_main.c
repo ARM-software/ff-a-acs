@@ -10,7 +10,7 @@
 #include "val_test_dispatch.h"
 
 /* Stack memory */
-__attribute__ ((aligned (128))) uint8_t val_stack[STACK_SIZE];
+__attribute__ ((aligned (4096))) uint8_t val_stack[STACK_SIZE];
 
 /**
  *   @brief    - C entry function for endpoint
@@ -28,6 +28,13 @@ void val_main(void)
 #endif
 
     /* Ready to run test regression */
+    if (val_get_curr_endpoint_logical_id() == VM1)
+    {
+#ifndef TARGET_LINUX
+        write_hcr_el2((1 << 27)); //TGE=1
+#endif
+        val_irq_setup();
+    }
     val_run_test_suite();
 
 #ifndef TARGET_LINUX

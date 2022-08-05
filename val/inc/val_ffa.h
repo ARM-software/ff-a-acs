@@ -9,7 +9,11 @@
 #define _VAL_FFA_H_
 
 #define FFA_VERSION_MAJOR 0x1
+#if (PLATFORM_FFA_V_1_0 == 1)
 #define FFA_VERSION_MINOR 0x0
+#else
+#define FFA_VERSION_MINOR 0x1
+#endif
 
 #define VAL_GET_MAJOR(x) ((x >> 16) & 0x7fff)
 #define VAL_GET_MINOR(x) (x & 0xffff)
@@ -23,6 +27,7 @@
 #define FFA_ERROR_DENIED             0xfffffffa //-6
 #define FFA_ERROR_RETRY              0xfffffff9 //-7
 #define FFA_ERROR_ABORTED            0xfffffff8 //-8
+#define FFA_ERROR_NODATA             0xfffffff7 //-9
 
 /* FFA 32 bit- function ids. */
 #define FFA_ERROR_32                 0x84000060
@@ -51,6 +56,15 @@
 #define FFA_MEM_RECLAIM_32           0x84000077
 #define FFA_NORMAL_WORLD_RESUME_32   0x8400007C
 #define FFA_SECONDARY_EP_REGISTER_32 0x84000084
+#define FFA_SPM_ID_GET_32            0x84000085
+
+#define FFA_NOTIFICATION_BITMAP_CREATE   0x8400007D
+#define FFA_NOTIFICATION_BITMAP_DESTROY  0x8400007E
+#define FFA_NOTIFICATION_BIND            0x8400007F
+#define FFA_NOTIFICATION_UNBIND          0x84000080
+#define FFA_NOTIFICATION_SET             0x84000081
+#define FFA_NOTIFICATION_GET             0x84000082
+#define FFA_NOTIFICATION_INFO_GET_32     0x84000083
 
 /* FFA 64 bit- function identifiers. */
 #define FFA_SUCCESS_64               0xC4000061
@@ -62,6 +76,7 @@
 #define FFA_MEM_SHARE_64             0xC4000073
 #define FFA_MEM_RETRIEVE_REQ_64      0xC4000074
 #define FFA_SECONDARY_EP_REGISTER_64 0xC4000084
+#define FFA_NOTIFICATION_INFO_GET_64 0xC4000083
 
 #define SENDER_ID(x)    (x >> 16) & 0xffff
 #define RECEIVER_ID(x)  (x & 0xffff)
@@ -100,6 +115,9 @@ typedef struct ffa_partition_info {
     uint16_t exec_context;
     /** The Partition's properties, e.g. supported messaging methods */
     uint32_t properties;
+#if (PLATFORM_FFA_V_1_0 == 0)
+	uint32_t uuid[4];
+#endif
 } ffa_partition_info_t;
 
 void val_call_conduit(ffa_args_t *args);
@@ -113,6 +131,7 @@ void val_ffa_msg_send_direct_resp_32(ffa_args_t *args);
 void val_ffa_msg_send_direct_resp_64(ffa_args_t *args);
 ffa_endpoint_id_t val_get_curr_endpoint_id(void);
 void val_ffa_id_get(ffa_args_t *args);
+void val_ffa_spm_id_get(ffa_args_t *args);
 void val_ffa_rx_release(ffa_args_t *args);
 void val_ffa_rxtx_unmap(ffa_args_t *args);
 void val_ffa_rxtx_map_32(ffa_args_t *args);
@@ -141,4 +160,13 @@ uint32_t val_rxtx_unmap(ffa_endpoint_id_t id);
 uint32_t val_rx_release(void);
 uint32_t val_reserve_param_check(ffa_args_t args, uint32_t param_count);
 void val_ffa_secondary_ep_register_64(void);
+void val_ffa_notification_bitmap_create(ffa_args_t *args);
+void val_ffa_notification_bitmap_destroy(ffa_args_t *args);
+void val_ffa_notification_bind(ffa_args_t *args);
+void val_ffa_notification_unbind(ffa_args_t *args);
+void val_ffa_notification_set(ffa_args_t *args);
+void val_ffa_notification_get(ffa_args_t *args);
+void val_ffa_notification_info_get_32(ffa_args_t *args);
+void val_ffa_notification_info_get_64(ffa_args_t *args);
+
 #endif /* _VAL_FFA_H_ */

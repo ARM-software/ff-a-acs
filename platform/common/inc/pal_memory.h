@@ -54,10 +54,15 @@
 #define ATTR_RW_DATA        (ATTR_NORMAL_WB_WA_RA | \
                               ATTR_USER_RW | ATTR_UXN | ATTR_PXN | ATTR_AF \
                               | ATTR_INNER_SHARED | ADD_NS_BIT)
-#define ATTR_DEVICE_RW      (ATTR_DEVICE | ATTR_USER_RW | ATTR_UXN | \
-                              ATTR_PXN | ATTR_AF | ATTR_INNER_SHARED | \
-                              ATTR_NS)
 
+#define ATTR_RW_DATA_NS        (ATTR_NORMAL_WB_WA_RA | \
+                              ATTR_USER_RW | ATTR_UXN | ATTR_PXN | ATTR_AF \
+                              | ATTR_INNER_SHARED | ATTR_NS)
+#define ATTR_DEVICE_RW      (ATTR_DEVICE | ATTR_USER_RW | ATTR_UXN | \
+                              ATTR_PXN | ATTR_AF | ATTR_INNER_SHARED | ATTR_NS)
+
+#define ATTR_DEVICE_RW_S      (ATTR_DEVICE | ATTR_USER_RW | ATTR_UXN | \
+                              ATTR_PXN | ATTR_AF | ATTR_INNER_SHARED | ATTR_S)
 typedef struct mem_info {
     uint32_t index;
     uint64_t base_address;

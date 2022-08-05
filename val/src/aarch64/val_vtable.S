@@ -88,12 +88,19 @@ sync_current_el_spx:
 
   .balign 128
 irq_current_el_spx:
-  //B        .                    //        IRQ
+#if defined(VM1_COMPILE)         //IRQ
+  current_exception_spx el2 val_irq_current
+#else
   current_exception_spx el1 val_irq_current
+#endif
 
   .balign 128
 fiq_current_el_spx:
-  B        .                    //        FIQ
+#if defined(VM1_COMPILE)         //FIQ
+  current_exception_spx el2 val_irq_current
+#else
+  current_exception_spx el1 val_irq_current
+#endif
 
   .balign 128
 serror_current_el_spx:
@@ -178,62 +185,88 @@ skip_elr:
 // ------------------------------------------------------------
 // Translation tables
 // ------------------------------------------------------------
-
+   /* Currently tt_base is aligned to 4kb. If the platform requirement is 16kb or 64kb,
+    * update align to 14 and 16 repectively.
+    */
   .section .bss.tt, "aw"
-  .align 16
+  .align 12
   .global tt_l0_base
 tt_l0_base:
   .fill  4096
 
-  .align 16
+  .align 12
   .global tt_l1_base
 tt_l1_base:
   .fill 4096
 
-  .align 16
+  .align 12
  // Allocate space for 4 contiguous L2 tables
   .global tt_l2_base_1
 tt_l2_base_1:
   .fill 16384
 
-  .align 16
+  .align 12
  // Allocate space for 4 contiguous L2 tables
   .global tt_l2_base_2
 tt_l2_base_2:
   .fill 16384
 
-  .align 16
+  .align 12
  // Allocate space for 4 contiguous L2 tables
   .global tt_l2_base_3
 tt_l2_base_3:
   .fill 16384
 
-  .align 16
+  .align 12
  // Allocate space for 4 contiguous L2 tables
   .global tt_l2_base_4
 tt_l2_base_4:
   .fill 16384
 
-   .align 16
+  .align 12
+ // Allocate space for 4 contiguous L2 tables
+  .global tt_l2_base_5
+tt_l2_base_5:
+  .fill 16384
+
+  .align 12
+ // Allocate space for 4 contiguous L2 tables
+  .global tt_l2_base_6
+tt_l2_base_6:
+  .fill 16384
+
+   .align 12
  // Allocate space for 4 contiguous L3 tables
   .global tt_l3_base_1
 tt_l3_base_1:
   .fill 16384
 
-  .align 16
+  .align 12
 // Allocate space for 4 contiguous L3 tables
   .global tt_l3_base_2
 tt_l3_base_2:
   .fill 16384
 
-  .align 16
+  .align 12
 // Allocate space for 4 contiguous L3 tables
   .global tt_l3_base_3
 tt_l3_base_3:
   .fill 16384
 
-    .align 16
+    .align 12
 // Allocate space for 4 contiguous L3 tables
   .global tt_l3_base_4
 tt_l3_base_4:
+  .fill 16384
+
+    .align 12
+// Allocate space for 4 contiguous L3 tables
+  .global tt_l3_base_5
+tt_l3_base_5:
+  .fill 16384
+
+    .align 12
+// Allocate space for 4 contiguous L3 tables
+  .global tt_l3_base_6
+tt_l3_base_6:
   .fill 16384

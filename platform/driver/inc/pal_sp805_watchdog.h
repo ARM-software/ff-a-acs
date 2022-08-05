@@ -8,6 +8,8 @@
 #ifndef _PAL_SP805_WATCHDOG_H_
 #define _PAL_SP805_WATCHDOG_H_
 
+#include <pal_interfaces.h>
+
 #define SP805_WDOG_BASE          PLATFORM_WDOG_BASE
 #define SP805_WDOG_LOAD_VALUE    PLATFORM_WDOG_LOAD_VALUE
 
@@ -51,9 +53,12 @@
 #define SP805_WDOG_PCELL_ID_SHIFT    0
 #define SP805_WDOG_PCELL_ID_MASK     0xff
 
-void driver_sp805_wdog_start(void);
-void driver_sp805_wdog_stop(void);
-void driver_sp805_wdog_refresh(void);
+void driver_sp805_wdog_start(unsigned long base);
+void driver_sp805_wdog_stop(unsigned long base);
+void driver_sp805_wdog_refresh(unsigned long base);
+void driver_sp805_twdog_start(unsigned long base, uint32_t ms);
+void driver_ns_wdog_start(uint32_t ms);
+void driver_ns_wdog_stop(void);
 
 #endif /* _PAL_SP805_WATCHDOG_H_ */
 

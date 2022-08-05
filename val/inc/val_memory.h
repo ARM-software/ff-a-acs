@@ -60,8 +60,12 @@ extern uint64_t tt_l2_base_1[];
 extern uint64_t tt_l2_base_2[];
 extern uint64_t tt_l2_base_3[];
 extern uint64_t tt_l2_base_4[];
+extern uint64_t tt_l2_base_5[];
+extern uint64_t tt_l2_base_6[];
 extern uint64_t tt_l3_base_1[];
 extern uint64_t tt_l3_base_2[];
 extern uint64_t tt_l3_base_3[];
 extern uint64_t tt_l3_base_4[];
+extern uint64_t tt_l3_base_5[];
+extern uint64_t tt_l3_base_6[];
 #endif /* _VAL_MEMORY_H_ */

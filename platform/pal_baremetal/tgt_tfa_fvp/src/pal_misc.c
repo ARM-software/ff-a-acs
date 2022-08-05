@@ -27,10 +27,15 @@ static memory_region_descriptor_t endpoint_device_regions[] = {
     {PLATFORM_S_UART_BASE, PLATFORM_S_UART_BASE, PLATFORM_S_UART_SIZE, ATTR_DEVICE_RW},
     {PLATFORM_NVM_BASE, PLATFORM_NVM_BASE, PLATFORM_NVM_SIZE, ATTR_DEVICE_RW},
     {PLATFORM_WDOG_BASE, PLATFORM_WDOG_BASE, PLATFORM_WDOG_SIZE, ATTR_DEVICE_RW},
+    {PLATFORM_SP805_TWDOG_BASE, PLATFORM_SP805_TWDOG_BASE, PLATFORM_TWDOG_SIZE, ATTR_DEVICE_RW_S},
 #endif
 
 #if defined(VM1_COMPILE)
     {PLATFORM_NS_UART_BASE, PLATFORM_NS_UART_BASE, PLATFORM_NS_UART_SIZE, ATTR_DEVICE_RW},
+    {PLATFORM_NS_WD_BASE, PLATFORM_NS_WD_BASE, PLATFORM_NS_WD_SIZE, ATTR_DEVICE_RW},
+    {GICD_BASE, GICD_BASE, GICD_SIZE, ATTR_DEVICE_RW},
+    {GICR_BASE, GICR_BASE, GICR_SIZE, ATTR_DEVICE_RW},
+    {GICC_BASE, GICC_BASE, GICC_SIZE, ATTR_DEVICE_RW},
 #endif
     };
 
@@ -44,8 +49,8 @@ uint32_t pal_get_endpoint_device_map(void **region_list, size_t *no_of_mem_regio
 
 uint32_t pal_terminate_simulation(void)
 {
-   asm volatile("wfi" : : : "memory");
-   return PAL_SUCCESS;
+    while(1);
+    return PAL_SUCCESS;
 }
 
 void *pal_memory_alloc(uint64_t size)

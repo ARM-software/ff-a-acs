@@ -15,6 +15,8 @@
 #define direct_messaging   2
 #define indirect_messaging 3
 #define memory_manage      4
+#define notifications      5
+#define interrupts         6
 
 #define DECLARE_TEST_FN(testname) \
     extern void testname##_testentry(uint32_t test_num);\
@@ -41,7 +43,9 @@
 #if (SUITE == all || SUITE == setup_discovery)
 DECLARE_TEST_FN(ffa_version);
 DECLARE_TEST_FN(ffa_features);
+DECLARE_TEST_FN(ffa_features_intr);
 DECLARE_TEST_FN(ffa_id_get);
+DECLARE_TEST_FN(ffa_spm_id_get);
 DECLARE_TEST_FN(ffa_partition_info_get);
 DECLARE_TEST_FN(ffa_rx_release);
 DECLARE_TEST_FN(ffa_rxtx_map_and_unmap);
@@ -55,11 +59,13 @@ DECLARE_TEST_FN(ffa_direct_message_32);
 DECLARE_TEST_FN(ffa_direct_message_64);
 DECLARE_TEST_FN(ffa_direct_message_error);
 DECLARE_TEST_FN(ffa_direct_message_error1);
+DECLARE_TEST_FN(ffa_direct_message_error2);
 #endif
 
 #if (SUITE == all || SUITE == indirect_messaging)
 DECLARE_TEST_FN(ffa_msg_send);
 DECLARE_TEST_FN(ffa_msg_send_error);
+DECLARE_TEST_FN(ffa_run);
 #endif
 
 #if (SUITE == all || SUITE == memory_manage)
@@ -78,6 +84,7 @@ DECLARE_TEST_FN(share_state_machine_5);
 DECLARE_TEST_FN(share_state_machine_6);
 DECLARE_TEST_FN(share_input_error_checks);
 DECLARE_TEST_FN(share_input_error_checks1);
+DECLARE_TEST_FN(share_input_error_checks2);
 DECLARE_TEST_FN(share_rw_retrieve_ro);
 DECLARE_TEST_FN(share_ro_retrieve_rw_64_vmsp);
 DECLARE_TEST_FN(share_ro_retrieve_rw_64_spsp);
@@ -95,16 +102,29 @@ DECLARE_TEST_FN(share_retrieve_with_address_range);
 DECLARE_TEST_FN(share_retrieve_input_checks);
 DECLARE_TEST_FN(share_retrieve_align_hint_check);
 DECLARE_TEST_FN(share_relinquish_input_checks);
+DECLARE_TEST_FN(share_multiple_retrievals);
+DECLARE_TEST_FN(share_sepid);
+DECLARE_TEST_FN(share_sepid_multiple_borrowers);
 DECLARE_TEST_FN(ffa_mem_lend);
 DECLARE_TEST_FN(lend_invalid_handle_tag);
 DECLARE_TEST_FN(lend_input_error_checks);
 DECLARE_TEST_FN(lend_input_error_checks1);
+DECLARE_TEST_FN(lend_input_error_checks2);
+DECLARE_TEST_FN(lend_input_error_checks3);
+DECLARE_TEST_FN(lend_input_error_checks4);
 DECLARE_TEST_FN(lend_retrieve_with_address_range);
 DECLARE_TEST_FN(lend_retrieve_align_hint_check);
 DECLARE_TEST_FN(lend_retrieve_input_checks);
 DECLARE_TEST_FN(lend_retrieve_input_checks1);
 DECLARE_TEST_FN(lend_retrieve_input_checks2);
 DECLARE_TEST_FN(lend_retrieve_input_checks3);
+DECLARE_TEST_FN(lend_retrieve_input_checks4);
+DECLARE_TEST_FN(lend_retrieve_input_checks5);
+DECLARE_TEST_FN(lend_retrieve_input_checks6);
+DECLARE_TEST_FN(lend_retrieve_input_checks7);
+DECLARE_TEST_FN(lend_retrieve_input_checks8);
+DECLARE_TEST_FN(lend_retrieve_input_checks9);
+DECLARE_TEST_FN(lend_retrieve_input_checks10);
 DECLARE_TEST_FN(lend_mem_access_after_lend_32_vm);
 DECLARE_TEST_FN(lend_mem_access_after_lend_32_sp);
 DECLARE_TEST_FN(lend_mem_access_after_lend_64_vm);
@@ -115,7 +135,36 @@ DECLARE_TEST_FN(lend_retrieve_mem_access_32_spsp);
 DECLARE_TEST_FN(lend_retrieve_mem_access_64_vmvm);
 DECLARE_TEST_FN(lend_retrieve_mem_access_64_vmsp);
 DECLARE_TEST_FN(lend_retrieve_mem_access_64_spsp);
+DECLARE_TEST_FN(lend_cache_attr);
+DECLARE_TEST_FN(lend_cache_attr1);
+DECLARE_TEST_FN(lend_shareability_attr);
+DECLARE_TEST_FN(lend_shareability_attr1);
+DECLARE_TEST_FN(lend_shareability_attr2);
+DECLARE_TEST_FN(lend_shareability_attr3);
+DECLARE_TEST_FN(lend_lower_upper_boundary_32_vmsp);
+DECLARE_TEST_FN(lend_lower_upper_boundary_32_spsp);
+DECLARE_TEST_FN(lend_lower_upper_boundary_32_vmvm);
+DECLARE_TEST_FN(lend_lower_upper_boundary_64_vmsp);
+DECLARE_TEST_FN(lend_lower_upper_boundary_64_spsp);
+DECLARE_TEST_FN(lend_lower_upper_boundary_64_vmvm);
+DECLARE_TEST_FN(lend_device_attr);
+DECLARE_TEST_FN(lend_device_attr1);
+DECLARE_TEST_FN(lend_ro_retrieve_rw);
+DECLARE_TEST_FN(lend_rw_retrieve_ro);
+DECLARE_TEST_FN(lend_state_machine_1);
+DECLARE_TEST_FN(lend_state_machine_2);
+DECLARE_TEST_FN(lend_state_machine_3);
+DECLARE_TEST_FN(lend_state_machine_4);
+DECLARE_TEST_FN(lend_state_machine_5);
+DECLARE_TEST_FN(lend_state_machine_6);
+DECLARE_TEST_FN(lend_multiple_retrievals);
+DECLARE_TEST_FN(lend_sepid);
+DECLARE_TEST_FN(ffa_mem_donate);
 DECLARE_TEST_FN(donate_input_error_checks);
+DECLARE_TEST_FN(donate_input_error_checks1);
+DECLARE_TEST_FN(donate_input_error_checks2);
+DECLARE_TEST_FN(donate_input_error_checks3);
+DECLARE_TEST_FN(donate_input_error_checks4);
 DECLARE_TEST_FN(donate_invalid_handle_tag);
 DECLARE_TEST_FN(donate_lower_upper_boundary_32_spsp);
 DECLARE_TEST_FN(donate_lower_upper_boundary_32_vmvm);
@@ -123,6 +172,22 @@ DECLARE_TEST_FN(donate_lower_upper_boundary_64_spsp);
 DECLARE_TEST_FN(donate_lower_upper_boundary_64_vmvm);
 DECLARE_TEST_FN(donate_retrieve_input_checks1);
 DECLARE_TEST_FN(donate_retrieve_input_checks2);
+DECLARE_TEST_FN(donate_retrieve_input_checks3);
+DECLARE_TEST_FN(donate_retrieve_input_checks4);
+DECLARE_TEST_FN(donate_retrieve_input_checks5);
+DECLARE_TEST_FN(donate_retrieve_input_checks6);
+DECLARE_TEST_FN(donate_state_machine_1);
+DECLARE_TEST_FN(donate_state_machine_2);
+DECLARE_TEST_FN(donate_state_machine_3);
+DECLARE_TEST_FN(donate_state_machine_4);
+DECLARE_TEST_FN(donate_state_machine_5);
+DECLARE_TEST_FN(donate_mem_access_after_donate_32_vm);
+DECLARE_TEST_FN(donate_mem_access_after_donate_32_sp);
+DECLARE_TEST_FN(donate_mem_access_after_donate_64_vm);
+DECLARE_TEST_FN(donate_mem_access_after_donate_64_sp);
+DECLARE_TEST_FN(donate_retrieve_align_hint_check);
+DECLARE_TEST_FN(donate_retrieve_with_address_range);
+DECLARE_TEST_FN(donate_sepid);
 DECLARE_TEST_FN(relinquish_state_machine_2);
 DECLARE_TEST_FN(relinquish_state_machine_3);
 DECLARE_TEST_FN(relinquish_state_machine_4);
@@ -132,5 +197,25 @@ DECLARE_TEST_FN(relinquish_mem_unmap_check_vmvm);
 DECLARE_TEST_FN(relinquish_mem_unmap_check_spsp);
 DECLARE_TEST_FN(reclaim_input_error_checks);
 DECLARE_TEST_FN(reclaim_zero_flag);
+#endif
+
+#if (SUITE == all || SUITE == notifications)
+DECLARE_TEST_FN(vm_to_sp_notification);
+DECLARE_TEST_FN(vm_to_sp_notification_pcpu);
+DECLARE_TEST_FN(notification_bitmap_create);
+DECLARE_TEST_FN(notification_bitmap_destroy);
+DECLARE_TEST_FN(notification_bind);
+DECLARE_TEST_FN(notification_unbind);
+DECLARE_TEST_FN(notification_get);
+DECLARE_TEST_FN(notification_set);
+DECLARE_TEST_FN(notification_info_get);
+#endif
+
+#if (SUITE == all || SUITE == interrupts)
+DECLARE_TEST_FN(vm_to_sp_preempt);
+DECLARE_TEST_FN(vm_to_sp_managed_exit);
+DECLARE_TEST_FN(sp_to_sp_blocked);
+DECLARE_TEST_FN(sp_to_sp_waiting);
+DECLARE_TEST_FN(vm_to_sp_waiting);
 #endif
 #endif /* _TEST_DATABASE_H_ */

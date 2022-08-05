@@ -8,19 +8,58 @@
 #include "val_def.h"
 
     .extern val_main
-    .extern val_stack
     .extern vector_table
+    .extern val_stack
     .extern val_fixup_symbol_table
-
     .cfi_sections .debug_frame
+    .globl  inv_dcache_range
     .globl    val_entry
+
+/* Provision one stack per Execution Context (or vCPU) */
+.section .bss.stacks
+    .balign 64
+    .fill   4096
+stacks_end:
+
     .section .text.val_entry, "ax"
+
+   .macro  dcache_line_size  reg, tmp
+    mrs \tmp, ctr_el0
+    ubfx    \tmp, \tmp, #16, #4
+    mov \reg, #4
+    lsl \reg, \reg, \tmp
+    .endm
+
+/*
+ * This macro can be used for implementing various data cache operations `op`
+ */
+.macro do_dcache_maintenance_by_mva op
+    /* Exit early if size is zero */
+    cbz x1, exit_loop_\op
+    dcache_line_size x2, x3
+    add x1, x0, x1
+    sub x3, x2, #1
+    bic x0, x0, x3
+loop_\op:
+    dc  \op, x0
+    add x0, x0, x2
+    cmp x0, x1
+    b.lo    loop_\op
+    dsb sy
+exit_loop_\op:
+    ret
+.endm
+
 val_entry:
 
 #if (PLATFORM_SP_EL != 0)
    /* Install vector table */
     adr     x0, vector_table
+#if defined(VM1_COMPILE)
+    msr     vbar_el2, x0
+#else
     msr     vbar_el1, x0
+#endif
 
     /* MMU must be disabled at partition boot entry for VM and EL1 SP */
     mrs    x0, sctlr_el1
@@ -29,10 +68,37 @@ val_entry:
     b.eq   1f
     b .
 1:
+
     /* Enable I-Cache */
     orr    x0, x0, #SCTLR_I_BIT
     msr    sctlr_el1, x0
     isb
+
+    /*
+     * Invalidate the data cache for the whole image.
+     * This prevents re-use of stale data cache entries from
+     * prior bootloader stages.
+     */
+image_load_addr:
+    adr x0, image_load_addr
+    and x0, x0, #~(PAGE_ALIGNMENT - 1)
+    adr x1, bss_end_addr
+    ldr x1, [x1]
+    adr x2, text_start_addr
+    ldr x2, [x2]
+    sub x1, x1, x2 // Actual image size
+    bl  flush_dcache_range
+
+    /*
+     * Set CPACR_EL1.FPEN=11 no EL1/0 trapping of
+     * SVE/Adv. SIMD/FP instructions.
+     */
+    mov x1, 3 << 20
+    mrs x0, cpacr_el1
+    orr x0, x0, x1
+    msr cpacr_el1, x0
+    isb
+
 #endif /* PLATFORM_SP_EL != 0 */
 
     /* Relocate symbols */
@@ -44,7 +110,7 @@ pie_fixup:
     bl    fix_symbol_table
 
     /* Setup the stack pointer to call C entry */
-    adr    x0, val_stack + STACK_SIZE
+    adr    x0, stacks_end
     mov    sp, x0
 
    /* Clear BSS */
@@ -136,6 +202,10 @@ pie_fixup:
 
     ret
 
+flush_dcache_range:
+    do_dcache_maintenance_by_mva civac
+
+
   .section .data.far_addr, "aw"
   .align 12
   .global val_image_load_offset
@@ -147,3 +217,7 @@ bss_start_addr:
   .global bss_end_addr
 bss_end_addr:
    .quad __BSS_END__
+
+  .global text_start_addr
+text_start_addr:
+   .quad __TEXT_START__

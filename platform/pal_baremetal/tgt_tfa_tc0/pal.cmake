@@ -9,6 +9,9 @@ set(PAL_SRC
     ${ROOT_DIR}/platform/common/src/pal_libc.c
     ${ROOT_DIR}/platform/common/src/pal_misc_asm.S
     ${ROOT_DIR}/platform/common/src/pal_spinlock.S
+    ${ROOT_DIR}/platform/common/src/pal_sp_helpers.c
+    ${ROOT_DIR}/platform/common/src/pal_spm_helpers.c
+    ${ROOT_DIR}/platform/common/src/pal_asm_smc.S
     ${ROOT_DIR}/platform/pal_baremetal/${TARGET}/src/pal_driver.c
     ${ROOT_DIR}/platform/pal_baremetal/${TARGET}/src/pal_misc.c
     ${ROOT_DIR}/platform/pal_baremetal/${TARGET}/src/pal_mmio.c
@@ -21,6 +24,7 @@ set(PAL_SRC
     ${ROOT_DIR}/platform/driver/src/gic/pal_gic_common.c
     ${ROOT_DIR}/platform/driver/src/gic/pal_gic_v2.c
     ${ROOT_DIR}/platform/driver/src/gic/pal_gic_v3.c
+    ${ROOT_DIR}/platform/driver/src/gic/platform.S
     ${ROOT_DIR}/platform/driver/src/pal_smmuv3_testengine.c
 )
 

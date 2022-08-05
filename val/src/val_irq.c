@@ -13,28 +13,37 @@ void val_irq_setup(void)
     pal_irq_setup();
 }
 
-int val_irq_handler_dispatcher(void)
-{
-    return pal_irq_handler_dispatcher();
-}
-
-void val_irq_enable(int irq_num, uint8_t irq_priority)
+void val_irq_enable(uint32_t irq_num, uint8_t irq_priority)
 {
     pal_irq_enable(irq_num, irq_priority);
 }
 
-void val_irq_disable(int irq_num)
+void val_irq_disable(uint32_t irq_num)
 {
     pal_irq_disable(irq_num);
 }
 
-int val_irq_register_handler(int num, void *irq_handler)
+int val_irq_register_handler(uint32_t num, void *irq_handler)
 {
     return pal_irq_register_handler(num, irq_handler);
 }
 
-int val_irq_unregister_handler(int irq_num)
+int val_irq_unregister_handler(uint32_t irq_num)
 {
     return pal_irq_unregister_handler(irq_num);
 }
 
+void val_secure_intr_enable(uint32_t int_id, enum interrupt_pin pin)
+{
+    pal_secure_intr_enable(int_id, pin);
+}
+
+void val_secure_intr_disable(uint32_t int_id, enum interrupt_pin pin)
+{
+    pal_secure_intr_disable(int_id, pin);
+}
+
+uint64_t val_sleep(uint32_t ms)
+{
+    return pal_sleep(ms);
+}

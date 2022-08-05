@@ -20,6 +20,7 @@
 #include "val_exceptions.h"
 #include "val_sysreg.h"
 #include "val_irq.h"
+#include "val_wd.h"
 
 /* Test entry prototype */
 typedef void (*test_entry_fptr_t)(uint32_t test_num);
@@ -37,6 +38,8 @@ typedef enum {
     TESTSUITE_DIRECT_MESSAGING   = 2,
     TESTSUITE_INDIRECT_MESSAGING = 3,
     TESTSUITE_MEMORY_MANAGE      = 4,
+    TESTSUITE_NOTIFICATIONS      = 5,
+    TESTSUITE_INTERRUPTS         = 6,
 } test_suite_num_t;
 
 /* Structure to hold list of test suite */

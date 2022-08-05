@@ -13,4 +13,5 @@
          "image": "../../../build/output/sp3.bin",
          "pm": "sp3.dts"
      }
+
 }

@@ -19,10 +19,14 @@ static uint8_t tt_l2_base_1_used = 0;
 static uint8_t tt_l2_base_2_used = 0;
 static uint8_t tt_l2_base_3_used = 0;
 static uint8_t tt_l2_base_4_used = 0;
+static uint8_t tt_l2_base_5_used = 0;
+static uint8_t tt_l2_base_6_used = 0;
 static uint8_t tt_l3_base_1_used = 0;
 static uint8_t tt_l3_base_2_used = 0;
 static uint8_t tt_l3_base_3_used = 0;
 static uint8_t tt_l3_base_4_used = 0;
+static uint8_t tt_l3_base_5_used = 0;
+static uint8_t tt_l3_base_6_used = 0;
 
 /* Linker symbols used to figure out the memory layout of secure partition. */
 extern uintptr_t __TEXT_START__, __TEXT_END__;
@@ -139,6 +143,16 @@ static uint32_t fill_translation_table(tt_descriptor_t tt_desc,
                      tt_base_next_level = tt_l2_base_4;
                      tt_l2_base_4_used = 1;
                }
+               else if (!tt_l2_base_5_used)
+               {
+                     tt_base_next_level = tt_l2_base_5;
+                     tt_l2_base_5_used = 1;
+               }
+               else if (!tt_l2_base_6_used)
+               {
+                     tt_base_next_level = tt_l2_base_6;
+                     tt_l2_base_6_used = 1;
+               }
                else
                {
                     LOG(ERROR, "\tOut of memory, allocate more tt_l2 space", 0, 0);
@@ -166,6 +180,16 @@ static uint32_t fill_translation_table(tt_descriptor_t tt_desc,
                {
                      tt_base_next_level = tt_l3_base_4;
                      tt_l3_base_4_used = 1;
+               }
+               else if (!tt_l3_base_5_used)
+               {
+                     tt_base_next_level = tt_l3_base_5;
+                     tt_l3_base_5_used = 1;
+               }
+               else if (!tt_l3_base_6_used)
+               {
+                     tt_base_next_level = tt_l3_base_6;
+                     tt_l3_base_6_used = 1;
                }
                else
                {
@@ -446,6 +470,7 @@ uint32_t val_setup_mmu(void)
     val_sctlr_write((1 << 0) | // M=1 Enable the stage 1 MMU
                     (1 << 2) | // C=1 Enable data and unified caches
                     (1 << 12)| // I=1 Enable instruction caches
+                    (1 << 23)| // PSTATE.PAN is left unchanged on taking an exception to EL1
                     val_sctlr_read(currentEL),
                     currentEL);
 #ifdef PGT_DEBUG

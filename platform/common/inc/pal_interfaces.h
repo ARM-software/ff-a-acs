@@ -18,6 +18,7 @@
 #include "pal_irq.h"
 #include "pal_shemaphore.h"
 #ifndef TARGET_LINUX
+#include <pal_sp805_watchdog.h>
 #include "pal_arch_helpers.h"
 #endif
 
@@ -61,6 +62,20 @@ uint32_t pal_watchdog_enable(void);
  *   @return   - SUCCESS/FAILURE
 **/
 uint32_t pal_watchdog_disable(void);
+
+/**
+ *   @brief    - Initializes and enable the hardware watchdog timer
+ *   @param    - ms   : Number of cycles(Milliseconds)
+ *   @return   - SUCCESS/FAILURE
+**/
+uint32_t pal_twdog_enable(uint32_t ms);
+
+/**
+ *   @brief    - Disables the hardware trusted watchdog timer
+ *   @param    - void
+ *   @return   - SUCCESS/FAILURE
+**/
+uint32_t pal_twdog_disable(void);
 
 /**
  *   @brief    - Returns the base address of endpoint device map region block.
@@ -138,55 +153,15 @@ uint32_t pal_smmu_device_configure(uint32_t stream_id, uint64_t source, uint64_t
 **/
 void pal_irq_setup(void);
 
-/**
- * @brief       - Generic handler called upon reception of an IRQ.
- *              - This function acknowledges the interrupt, calls the user-defined handler
- *              - if one has been registered then marks the processing of the interrupt as
- *              - complete.
- * @param       - Void.
- * @return      - SUCCESS/FAILURE.
-**/
-int pal_irq_handler_dispatcher(void);
 
-/**
- * @brief       - Enable interrupt #irq_num for the calling core.
- * @param       - irq_num:       irq number.
- * @param       - irq_priority:  irq priority value.
- * @return      - Void.
-**/
-void pal_irq_enable(int irq_num, uint8_t irq_priority);
-
-/**
- * @brief       - Disable interrupt #irq_num for the calling core.
- * @param       - irq_num: irq number.
- * @return      - Void
-**/
-void pal_irq_disable(int irq_num);
-
-/**
- * @brief       - Register an interrupt handler for a given interrupt number.
- *              - Will fail if there is already an interrupt handler registered for
- *              - the same interrupt.
- * @param       - irq_num:      irq number.
- * @param       - irq_handler:  irq handler.
- * @return      - Return 0 on success, a negative value otherwise.
-**/
-int pal_irq_register_handler(int irq_num, void *irq_handler);
-
-/**
- * @brief       - Unregister an interrupt handler for a given interrupt number.
- *              - Will fail if there is no interrupt handler registered for that interrupt.
- * @param       - irq_num:  irq number.
- * @return      - Return 0 on success, a negative value otherwise.
-**/
-int pal_irq_unregister_handler(int irq_num);
-
-/**
- * @brief       - Send an SGI to a given core.
- * @param       - sgi_id:    SGI interrupt number.
- * @param       - core_pos:  CPU core number.
- * @return      - Void.
-**/
-void pal_send_sgi(int sgi_id, unsigned int core_pos);
+uint64_t pal_sleep(uint32_t ms);
+void pal_twdog_intr_enable(void);
+void pal_twdog_intr_disable(void);
+void pal_ns_wdog_enable(uint32_t ms);
+void pal_ns_wdog_disable(void);
+void pal_ns_wdog_intr_enable(void);
+void pal_ns_wdog_intr_disable(void);
+void pal_secure_intr_enable(uint32_t int_id, enum interrupt_pin pin);
+void pal_secure_intr_disable(uint32_t int_id, enum interrupt_pin pin);
 
 #endif /* _PAL_INTERFACES_H_ */

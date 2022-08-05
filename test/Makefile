@@ -11,6 +11,9 @@ export ARCH ?= arm64
 # ACS Make commandline arguments
 VERBOSITY ?= 3
 PLATFORM_NS_HYPERVISOR_PRESENT ?=  0
+PLATFORM_FFA_V_1_0 ?= 0
+PLATFORM_FFA_V_1_1 ?= 0
+PLATFORM_FFA_V_ALL ?= 1
 PLATFORM_SPMC_EL ?= 2
 PLATFORM_SP_EL   ?= 1
 SUITE            ?= all
@@ -18,18 +21,22 @@ SUITE            ?= all
 ACS_MACROS += -DVM1_COMPILE -DTARGET_LINUX
 ACS_MACROS += -DVERBOSITY=$(VERBOSITY)
 ACS_MACROS += -DPLATFORM_NS_HYPERVISOR_PRESENT=$(PLATFORM_NS_HYPERVISOR_PRESENT)
+ACS_MACROS += -DPLATFORM_FFA_V_1_0=$(PLATFORM_FFA_V_1_0)
+ACS_MACROS += -DPLATFORM_FFA_V_1_1=$(PLATFORM_FFA_V_1_1)
+ACS_MACROS += -DPLATFORM_FFA_V_ALL=$(PLATFORM_FFA_V_ALL)
 ACS_MACROS += -DPLATFORM_SPMC_EL=$(PLATFORM_SPMC_EL)
 ACS_MACROS += -DPLATFORM_SP_EL=$(PLATFORM_SP_EL)
 ACS_MACROS += -DSUITE=$(SUITE)
 
 #since we have copied the files locally
 ACS_DIR ?= .
-TEST_SRC = $(ACS_DIR)
+TEST_SRC = $(ACS_DIR)/v1.0
+TEST_SRC1 = $(ACS_DIR)/v1.1
 
 ACS_INCLUDE = -I$(PWD)/$(ACS_DIR)/../val/inc -I$(PWD)/$(ACS_DIR)/common/ -I$(PWD)/$(ACS_DIR)/../common/inc -I$(PWD)/$(ACS_DIR)/../pal_linux/inc
 obj-m += ffa_acs_test.o
 
-ffa_acs_test-objs += $(TEST_SRC)/common/test_database.o \
+ffa_acs_test-objs += $(TEST_SRC)/../common/test_database.o \
                 $(TEST_SRC)/direct_messaging/ffa_direct_message_32/ffa_direct_message_32_client.o \
                 $(TEST_SRC)/direct_messaging/ffa_direct_message_32/ffa_direct_message_32_testentry.o \
                 $(TEST_SRC)/direct_messaging/ffa_direct_message_32/ffa_direct_message_32_server.o \
@@ -45,7 +52,9 @@ ffa_acs_test-objs += $(TEST_SRC)/indirect_messaging/ffa_msg_send/ffa_msg_send_cl
                 $(TEST_SRC)/indirect_messaging/ffa_msg_send/ffa_msg_send_server.o \
                 $(TEST_SRC)/indirect_messaging/ffa_msg_send/ffa_msg_send_testentry.o \
                 $(TEST_SRC)/indirect_messaging/ffa_msg_send_error/ffa_msg_send_error_client.o \
-                $(TEST_SRC)/indirect_messaging/ffa_msg_send_error/ffa_msg_send_error_testentry.o 
+                $(TEST_SRC)/indirect_messaging/ffa_msg_send_error/ffa_msg_send_error_testentry.o \
+                $(TEST_SRC)/indirect_messaging/ffa_run/ffa_run_testentry.o \
+                $(TEST_SRC)/indirect_messaging/ffa_run/ffa_run_client.o
 
 ffa_acs_test-objs += $(TEST_SRC)/memory_manage/ffa_mem_share/ffa_mem_share_client.o \
                 $(TEST_SRC)/memory_manage/ffa_mem_share/ffa_mem_share_server.o \
@@ -59,6 +68,8 @@ ffa_acs_test-objs += $(TEST_SRC)/memory_manage/ffa_mem_share/ffa_mem_share_clien
                 $(TEST_SRC)/memory_manage/share_device_attr/share_device_attr1_client.o \
                 $(TEST_SRC)/memory_manage/share_device_attr/share_device_attr1_server.o \
                 $(TEST_SRC)/memory_manage/share_device_attr/share_device_attr1_testentry.o \
+                $(TEST_SRC)/memory_manage/share_input_error_checks/share_input_error_checks2_client.o \
+                $(TEST_SRC)/memory_manage/share_input_error_checks/share_input_error_checks2_testentry.o \
                 $(TEST_SRC)/memory_manage/share_input_error_checks/share_input_error_checks1_client.o \
                 $(TEST_SRC)/memory_manage/share_input_error_checks/share_input_error_checks1_testentry.o \
                 $(TEST_SRC)/memory_manage/share_input_error_checks/share_input_error_checks_client.o \
@@ -93,6 +104,12 @@ ffa_acs_test-objs += $(TEST_SRC)/memory_manage/ffa_mem_share/ffa_mem_share_clien
                 $(TEST_SRC)/memory_manage/share_rw_retrieve_ro/share_rw_retrieve_ro_client.o \
                 $(TEST_SRC)/memory_manage/share_rw_retrieve_ro/share_rw_retrieve_ro_server.o \
                 $(TEST_SRC)/memory_manage/share_rw_retrieve_ro/share_rw_retrieve_ro_testentry.o \
+                $(TEST_SRC)/memory_manage/share_sepid/share_sepid_client.o \
+                $(TEST_SRC)/memory_manage/share_sepid/share_sepid_server.o \
+                $(TEST_SRC)/memory_manage/share_sepid/share_sepid_testentry.o \
+                $(TEST_SRC)/memory_manage/share_sepid_multiple_borrowers/share_sepid_multiple_borrowers_client.o \
+                $(TEST_SRC)/memory_manage/share_sepid_multiple_borrowers/share_sepid_multiple_borrowers_server.o \
+                $(TEST_SRC)/memory_manage/share_sepid_multiple_borrowers/share_sepid_multiple_borrowers_testentry.o \
                 $(TEST_SRC)/memory_manage/share_shareability_attr/share_shareability_attr1_client.o \
                 $(TEST_SRC)/memory_manage/share_shareability_attr/share_shareability_attr1_server.o \
                 $(TEST_SRC)/memory_manage/share_shareability_attr/share_shareability_attr1_testentry.o \
@@ -115,11 +132,32 @@ ffa_acs_test-objs += $(TEST_SRC)/memory_manage/ffa_mem_share/ffa_mem_share_clien
                 $(TEST_SRC)/memory_manage/share_state_machine/share_state_machine_5_testentry.o \
                 $(TEST_SRC)/memory_manage/share_state_machine/share_state_machine_6_client.o \
                 $(TEST_SRC)/memory_manage/share_state_machine/share_state_machine_6_server.o \
-                $(TEST_SRC)/memory_manage/share_state_machine/share_state_machine_6_testentry.o 
+                $(TEST_SRC)/memory_manage/share_state_machine/share_state_machine_6_testentry.o \
+                $(TEST_SRC)/memory_manage/multiple_retrievals_by_borrower/share_multiple_retrievals_client.o \
+                $(TEST_SRC)/memory_manage/multiple_retrievals_by_borrower/share_multiple_retrievals_server.o \
+                $(TEST_SRC)/memory_manage/multiple_retrievals_by_borrower/share_multiple_retrievals_testentry.o
 
 ffa_acs_test-objs += $(TEST_SRC)/memory_manage/ffa_mem_lend/ffa_mem_lend_client.o \
                 $(TEST_SRC)/memory_manage/ffa_mem_lend/ffa_mem_lend_server.o \
                 $(TEST_SRC)/memory_manage/ffa_mem_lend/ffa_mem_lend_testentry.o \
+                $(TEST_SRC)/memory_manage/lend_cache_attr/lend_cache_attr_testentry.o \
+                $(TEST_SRC)/memory_manage/lend_cache_attr/lend_cache_attr_client.o \
+                $(TEST_SRC)/memory_manage/lend_cache_attr/lend_cache_attr_server.o \
+                $(TEST_SRC)/memory_manage/lend_cache_attr/lend_cache_attr1_testentry.o \
+                $(TEST_SRC)/memory_manage/lend_cache_attr/lend_cache_attr1_client.o \
+                $(TEST_SRC)/memory_manage/lend_cache_attr/lend_cache_attr1_server.o \
+                $(TEST_SRC)/memory_manage/lend_device_attr/lend_device_attr1_testentry.o \
+                $(TEST_SRC)/memory_manage/lend_device_attr/lend_device_attr1_client.o \
+                $(TEST_SRC)/memory_manage/lend_device_attr/lend_device_attr1_server.o \
+                $(TEST_SRC)/memory_manage/lend_device_attr/lend_device_attr_testentry.o \
+                $(TEST_SRC)/memory_manage/lend_device_attr/lend_device_attr_client.o \
+                $(TEST_SRC)/memory_manage/lend_device_attr/lend_device_attr_server.o \
+                $(TEST_SRC)/memory_manage/lend_input_error_checks/lend_input_error_checks4_client.o \
+                $(TEST_SRC)/memory_manage/lend_input_error_checks/lend_input_error_checks4_testentry.o \
+                $(TEST_SRC)/memory_manage/lend_input_error_checks/lend_input_error_checks3_client.o \
+                $(TEST_SRC)/memory_manage/lend_input_error_checks/lend_input_error_checks3_testentry.o \
+                $(TEST_SRC)/memory_manage/lend_input_error_checks/lend_input_error_checks2_client.o \
+                $(TEST_SRC)/memory_manage/lend_input_error_checks/lend_input_error_checks2_testentry.o \
                 $(TEST_SRC)/memory_manage/lend_input_error_checks/lend_input_error_checks1_client.o \
                 $(TEST_SRC)/memory_manage/lend_input_error_checks/lend_input_error_checks1_testentry.o \
                 $(TEST_SRC)/memory_manage/lend_input_error_checks/lend_input_error_checks_client.o \
@@ -127,6 +165,12 @@ ffa_acs_test-objs += $(TEST_SRC)/memory_manage/ffa_mem_lend/ffa_mem_lend_client.
                 $(TEST_SRC)/memory_manage/lend_invalid_handle_tag/lend_invalid_handle_tag_client.o \
                 $(TEST_SRC)/memory_manage/lend_invalid_handle_tag/lend_invalid_handle_tag_server.o \
                 $(TEST_SRC)/memory_manage/lend_invalid_handle_tag/lend_invalid_handle_tag_testentry.o \
+                $(TEST_SRC)/memory_manage/lend_lower_upper_boundary/lend_lower_upper_boundary_32_client.o \
+                $(TEST_SRC)/memory_manage/lend_lower_upper_boundary/lend_lower_upper_boundary_32_server.o \
+                $(TEST_SRC)/memory_manage/lend_lower_upper_boundary/lend_lower_upper_boundary_32_testentry.o \
+                $(TEST_SRC)/memory_manage/lend_lower_upper_boundary/lend_lower_upper_boundary_64_client.o \
+                $(TEST_SRC)/memory_manage/lend_lower_upper_boundary/lend_lower_upper_boundary_64_server.o \
+                $(TEST_SRC)/memory_manage/lend_lower_upper_boundary/lend_lower_upper_boundary_64_testentry.o \
                 $(TEST_SRC)/memory_manage/lend_mem_access_after_lend/lend_mem_access_after_lend_32_client.o \
                 $(TEST_SRC)/memory_manage/lend_mem_access_after_lend/lend_mem_access_after_lend_32_testentry.o \
                 $(TEST_SRC)/memory_manage/lend_mem_access_after_lend/lend_mem_access_after_lend_64_client.o \
@@ -143,6 +187,27 @@ ffa_acs_test-objs += $(TEST_SRC)/memory_manage/ffa_mem_lend/ffa_mem_lend_client.
                 $(TEST_SRC)/memory_manage/lend_retrieve_input_checks/lend_retrieve_input_checks3_client.o \
                 $(TEST_SRC)/memory_manage/lend_retrieve_input_checks/lend_retrieve_input_checks3_server.o \
                 $(TEST_SRC)/memory_manage/lend_retrieve_input_checks/lend_retrieve_input_checks3_testentry.o \
+                $(TEST_SRC)/memory_manage/lend_retrieve_input_checks/lend_retrieve_input_checks4_client.o \
+                $(TEST_SRC)/memory_manage/lend_retrieve_input_checks/lend_retrieve_input_checks4_server.o \
+                $(TEST_SRC)/memory_manage/lend_retrieve_input_checks/lend_retrieve_input_checks4_testentry.o \
+                $(TEST_SRC)/memory_manage/lend_retrieve_input_checks/lend_retrieve_input_checks5_client.o \
+                $(TEST_SRC)/memory_manage/lend_retrieve_input_checks/lend_retrieve_input_checks5_server.o \
+                $(TEST_SRC)/memory_manage/lend_retrieve_input_checks/lend_retrieve_input_checks5_testentry.o \
+                $(TEST_SRC)/memory_manage/lend_retrieve_input_checks/lend_retrieve_input_checks6_client.o \
+                $(TEST_SRC)/memory_manage/lend_retrieve_input_checks/lend_retrieve_input_checks6_server.o \
+                $(TEST_SRC)/memory_manage/lend_retrieve_input_checks/lend_retrieve_input_checks6_testentry.o \
+                $(TEST_SRC)/memory_manage/lend_retrieve_input_checks/lend_retrieve_input_checks7_client.o \
+                $(TEST_SRC)/memory_manage/lend_retrieve_input_checks/lend_retrieve_input_checks7_server.o \
+                $(TEST_SRC)/memory_manage/lend_retrieve_input_checks/lend_retrieve_input_checks7_testentry.o \
+                $(TEST_SRC)/memory_manage/lend_retrieve_input_checks/lend_retrieve_input_checks8_client.o \
+                $(TEST_SRC)/memory_manage/lend_retrieve_input_checks/lend_retrieve_input_checks8_server.o \
+                $(TEST_SRC)/memory_manage/lend_retrieve_input_checks/lend_retrieve_input_checks8_testentry.o \
+                $(TEST_SRC)/memory_manage/lend_retrieve_input_checks/lend_retrieve_input_checks9_client.o \
+                $(TEST_SRC)/memory_manage/lend_retrieve_input_checks/lend_retrieve_input_checks9_server.o \
+                $(TEST_SRC)/memory_manage/lend_retrieve_input_checks/lend_retrieve_input_checks9_testentry.o \
+                $(TEST_SRC)/memory_manage/lend_retrieve_input_checks/lend_retrieve_input_checks10_client.o \
+                $(TEST_SRC)/memory_manage/lend_retrieve_input_checks/lend_retrieve_input_checks10_server.o \
+                $(TEST_SRC)/memory_manage/lend_retrieve_input_checks/lend_retrieve_input_checks10_testentry.o \
                 $(TEST_SRC)/memory_manage/lend_retrieve_input_checks/lend_retrieve_input_checks_client.o \
                 $(TEST_SRC)/memory_manage/lend_retrieve_input_checks/lend_retrieve_input_checks_server.o \
                 $(TEST_SRC)/memory_manage/lend_retrieve_input_checks/lend_retrieve_input_checks_testentry.o \
@@ -154,25 +219,119 @@ ffa_acs_test-objs += $(TEST_SRC)/memory_manage/ffa_mem_lend/ffa_mem_lend_client.
                 $(TEST_SRC)/memory_manage/lend_retrieve_mem_access/lend_retrieve_mem_access_64_testentry.o \
                 $(TEST_SRC)/memory_manage/lend_retrieve_with_address_range/lend_retrieve_with_address_range_client.o \
                 $(TEST_SRC)/memory_manage/lend_retrieve_with_address_range/lend_retrieve_with_address_range_server.o \
-                $(TEST_SRC)/memory_manage/lend_retrieve_with_address_range/lend_retrieve_with_address_range_testentry.o
+                $(TEST_SRC)/memory_manage/lend_retrieve_with_address_range/lend_retrieve_with_address_range_testentry.o \
+                $(TEST_SRC)/memory_manage/lend_ro_retrieve_rw/lend_ro_retrieve_rw_client.o \
+                $(TEST_SRC)/memory_manage/lend_ro_retrieve_rw/lend_ro_retrieve_rw_server.o \
+                $(TEST_SRC)/memory_manage/lend_ro_retrieve_rw/lend_ro_retrieve_rw_testentry.o \
+                $(TEST_SRC)/memory_manage/lend_rw_retrieve_ro/lend_rw_retrieve_ro_client.o \
+                $(TEST_SRC)/memory_manage/lend_rw_retrieve_ro/lend_rw_retrieve_ro_server.o \
+                $(TEST_SRC)/memory_manage/lend_rw_retrieve_ro/lend_rw_retrieve_ro_testentry.o \
+                $(TEST_SRC)/memory_manage/lend_sepid/lend_sepid_client.o \
+                $(TEST_SRC)/memory_manage/lend_sepid/lend_sepid_server.o \
+                $(TEST_SRC)/memory_manage/lend_sepid/lend_sepid_testentry.o \
+                $(TEST_SRC)/memory_manage/lend_shareability_attr/lend_shareability_attr_client.o \
+                $(TEST_SRC)/memory_manage/lend_shareability_attr/lend_shareability_attr_server.o \
+                $(TEST_SRC)/memory_manage/lend_shareability_attr/lend_shareability_attr_testentry.o \
+                $(TEST_SRC)/memory_manage/lend_shareability_attr/lend_shareability_attr1_client.o \
+                $(TEST_SRC)/memory_manage/lend_shareability_attr/lend_shareability_attr1_server.o \
+                $(TEST_SRC)/memory_manage/lend_shareability_attr/lend_shareability_attr1_testentry.o \
+                $(TEST_SRC)/memory_manage/lend_shareability_attr/lend_shareability_attr2_client.o \
+                $(TEST_SRC)/memory_manage/lend_shareability_attr/lend_shareability_attr2_server.o \
+                $(TEST_SRC)/memory_manage/lend_shareability_attr/lend_shareability_attr2_testentry.o \
+                $(TEST_SRC)/memory_manage/lend_shareability_attr/lend_shareability_attr3_client.o \
+                $(TEST_SRC)/memory_manage/lend_shareability_attr/lend_shareability_attr3_server.o \
+                $(TEST_SRC)/memory_manage/lend_shareability_attr/lend_shareability_attr3_testentry.o \
+                $(TEST_SRC)/memory_manage/lend_state_machine/lend_state_machine_1_client.o \
+                $(TEST_SRC)/memory_manage/lend_state_machine/lend_state_machine_1_server.o \
+                $(TEST_SRC)/memory_manage/lend_state_machine/lend_state_machine_1_testentry.o \
+                $(TEST_SRC)/memory_manage/lend_state_machine/lend_state_machine_2_client.o \
+                $(TEST_SRC)/memory_manage/lend_state_machine/lend_state_machine_2_server.o \
+                $(TEST_SRC)/memory_manage/lend_state_machine/lend_state_machine_2_testentry.o \
+                $(TEST_SRC)/memory_manage/lend_state_machine/lend_state_machine_3_client.o \
+                $(TEST_SRC)/memory_manage/lend_state_machine/lend_state_machine_3_server.o \
+                $(TEST_SRC)/memory_manage/lend_state_machine/lend_state_machine_3_testentry.o \
+                $(TEST_SRC)/memory_manage/lend_state_machine/lend_state_machine_4_client.o \
+                $(TEST_SRC)/memory_manage/lend_state_machine/lend_state_machine_4_server.o \
+                $(TEST_SRC)/memory_manage/lend_state_machine/lend_state_machine_4_testentry.o \
+                $(TEST_SRC)/memory_manage/lend_state_machine/lend_state_machine_5_client.o \
+                $(TEST_SRC)/memory_manage/lend_state_machine/lend_state_machine_5_server.o \
+                $(TEST_SRC)/memory_manage/lend_state_machine/lend_state_machine_5_testentry.o \
+                $(TEST_SRC)/memory_manage/lend_state_machine/lend_state_machine_6_client.o \
+                $(TEST_SRC)/memory_manage/lend_state_machine/lend_state_machine_6_server.o \
+                $(TEST_SRC)/memory_manage/lend_state_machine/lend_state_machine_6_testentry.o \
+                $(TEST_SRC)/memory_manage/multiple_retrievals_by_borrower/lend_multiple_retrievals_client.o \
+                $(TEST_SRC)/memory_manage/multiple_retrievals_by_borrower/lend_multiple_retrievals_server.o \
+                $(TEST_SRC)/memory_manage/multiple_retrievals_by_borrower/lend_multiple_retrievals_testentry.o
 
 ffa_acs_test-objs += $(TEST_SRC)/memory_manage/donate_input_error_checks/donate_input_error_checks_client.o \
                 $(TEST_SRC)/memory_manage/donate_input_error_checks/donate_input_error_checks_testentry.o \
+                $(TEST_SRC)/memory_manage/donate_input_error_checks/donate_input_error_checks1_testentry.o \
+                $(TEST_SRC)/memory_manage/donate_input_error_checks/donate_input_error_checks1_client.o \
+                $(TEST_SRC)/memory_manage/donate_input_error_checks/donate_input_error_checks1_server.o \
+                $(TEST_SRC)/memory_manage/donate_input_error_checks/donate_input_error_checks2_testentry.o \
+                $(TEST_SRC)/memory_manage/donate_input_error_checks/donate_input_error_checks2_client.o \
+                $(TEST_SRC)/memory_manage/donate_input_error_checks/donate_input_error_checks3_testentry.o \
+                $(TEST_SRC)/memory_manage/donate_input_error_checks/donate_input_error_checks3_client.o \
+                $(TEST_SRC)/memory_manage/donate_input_error_checks/donate_input_error_checks4_testentry.o \
+                $(TEST_SRC)/memory_manage/donate_input_error_checks/donate_input_error_checks4_client.o \
                 $(TEST_SRC)/memory_manage/donate_invalid_handle_tag/donate_invalid_handle_tag_client.o \
                 $(TEST_SRC)/memory_manage/donate_invalid_handle_tag/donate_invalid_handle_tag_server.o \
                 $(TEST_SRC)/memory_manage/donate_invalid_handle_tag/donate_invalid_handle_tag_testentry.o \
+                $(TEST_SRC)/memory_manage/ffa_mem_donate/ffa_mem_donate_testentry.o \
+                $(TEST_SRC)/memory_manage/ffa_mem_donate/ffa_mem_donate_client.o \
+                $(TEST_SRC)/memory_manage/ffa_mem_donate/ffa_mem_donate_server.o \
                 $(TEST_SRC)/memory_manage/donate_lower_upper_boundary/donate_lower_upper_boundary_32_client.o \
                 $(TEST_SRC)/memory_manage/donate_lower_upper_boundary/donate_lower_upper_boundary_32_server.o \
                 $(TEST_SRC)/memory_manage/donate_lower_upper_boundary/donate_lower_upper_boundary_32_testentry.o \
                 $(TEST_SRC)/memory_manage/donate_lower_upper_boundary/donate_lower_upper_boundary_64_client.o \
                 $(TEST_SRC)/memory_manage/donate_lower_upper_boundary/donate_lower_upper_boundary_64_server.o \
                 $(TEST_SRC)/memory_manage/donate_lower_upper_boundary/donate_lower_upper_boundary_64_testentry.o \
+                $(TEST_SRC)/memory_manage/donate_mem_access_after_donate/donate_mem_access_after_donate_32_testentry.o \
+                $(TEST_SRC)/memory_manage/donate_mem_access_after_donate/donate_mem_access_after_donate_32_client.o \
+                $(TEST_SRC)/memory_manage/donate_mem_access_after_donate/donate_mem_access_after_donate_64_testentry.o \
+                $(TEST_SRC)/memory_manage/donate_mem_access_after_donate/donate_mem_access_after_donate_64_client.o \
+                $(TEST_SRC)/memory_manage/donate_retrieve_alignment_hint/donate_retrieve_align_hint_check_testentry.o \
+                $(TEST_SRC)/memory_manage/donate_retrieve_alignment_hint/donate_retrieve_align_hint_check_client.o \
+                $(TEST_SRC)/memory_manage/donate_retrieve_alignment_hint/donate_retrieve_align_hint_check_server.o \
                 $(TEST_SRC)/memory_manage/donate_retrieve_input_checks/donate_retrieve_input_checks1_client.o \
                 $(TEST_SRC)/memory_manage/donate_retrieve_input_checks/donate_retrieve_input_checks1_server.o \
                 $(TEST_SRC)/memory_manage/donate_retrieve_input_checks/donate_retrieve_input_checks1_testentry.o \
                 $(TEST_SRC)/memory_manage/donate_retrieve_input_checks/donate_retrieve_input_checks2_client.o \
                 $(TEST_SRC)/memory_manage/donate_retrieve_input_checks/donate_retrieve_input_checks2_server.o \
-                $(TEST_SRC)/memory_manage/donate_retrieve_input_checks/donate_retrieve_input_checks2_testentry.o 
+                $(TEST_SRC)/memory_manage/donate_retrieve_input_checks/donate_retrieve_input_checks2_testentry.o \
+                $(TEST_SRC)/memory_manage/donate_retrieve_input_checks/donate_retrieve_input_checks3_client.o \
+                $(TEST_SRC)/memory_manage/donate_retrieve_input_checks/donate_retrieve_input_checks3_server.o \
+                $(TEST_SRC)/memory_manage/donate_retrieve_input_checks/donate_retrieve_input_checks3_testentry.o \
+                $(TEST_SRC)/memory_manage/donate_retrieve_input_checks/donate_retrieve_input_checks4_client.o \
+                $(TEST_SRC)/memory_manage/donate_retrieve_input_checks/donate_retrieve_input_checks4_server.o \
+                $(TEST_SRC)/memory_manage/donate_retrieve_input_checks/donate_retrieve_input_checks4_testentry.o \
+                $(TEST_SRC)/memory_manage/donate_retrieve_input_checks/donate_retrieve_input_checks5_client.o \
+                $(TEST_SRC)/memory_manage/donate_retrieve_input_checks/donate_retrieve_input_checks5_server.o \
+                $(TEST_SRC)/memory_manage/donate_retrieve_input_checks/donate_retrieve_input_checks5_testentry.o \
+                $(TEST_SRC)/memory_manage/donate_retrieve_input_checks/donate_retrieve_input_checks6_client.o \
+                $(TEST_SRC)/memory_manage/donate_retrieve_input_checks/donate_retrieve_input_checks6_server.o \
+                $(TEST_SRC)/memory_manage/donate_retrieve_input_checks/donate_retrieve_input_checks6_testentry.o \
+                $(TEST_SRC)/memory_manage/donate_retrieve_with_address_range/donate_retrieve_with_address_range_testentry.o \
+                $(TEST_SRC)/memory_manage/donate_retrieve_with_address_range/donate_retrieve_with_address_range_client.o \
+                $(TEST_SRC)/memory_manage/donate_retrieve_with_address_range/donate_retrieve_with_address_range_server.o \
+                $(TEST_SRC)/memory_manage/donate_sepid/donate_sepid_testentry.o \
+                $(TEST_SRC)/memory_manage/donate_sepid/donate_sepid_client.o \
+                $(TEST_SRC)/memory_manage/donate_sepid/donate_sepid_server.o \
+                $(TEST_SRC)/memory_manage/donate_state_machine/donate_state_machine_1_client.o \
+                $(TEST_SRC)/memory_manage/donate_state_machine/donate_state_machine_1_server.o \
+                $(TEST_SRC)/memory_manage/donate_state_machine/donate_state_machine_1_testentry.o \
+                $(TEST_SRC)/memory_manage/donate_state_machine/donate_state_machine_2_client.o \
+                $(TEST_SRC)/memory_manage/donate_state_machine/donate_state_machine_2_server.o \
+                $(TEST_SRC)/memory_manage/donate_state_machine/donate_state_machine_2_testentry.o \
+                $(TEST_SRC)/memory_manage/donate_state_machine/donate_state_machine_3_client.o \
+                $(TEST_SRC)/memory_manage/donate_state_machine/donate_state_machine_3_server.o \
+                $(TEST_SRC)/memory_manage/donate_state_machine/donate_state_machine_3_testentry.o \
+                $(TEST_SRC)/memory_manage/donate_state_machine/donate_state_machine_4_client.o \
+                $(TEST_SRC)/memory_manage/donate_state_machine/donate_state_machine_4_server.o \
+                $(TEST_SRC)/memory_manage/donate_state_machine/donate_state_machine_4_testentry.o \
+                $(TEST_SRC)/memory_manage/donate_state_machine/donate_state_machine_5_client.o \
+                $(TEST_SRC)/memory_manage/donate_state_machine/donate_state_machine_5_server.o \
+                $(TEST_SRC)/memory_manage/donate_state_machine/donate_state_machine_5_testentry.o 
 
 ffa_acs_test-objs += $(TEST_SRC)/memory_manage/relinquish_mem_unmap_check/relinquish_mem_unmap_check_client.o \
                 $(TEST_SRC)/memory_manage/relinquish_mem_unmap_check/relinquish_mem_unmap_check_server.o \
@@ -216,6 +375,53 @@ ffa_acs_test-objs += $(TEST_SRC)/setup_discovery/ffa_features/ffa_features_clien
                 $(TEST_SRC)/setup_discovery/up_migrate_capable/up_migrate_capable_client.o \
                 $(TEST_SRC)/setup_discovery/up_migrate_capable/up_migrate_capable_server.o \
                 $(TEST_SRC)/setup_discovery/up_migrate_capable/up_migrate_capable_testentry.o
+
+ffa_acs_test-objs += $(TEST_SRC1)/setup_discovery/ffa_features/ffa_features_intr_testentry.o \
+                $(TEST_SRC1)/setup_discovery/ffa_features/ffa_features_intr_client.o \
+                $(TEST_SRC1)/setup_discovery/ffa_spm_id_get/ffa_spm_id_get_testentry.o \
+                $(TEST_SRC1)/setup_discovery/ffa_spm_id_get/ffa_spm_id_get_client.o \
+                $(TEST_SRC1)/direct_messaging/ffa_direct_message_error2/ffa_direct_message_error2_client.o \
+                $(TEST_SRC1)/direct_messaging/ffa_direct_message_error2/ffa_direct_message_error2_server.o \
+                $(TEST_SRC1)/direct_messaging/ffa_direct_message_error2/ffa_direct_message_error2_testentry.o
+                
+
+ffa_acs_test-objs += $(TEST_SRC1)/notifications/notification_bind/notification_bind_testentry.o \
+                $(TEST_SRC1)/notifications/notification_bind/notification_bind_client.o \
+                $(TEST_SRC1)/notifications/notification_bitmap_create/notification_bitmap_create_testentry.o \
+                $(TEST_SRC1)/notifications/notification_bitmap_create/notification_bitmap_create_client.o \
+                $(TEST_SRC1)/notifications/notification_bitmap_destroy/notification_bitmap_destroy_testentry.o \
+                $(TEST_SRC1)/notifications/notification_bitmap_destroy/notification_bitmap_destroy_client.o \
+                $(TEST_SRC1)/notifications/notification_get/notification_get_testentry.o \
+                $(TEST_SRC1)/notifications/notification_get/notification_get_client.o \
+                $(TEST_SRC1)/notifications/notification_set/notification_set_testentry.o \
+                $(TEST_SRC1)/notifications/notification_set/notification_set_client.o \
+                $(TEST_SRC1)/notifications/notification_set/notification_set_server.o \
+                $(TEST_SRC1)/notifications/notification_info_get/notification_info_get_testentry.o \
+                $(TEST_SRC1)/notifications/notification_info_get/notification_info_get_client.o \
+                $(TEST_SRC1)/notifications/notification_unbind/notification_unbind_testentry.o \
+                $(TEST_SRC1)/notifications/notification_unbind/notification_unbind_client.o \
+                $(TEST_SRC1)/notifications/vm_to_sp_notification/vm_to_sp_notification_testentry.o \
+                $(TEST_SRC1)/notifications/vm_to_sp_notification/vm_to_sp_notification_client.o \
+                $(TEST_SRC1)/notifications/vm_to_sp_notification/vm_to_sp_notification_server.o \
+                $(TEST_SRC1)/notifications/vm_to_sp_notification_pcpu/vm_to_sp_notification_pcpu_testentry.o \
+                $(TEST_SRC1)/notifications/vm_to_sp_notification_pcpu/vm_to_sp_notification_pcpu_client.o \
+                $(TEST_SRC1)/notifications/vm_to_sp_notification_pcpu/vm_to_sp_notification_pcpu_server.o
+
+ffa_acs_test-objs += $(TEST_SRC1)/interrupts/sp_to_sp_blocked/sp_to_sp_blocked_client.o \
+                $(TEST_SRC1)/interrupts/sp_to_sp_blocked/sp_to_sp_blocked_server.o \
+                $(TEST_SRC1)/interrupts/sp_to_sp_blocked/sp_to_sp_blocked_testentry.o \
+                $(TEST_SRC1)/interrupts/sp_to_sp_waiting/sp_to_sp_waiting_testentry.o \
+                $(TEST_SRC1)/interrupts/sp_to_sp_waiting/sp_to_sp_waiting_client.o \
+                $(TEST_SRC1)/interrupts/sp_to_sp_waiting/sp_to_sp_waiting_server.o \
+                $(TEST_SRC1)/interrupts/vm_to_sp_waiting/vm_to_sp_waiting_testentry.o \
+                $(TEST_SRC1)/interrupts/vm_to_sp_waiting/vm_to_sp_waiting_client.o \
+                $(TEST_SRC1)/interrupts/vm_to_sp_waiting/vm_to_sp_waiting_server.o \
+                $(TEST_SRC1)/interrupts/vm_to_sp_managed_exit/vm_to_sp_managed_exit_testentry.o \
+                $(TEST_SRC1)/interrupts/vm_to_sp_managed_exit/vm_to_sp_managed_exit_client.o \
+                $(TEST_SRC1)/interrupts/vm_to_sp_managed_exit/vm_to_sp_managed_exit_server.o \
+                $(TEST_SRC1)/interrupts/vm_to_sp_preempt/vm_to_sp_preempt_testentry.o \
+                $(TEST_SRC1)/interrupts/vm_to_sp_preempt/vm_to_sp_preempt_client.o \
+                $(TEST_SRC1)/interrupts/vm_to_sp_preempt/vm_to_sp_preempt_server.o 
 
 ccflags-y=$(ACS_MACROS) $(ACS_INCLUDE) -Wall -Werror
 

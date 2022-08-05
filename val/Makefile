@@ -14,6 +14,9 @@ PLATFORM_NS_HYPERVISOR_PRESENT ?=  0
 PLATFORM_SPMC_EL ?= 2
 PLATFORM_SP_EL   ?= 1
 SUITE            ?= all
+PLATFORM_FFA_V_1_0 ?= 0
+PLATFORM_FFA_V_1_1 ?= 0
+PLATFORM_FFA_V_ALL ?= 1
 
 ACS_MACROS += -DVM1_COMPILE -DTARGET_LINUX
 ACS_MACROS += -DVERBOSITY=$(VERBOSITY)
@@ -21,6 +24,9 @@ ACS_MACROS += -DPLATFORM_NS_HYPERVISOR_PRESENT=$(PLATFORM_NS_HYPERVISOR_PRESENT)
 ACS_MACROS += -DPLATFORM_SPMC_EL=$(PLATFORM_SPMC_EL)
 ACS_MACROS += -DPLATFORM_SP_EL=$(PLATFORM_SP_EL)
 ACS_MACROS += -DSUITE=$(SUITE)
+ACS_MACROS += -DPLATFORM_FFA_V_1_0=$(PLATFORM_FFA_V_1_0)
+ACS_MACROS += -DPLATFORM_FFA_V_1_1=$(PLATFORM_FFA_V_1_1)
+ACS_MACROS += -DPLATFORM_FFA_V_ALL=$(PLATFORM_FFA_V_ALL)
 
 #since we have copied the files locally
 ACS_DIR ?= .
@@ -35,6 +41,7 @@ ffa_acs_val-objs += $(VAL_SRC)/val_main.o  \
                     $(VAL_SRC)/val_ffa_abi.o \
                     $(VAL_SRC)/val_ffa_helpers.o \
                     $(VAL_SRC)/val_misc.o \
+                    $(VAL_SRC)/val_wd.o \
                     $(VAL_SRC)/val_vcpu_setup.o \
                     $(VAL_SRC)/val_shemaphore.o \
                     $(VAL_SRC)/val_exceptions.o \

@@ -35,7 +35,7 @@ For more information on Architecture Compliance Suite see [Validation Methodolog
 ## This release
 - Release Version - v0.8
 - Code Quality: Beta - ACS is being developed, please use this opportunity to ameliorate.
-- The tests are written for Arm FF-A 1.0 specification version.
+- The tests are written for Arm FF-A 1.1 specification version.
 - For information about the test coverage scenarios that are implemented in the current release of ACS and the scenarios that are planned for the future releases, see [Testcase checklist](./docs/testcase_checklist.md).
 
 ## GitHub branch
@@ -86,6 +86,9 @@ make
 -	-DPLATFORM_SPMC_EL=<el_num>: EL number where the target SPMC component runs. Supported values are 1 and 2. The default value is 2.
 -	-DPLATFORM_SP_EL=<el_num>: EL number where the test secure endpoints are expected to run. Supported values are 0(EL0), 1(EL1), and -1(Platform doesn't support deploying FFA based SPs). The default value is 1.
 -	-DPLATFORM_NS_HYPERVISOR_PRESENT=<0|1>: Does the system support the non-secure hypervisor implementing FF-A features? 1 for yes, 0 for no. The default vaule is 1. System is expected to intergrate and load all the three of nonsecure test endpoints(vm1, vm2 and vm3) if the value is set to 1. Otherwise needs to use single non-secure test endpoint(vm1) which would act as NS OS kernel.
+-   -DPLATFORM_FFA_V_1_0=<0|1>: It runs only tests that are supported by the Arm FF-A v1.0 specification. The default value is 0.
+-   -DPLATFORM_FFA_V_1_1=<0|1>: It only tests the Arm FF-A v1.1 specifications as updates to Arm FF-A v1.0. The default value is 0.
+-   -DPLATFORM_FFA_V_ALL=<0|1>: It runs all tests that are supported by the Arm FF-A v1.1 specification. The default value is 1.
 
 *To compile tests for tgt_tfa_fvp platform*:<br />
 ```
@@ -95,7 +98,7 @@ cmake ../ -G"Unix Makefiles" -DCROSS_COMPILE=<path-to-aarch64-gcc>/bin/aarch64-n
 make
 ```
 **NOTE**
-	 The current release has been tested on **tgt_tfa_fvp** and **tgt_tfa_tc0** reference platforms with build options set to -DPLATFORM_NS_HYPERVISOR_PRESENT=0, -DPLATFORM_SPMC_EL=2, -DPLATFORM_SP_EL=1. These platform represents system configuration where SPMD and SMPC are implemented at EL3 and SEL2 respectively, and three test-SPs(sp1, sp2 and sp3) runs at SEL1 and one test NS-EP (vm1) runs as an OS kernel in normal world. For more information on the unverified tests on reference platform, see [testcase_unverified](./docs/testcase_unverified.md) document.<br />
+	 The current release has been tested on **tgt_tfa_fvp** reference platforms with build options set to -DPLATFORM_NS_HYPERVISOR_PRESENT=0, -DPLATFORM_SPMC_EL=2, -DPLATFORM_SP_EL=1. These platform represents system configuration where SPMD and SMPC are implemented at EL3 and SEL2 respectively, and three test-SPs(sp1, sp2 and sp3) runs at SEL1 and one test NS-EP (vm1) runs as an OS kernel in normal world. For more information on the unverified tests on reference platform, see [testcase_unverified](./docs/testcase_unverified.md) document.<br />
 
 ### Build output
 The ACS build generates the binaries for the following test endpoints:<br />
@@ -125,4 +128,4 @@ Arm FF-A ACS is distributed under BSD-3-Clause License.
 
 --------------
 
-*Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.*
+*Copyright (c) 2021-2022, Arm Limited or its affiliates. All rights reserved.*

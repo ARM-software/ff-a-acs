@@ -12,8 +12,8 @@
 
     /* Properties */
     description = "Base-1";
-    ffa-version = <0x00010000>; /* 31:16 - Major, 15:0 - Minor */
-    uuid = <0x79b55c73 0x1d8c44b9 0x859361e1 0x770ad8d2>;
+    ffa-version = <0x00010001>; /* 31:16 - Major, 15:0 - Minor */
+    uuid = <0x735cb579 0xb9448c1d 0xe1619385 0xd2d80a77>;
     id = <3>;
     auxiliary-id = <0xae>;
     stream-endpoint-ids = <0 1 2 3>;
@@ -21,10 +21,12 @@
     exception-level = <2>; /* S-EL1 */
     execution-state = <0>; /* AARCH64 */
     load-address = <0x7200000>;
-    entrypoint-offset = <0x1000>;
+    entrypoint-offset = <0x4000>;
     xlat-granule = <0>; /* 4KiB */
     boot-order = <0>;
+    notification-support;
     messaging-method = <3>; /* Direct messaging only */
+    managed-exit; /* Managed exit is supported */
     run-time-model = <0>; /* Run to completion */
 
     /* Boot protocol */

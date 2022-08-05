@@ -12,8 +12,8 @@
 
     /* Properties */
     description = "Base-1";
-    ffa-version = <0x00010000>; /* 31:16 - Major, 15:0 - Minor */
-    uuid = <0xb4b5671e 0x4a904fe1 0xb81ffb13 0xdae1dacb>;
+    ffa-version = <0x00010001>; /* 31:16 - Major, 15:0 - Minor */
+    uuid = <0x1e67b5b4 0xe14f904a 0x13fb1fb8 0xcbdae1da>;
     id = <1>;
     auxiliary-id = <0xae>;
     stream-endpoint-ids = <0 1 2 3>;
@@ -21,10 +21,11 @@
     exception-level = <2>; /* S-EL1 */
     execution-state = <0>; /* AARCH64 */
     load-address = <0x7000000>;
-    entrypoint-offset = <0x1000>;
+    entrypoint-offset = <0x00004000>;
     xlat-granule = <0>; /* 4KiB */
     boot-order = <0>;
     messaging-method = <3>; /* Direct messaging only */
+    notification-support; /* Support receipt of notifications. */
     run-time-model = <0>; /* Run to completion */
 
     /* Boot protocol */
@@ -51,6 +52,13 @@
             attributes = <0x3>; /* read-write */
         };
 
+        sec_twdog {
+            /* SP805 Trusted Watchdog Module */
+            base-address = <0x00000000 0x2a490000>;
+            pages-count = <32>; /* Two 64KB pages */
+            attributes = <0x3>; /* read-write */
+            interrupts = <56 0x900>;
+        };
     };
 
 };
