@@ -23,7 +23,7 @@
     load-address = <0x7200000>;
     entrypoint-offset = <0x4000>;
     xlat-granule = <0>; /* 4KiB */
-    boot-order = <0>;
+    boot-order = <2>;
     notification-support;
     messaging-method = <3>; /* Direct messaging only */
     managed-exit; /* Managed exit is supported */
