@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2022-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -53,7 +53,11 @@
     .globl    asm_smc64
 
 asm_smc64:
+#if ((PLATFORM_SP_EL == 0) && !(defined(VM1_COMPILE)))
+    smccc_conduit svc
+#else
     smccc_conduit smc
+#endif
     ret
 
 /* ---------------------------------------------------------------------------
@@ -70,5 +74,9 @@ asm_smc64:
     .globl    asm_hvc64
 
 asm_hvc64:
+#if ((PLATFORM_SP_EL == 0) && !(defined(VM1_COMPILE)))
+    smccc_conduit svc
+#else
     smccc_conduit hvc
+#endif
     ret

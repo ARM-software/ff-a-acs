@@ -1,11 +1,12 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
  */
 
 #include "test_database.h"
+#include "pal_smmuv3_testengine.h"
 
 static uint32_t ffa_mem_share_helper(uint32_t test_run_data, uint32_t fid)
 {
@@ -16,8 +17,7 @@ static uint32_t ffa_mem_share_helper(uint32_t test_run_data, uint32_t fid)
     ffa_endpoint_id_t sender = val_get_endpoint_id(client_logical_id);
     ffa_endpoint_id_t recipient = val_get_endpoint_id(server_logical_id);
     mb_buf_t mb;
-    uint8_t *pages = NULL;
-    uint32_t i;
+    memory_region_descriptor_t mem_desc;
     uint64_t size = 0x1000;
     ffa_memory_region_flags_t flags = 0;
     ffa_memory_handle_t handle;
@@ -43,18 +43,52 @@ static uint32_t ffa_mem_share_helper(uint32_t test_run_data, uint32_t fid)
         goto free_memory;
     }
 
-    pages = (uint8_t *)val_memory_alloc(size * 2);
-    if (!pages)
+    val_select_server_fn_direct(test_run_data, fid, 0, 0, 0);
+
+    /* Map the region into endpoint translation */
+    mem_desc.virtual_address = PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION;
+    mem_desc.physical_address = PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION;
+    mem_desc.length = size * 2;
+    if (VAL_IS_ENDPOINT_SECURE(val_get_endpoint_logical_id(sender)))
+        mem_desc.attributes = ATTR_RW_DATA;
+    else
+        mem_desc.attributes = ATTR_RW_DATA | ATTR_NS;
+
+    if (val_mem_map_pgt(&mem_desc))
     {
-        LOG(ERROR, "\tMemory allocation failed\n", 0, 0);
-        status = VAL_ERROR_POINT(3);
+        LOG(ERROR, "\tVa to pa mapping failed\n", 0, 0);
+        status =  VAL_ERROR_POINT(3);
         goto rxtx_unmap;
     }
 
-    val_select_server_fn_direct(test_run_data, fid, 0, 0, 0);
+    val_memset((void *)PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION, 0xab, size);
+    /* Initiate the DMA transactions to
+     * memory regions using device upstream of SMMU
+     */
+    if (VAL_IS_ENDPOINT_SECURE(val_get_endpoint_logical_id(sender)))
+    {
+        smmuv3_configure_testengine(PLATFORM_SMMU_STREAM_ID,
+                 PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION,
+                PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION + PAGE_SIZE_4K, size, true);
+    }
+    else
+    {
+        smmuv3_configure_testengine(PLATFORM_SMMU_STREAM_ID,
+                 PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION,
+                PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION + PAGE_SIZE_4K, size, false);
+    }
 
-    val_memset(pages, 0xab, size);
-    constituents[0].address = val_mem_virt_to_phys((void *)pages);
+    if (val_memcmp((void *)PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION,
+                    (void *)PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION + PAGE_SIZE_4K, size))
+    {
+        LOG(ERROR, "\tData mismatch\n", 0, 0);
+        status =  VAL_ERROR_POINT(4);
+        goto rxtx_unmap;
+    }
+
+    val_memset((void *)PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION + PAGE_SIZE_4K, 0x0, size);
+
+    constituents[0].address = (void *)PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION;
     constituents[0].page_count = 2;
 
     mem_region_init.memory_region = mb.send;
@@ -88,12 +122,9 @@ static uint32_t ffa_mem_share_helper(uint32_t test_run_data, uint32_t fid)
     if (payload.fid == FFA_ERROR_32)
     {
         LOG(ERROR, "\tMem_share request failed err %x\n", payload.arg2, 0);
-        status = VAL_ERROR_POINT(4);
+        status = VAL_ERROR_POINT(5);
         goto rxtx_unmap;
     }
-
-    /* Check that lender has Owner-SA state after FFA_MEM_SHARE call */
-    val_memset(pages, 0xab, size);
 
     handle = ffa_mem_success_handle(payload);
 
@@ -117,39 +148,22 @@ static uint32_t ffa_mem_share_helper(uint32_t test_run_data, uint32_t fid)
     if (payload.fid == FFA_ERROR_32)
     {
         LOG(ERROR, "\tMem Reclaim failed err %x\n", payload.arg2, 0);
-        status = VAL_ERROR_POINT(10);
+        status = VAL_ERROR_POINT(7);
         goto rxtx_unmap;
-    }
-
-    /* Check source and destination data are same */
-    for(i = 0; i < size; i++)
-    {
-        if(pages[i] != pages[i+size])
-        {
-           LOG(ERROR, "\tSource Destination data mismatch.\n", 0, 0);
-           status = VAL_ERROR_POINT(9);
-           goto rxtx_unmap;
-        }
     }
 
 rxtx_unmap:
     if (val_rxtx_unmap(sender))
     {
         LOG(ERROR, "\tRXTX_UNMAP failed\n", 0, 0);
-        status = status ? status : VAL_ERROR_POINT(12);
+        status = status ? status : VAL_ERROR_POINT(8);
     }
 
 free_memory:
     if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
     {
         LOG(ERROR, "\tfree_rxtx_buffers failed\n", 0, 0);
-        status = status ? status : VAL_ERROR_POINT(13);
-    }
-
-    if (val_memory_free(pages, size * 2))
-    {
-        LOG(ERROR, "\tval_mem_free failed\n", 0, 0);
-        status = status ? status : VAL_ERROR_POINT(14);
+        status = status ? status : VAL_ERROR_POINT(9);
     }
 
     payload = val_select_server_fn_direct(test_run_data, 0, 0, 0, 0);

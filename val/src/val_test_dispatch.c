@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -13,6 +13,7 @@ extern uint64_t val_image_load_offset;
 uint64_t val_image_load_offset = 0;
 #endif
 uint32_t g_current_test_num;
+extern const uint32_t  total_tests;
 
 /* Validate endpoint config for the given system */
 static uint32_t validate_test_config(uint32_t client_logical_id __UNUSED,
@@ -48,18 +49,6 @@ static uint32_t validate_test_config(uint32_t client_logical_id __UNUSED,
     {
         LOG(TEST,
             "\tBoth SP & SPMC at EL1 config isn't supported, skipping the check\n",
-            0, 0);
-        return VAL_SKIP_CHECK;
-    }
-#endif
-
-/* VHE config */
-#if (PLATFORM_SPMC_EL == 2 && PLATFORM_SP_EL == 0)
-    if (client_logical_id == SP2 || client_logical_id == SP3
-        || server_logical_id == SP2 || server_logical_id == SP3)
-    {
-        LOG(TEST,
-            "\tSP isn't support VHE config, skipping the check\n",
             0, 0);
         return VAL_SKIP_CHECK;
     }
@@ -192,8 +181,11 @@ void val_test_dispatch(void)
 {
     regre_report_t    regre_report = {0};
     test_info_t       test_info = {0};
-    uint32_t          test_result, test_num, suite_num, reboot_run = 0;
+    uint32_t          test_result, test_num, suite_num, i, reboot_run = 0;
+    uint32_t          test_num_start = 0, test_num_end = 0;
     test_entry_fptr_t test_entry_fn_ptr;
+    ffa_args_t payload;
+    uint32_t input_version_number;
 
     if (val_get_last_run_test_info(&test_info))
     {
@@ -211,17 +203,76 @@ void val_test_dispatch(void)
         reboot_run = 1;
     }
 
-    test_num = test_info.test_num;
     suite_num = test_info.suite_num;
 
-    /* Iterate over test_list[] to run test one by one */
-    for (; ; test_num++)
+    if (!reboot_run)
     {
-        if (test_list[test_num].testentry_fn == NULL)
+#if defined(SUITE_TEST_RANGE)
+        uint32_t test_num, j;
+        char *start_test_name = SUITE_TEST_RANGE_MIN;
+        char *end_test_name = SUITE_TEST_RANGE_MAX;
+        char *data_base = NULL;
+
+        test_num = test_info.test_num;
+        for (; test_num < total_tests-1; test_num++)
+        {
+            data_base = (char *)test_list[test_num].test_name;
+            data_base++;
+            if (val_strcmp((char *)data_base, start_test_name) == 0)
+            {
+                test_num_start = test_num;
+            }
+        }
+
+        test_num = test_info.test_num;
+        for (; test_num < total_tests-1; test_num++)
+        {
+            data_base = (char *)test_list[test_num].test_name;
+            data_base++;
+            if (val_strcmp((char *)data_base, end_test_name) == 0)
+            {
+                test_num_end = test_num;
+            }
+        }
+
+        if (test_num_start > test_num_end)
+        {
+            j = test_num_start;
+            test_num_start = test_num_end;
+            test_num_end = j;
+        }
+
+        if ((val_nvm_write(VAL_NVM_OFFSET(NVM_END_TEST_NUM_INDEX),
+                                                  &test_num_end, sizeof(test_num_end))))
+        {
+            LOG(ERROR, "\tUnable to write nvm\n", 0, 0);
+            return;
+        }
+#else
+        test_num_start = test_info.test_num;
+        test_num_end = total_tests;
+        if ((val_nvm_write(VAL_NVM_OFFSET(NVM_END_TEST_NUM_INDEX),
+                                                  &test_num_end, sizeof(test_num_end))))
+        {
+            LOG(ERROR, "\tUnable to write nvm\n", 0, 0);
+            return;
+        }
+#endif
+    }
+    else
+    {
+        test_num_start = test_info.test_num;
+        test_num_end = test_info.end_test_num;
+    }
+
+    /* Iterate over test_list[] to run test one by one */
+    for (i = test_num_start ; i <= test_num_end; i++)
+    {
+        if (test_list[i].testentry_fn == NULL)
             break;
 
         /* Fix symbol relocation - Add image offset */
-        test_entry_fn_ptr = (test_entry_fptr_t)(test_list[test_num].testentry_fn
+        test_entry_fn_ptr = (test_entry_fptr_t)(test_list[i].testentry_fn
                                 + val_image_load_offset);
         if (reboot_run)
         {
@@ -241,10 +292,10 @@ void val_test_dispatch(void)
         else
         {
 
-            if (suite_num != test_list[test_num].suite_num)
+            if (suite_num != test_list[i].suite_num)
             {
                 /* Print test suite name */
-                suite_num = test_list[test_num].suite_num;
+                suite_num = test_list[i].suite_num;
                 LOG(ALWAYS, "\n", 0, 0);
                 LOG(ALWAYS, test_suite_list[suite_num].suite_desc, 0, 0);
                 LOG(ALWAYS, "====================================\n", 0, 0);
@@ -264,18 +315,35 @@ void val_test_dispatch(void)
             * therefore perform cache ops on location to avoid any
             * sharing issue
             * */
-           g_current_test_num = test_num;
+           g_current_test_num = i;
            val_dataCacheCleanInvalidateVA((uint64_t)&g_current_test_num);
 
-           val_test_init(test_num);
+           /* Execute FFA_VERSION call before each test case */
+           input_version_number = (uint32_t)(((FFA_VERSION_MAJOR << 16)
+                                             | FFA_VERSION_MINOR));
+           val_memset(&payload, 0, sizeof(ffa_args_t));
+           payload.arg1 = input_version_number;
+           val_ffa_version(&payload);
+           if (payload.fid != ((FFA_VERSION_MAJOR << 16) | FFA_VERSION_MINOR))
+           {
+              if (!((FFA_VERSION_MAJOR == payload.fid >> 16)
+                 && FFA_VERSION_MINOR <= (payload.fid & 0xFFFF)))
+                {
+                    LOG(WARN, "\tExpected=0x%x but Actual=0x%x\n",
+                           ((FFA_VERSION_MAJOR << 16) | FFA_VERSION_MINOR),
+                              payload.fid);
+                }
+           }
+
+           val_test_init(i);
 
            /* Execute test, Call <testname>testentry() function */
-           test_entry_fn_ptr(test_num);
+           test_entry_fn_ptr(i);
 
            val_test_exit();
         }
 
-        test_result = val_report_status(test_num);
+        test_result = val_report_status(i);
 
         if (val_nvm_read(VAL_NVM_OFFSET(NVM_TOTAL_PASS_INDEX),
                  &regre_report.total_pass, sizeof(uint32_t)) ||

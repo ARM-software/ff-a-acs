@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -69,11 +69,15 @@ uint32_t lend_multiple_retrievals_server(ffa_args_t args)
     else
         payload.arg1 = FFA_MEM_RETRIEVE_REQ_32;
 
+#if (PLATFORM_FFA_V_1_1 == 1 || PLATFORM_FFA_V_ALL == 1)
+    payload.arg2 = 0x2;
+#endif
+
     val_ffa_features(&payload);
 
-    if (payload.fid == FFA_ERROR_32 && (payload.arg2 == FFA_ERROR_NOT_SUPPORTED))
+    if (payload.fid == FFA_ERROR_32 || (payload.arg2 == FFA_ERROR_NOT_SUPPORTED))
     {
-        LOG(ERROR, "\tRETRIEVE_REQ not supported.\n", 0, 0);
+        LOG(ERROR, "\tRETRIEVE_REQ not supported %x .\n", payload.arg2, 0);
         status = VAL_ERROR_POINT(5);
         goto rxtx_unmap;
     }
@@ -81,7 +85,11 @@ uint32_t lend_multiple_retrievals_server(ffa_args_t args)
     if (payload.fid == FFA_SUCCESS_32 || payload.fid == FFA_SUCCESS_64)
     {
        /* Check for Outstanding retrievals field [7:0] */
+#if (PLATFORM_FFA_V_1_1 == 1 || PLATFORM_FFA_V_ALL == 1)
+       outstanding_retrieve_count = VAL_EXTRACT_BITS(payload.arg3, 0, 7);
+#else
        outstanding_retrieve_count = VAL_EXTRACT_BITS(payload.arg1, 0, 7);
+#endif
        outstanding_retrieve_count = (1U << (outstanding_retrieve_count + 1)) - 1;
        LOG(TEST, "Outstanding retrievals count %d\n", outstanding_retrieve_count, 0);
     }
@@ -94,8 +102,14 @@ uint32_t lend_multiple_retrievals_server(ffa_args_t args)
     mem_region_init.tag = 0;
     mem_region_init.flags = 0;
     mem_region_init.data_access = FFA_DATA_ACCESS_RW;
+#if (PLATFORM_FFA_V_1_1 == 1 || PLATFORM_FFA_V_ALL == 1)
+    mem_region_init.instruction_access = FFA_INSTRUCTION_ACCESS_NX;
+#else
     mem_region_init.instruction_access = FFA_INSTRUCTION_ACCESS_NOT_SPECIFIED;
+#endif
     mem_region_init.type = FFA_MEMORY_NORMAL_MEM;
+    mem_region_init.multi_share = false;
+    mem_region_init.receiver_count = 1;
     mem_region_init.cacheability = FFA_MEMORY_CACHE_WRITE_BACK;
 #if (PLATFORM_OUTER_SHAREABLE_SUPPORT_ONLY == 1)
     mem_region_init.shareability = FFA_MEMORY_OUTER_SHAREABLE;

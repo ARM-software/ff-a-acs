@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -17,9 +17,8 @@ static uint32_t lend_retrieve_input_checks_helper(uint32_t test_run_data, uint32
     ffa_endpoint_id_t recipient = val_get_endpoint_id(server_logical_id);
     mb_buf_t mb;
     uint8_t *pages = NULL;
-    uint32_t i;
     uint64_t size = 0x1000;
-    ffa_memory_region_flags_t flags = 0;
+    ffa_memory_region_flags_t flags = FFA_MEMORY_REGION_FLAG_CLEAR;
     ffa_memory_handle_t handle;
     mem_region_init_t mem_region_init;
     struct ffa_memory_region_constituent constituents[1];
@@ -69,7 +68,7 @@ static uint32_t lend_retrieve_input_checks_helper(uint32_t test_run_data, uint32
     mem_region_init.cacheability = 0;
     mem_region_init.shareability = 0;
     mem_region_init.multi_share = false;
-
+    mem_region_init.receiver_count = 1;
     val_ffa_memory_region_init(&mem_region_init, constituents, constituents_count);
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 = mem_region_init.total_length;
@@ -113,17 +112,6 @@ static uint32_t lend_retrieve_input_checks_helper(uint32_t test_run_data, uint32
         goto rxtx_unmap;
     }
 
-    /* Check that content of reclaimed memory is equal to the data
-     * set by lender. */
-    for (i = 0; i < size; ++i)
-    {
-        if (pages[i] != 0xab)
-        {
-            LOG(ERROR, "\tRegion data mismatch after relinquish\n", 0, 0);
-            status = VAL_ERROR_POINT(7);
-            goto rxtx_unmap;
-        }
-    }
 rxtx_unmap:
     if (val_rxtx_unmap(sender))
     {

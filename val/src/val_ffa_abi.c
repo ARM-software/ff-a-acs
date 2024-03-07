@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -103,7 +103,9 @@ void val_ffa_version(ffa_args_t *args)
 
 static void ffa_msg_send_direct_req(ffa_args_t *args, bool arch64)
 {
+#ifdef TARGET_LINUX
     ffa_args_t  payload;
+#endif
 
     if (arch64)
     {
@@ -118,6 +120,7 @@ static void ffa_msg_send_direct_req(ffa_args_t *args, bool arch64)
                           args->arg7);
     }
 
+#ifdef TARGET_LINUX
     while (args->fid == FFA_INTERRUPT_32)
     {
         val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -125,6 +128,7 @@ static void ffa_msg_send_direct_req(ffa_args_t *args, bool arch64)
         val_ffa_run(&payload);
         *args = payload;
     }
+#endif
 }
 
 /**
@@ -741,6 +745,59 @@ void val_ffa_notification_info_get_64(ffa_args_t *args)
                                     args->arg4, args->arg5,
                                     args->arg6, args->arg7);
 }
+
+static void ffa_mem_perm_set(ffa_args_t *args, bool arch64)
+{
+    if (arch64)
+    {
+        *args = ffa_smccc(FFA_MEM_PERM_SET_64, args->arg1, args->arg2, args->arg3,
+                                args->arg4, args->arg5, args->arg6, args->arg7);
+    }
+    else
+    {
+        *args = ffa_smccc(FFA_MEM_PERM_SET_32, (uint32_t)args->arg1,
+                          (uint32_t)args->arg2, (uint32_t)args->arg3,
+                          (uint32_t)args->arg4, (uint32_t)args->arg5,
+                          (uint32_t)args->arg6, (uint32_t)args->arg7);
+    }
+}
+
+void val_ffa_mem_perm_set_32(ffa_args_t *args)
+{
+    ffa_mem_perm_set(args, false);
+}
+
+void val_ffa_mem_perm_set_64(ffa_args_t *args)
+{
+    ffa_mem_perm_set(args, true);
+}
+
+static void ffa_mem_perm_get(ffa_args_t *args, bool arch64)
+{
+    if (arch64)
+    {
+        *args = ffa_smccc(FFA_MEM_PERM_GET_64, args->arg1, args->arg2, args->arg3,
+                                args->arg4, args->arg5, args->arg6, args->arg7);
+    }
+    else
+    {
+        *args = ffa_smccc(FFA_MEM_PERM_GET_32, (uint32_t)args->arg1,
+                          (uint32_t)args->arg2, (uint32_t)args->arg3,
+                          (uint32_t)args->arg4, (uint32_t)args->arg5,
+                          (uint32_t)args->arg6, (uint32_t)args->arg7);
+    }
+}
+
+void val_ffa_mem_perm_get_32(ffa_args_t *args)
+{
+    ffa_mem_perm_get(args, false);
+}
+
+void val_ffa_mem_perm_get_64(ffa_args_t *args)
+{
+    ffa_mem_perm_get(args, true);
+}
+
 
 /**
  * @brief - Maps the RX/TX buffer pair in the callee's translation regime

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2022-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -15,9 +15,15 @@
      .globl pal_uart_putc_hypcall
 pal_uart_putc_hypcall:
 
-    mov x1, x0 /* Char c*/
-    mov x0, #0xBD000000 /* FID */
+    mov x2, x0 /* Char c*/
+    mov x1, #1
+    mov x0, #0x8A /* FID */
+    movk x0, #0xC400, lsl #16
+#if (PLATFORM_SP_EL == 0)
+    svc     #0
+#else
     hvc #0
+#endif
     ret
 
     /* int32_t pal_syscall_for_psci(uint64_t fid, uint64_t x1, uint64_t x2, uint64_t x3); */

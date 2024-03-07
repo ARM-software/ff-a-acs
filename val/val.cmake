@@ -8,6 +8,7 @@
 # Listing all the sources from val
 set(VAL_SRC ${ROOT_DIR}/val/src/val_main.c)
 
+if((${PROJECT_NAME} STREQUAL "vm1") OR (${PLATFORM_SP_EL} STREQUAL 1))
 list(APPEND VAL_SRC
     ${ROOT_DIR}/val/src/val_framework.c
     ${ROOT_DIR}/val/src/val_memory.c
@@ -26,6 +27,26 @@ list(APPEND VAL_SRC
     ${ROOT_DIR}/val/src/val_irq.c
     ${ROOT_DIR}/val/src/val_wd.c
 )
+else()
+list(APPEND VAL_SRC
+    ${ROOT_DIR}/val/src/val_framework.c
+    ${ROOT_DIR}/val/src/val_memory.c
+    ${ROOT_DIR}/val/src/val_ffa_abi.c
+    ${ROOT_DIR}/val/src/val_test_dispatch.c
+    ${ROOT_DIR}/val/src/val_endpoint_info.c
+    ${ROOT_DIR}/val/src/val_misc.c
+    ${ROOT_DIR}/val/src/val_ffa_helpers.c
+    ${ROOT_DIR}/val/src/val_vcpu_setup.c
+    ${ROOT_DIR}/val/src/val_shemaphore.c
+    ${ROOT_DIR}/val/src/val_exceptions.c
+    ${ROOT_DIR}/val/src/aarch64/val_entry_el0.S
+    ${ROOT_DIR}/val/src/aarch64/val_vtable.S
+    ${ROOT_DIR}/val/src/aarch64/val_sysreg.S
+    ${ROOT_DIR}/val/src/aarch64/val_syscalls.S
+    ${ROOT_DIR}/val/src/val_irq.c
+    ${ROOT_DIR}/val/src/val_wd.c
+)
+endif()
 
 # Create VAL library
 add_library(${VAL_LIB} STATIC ${VAL_SRC})

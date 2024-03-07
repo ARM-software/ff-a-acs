@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -79,6 +79,9 @@ uint32_t lend_retrieve_input_checks4_server(ffa_args_t args)
 #elif (PLATFORM_INNER_OUTER_SHAREABLE_SUPPORT == 1)
     mem_region_init.shareability = FFA_MEMORY_OUTER_SHAREABLE;
 #endif
+    mem_region_init.multi_share = false;
+    mem_region_init.receiver_count = 1;
+
     msg_size = val_ffa_memory_retrieve_request_init(&mem_region_init, handle);
 
     val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -89,9 +92,10 @@ uint32_t lend_retrieve_input_checks4_server(ffa_args_t args)
     else
         val_ffa_mem_retrieve_32(&payload);
 
-    if (payload.fid != FFA_ERROR_32 && payload.arg2 != FFA_ERROR_DENIED)
+    if (payload.fid != FFA_ERROR_32 || payload.arg2 != FFA_ERROR_DENIED)
     {
-        LOG(ERROR, "\tMem retrieve request must failed with DENIED err %x and fid=%x\n", payload.arg2, payload.fid);
+        LOG(ERROR, "\tMem retrieve request must failed with DENIED err %x and fid=%x\n",
+           payload.arg2, payload.fid);
         status =  VAL_ERROR_POINT(5);
         if (payload.fid == FFA_MEM_RETRIEVE_RESP_32)
         {
@@ -138,15 +142,6 @@ free_memory:
     {
         LOG(ERROR, "\tval_mem_free failed\n", 0, 0);
         status = status ? status : VAL_ERROR_POINT(9);
-    }
-
-    val_memset(&payload, 0, sizeof(ffa_args_t));
-    payload.arg1 =  ((uint32_t)sender << 16) | receiver;
-    val_ffa_msg_send_direct_resp_64(&payload);
-    if (payload.fid == FFA_ERROR_32)
-    {
-        LOG(ERROR, "\tDirect response failed err %x\n", payload.arg2, 0);
-        status = status ? status : VAL_ERROR_POINT(10);
     }
 
     return status;

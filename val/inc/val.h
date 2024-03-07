@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -54,6 +54,7 @@ typedef struct {
 typedef struct {
     uint32_t suite_num;
     uint32_t test_num;
+    uint32_t end_test_num;
     uint32_t test_progress;
 } test_info_t;
 
@@ -61,11 +62,12 @@ typedef enum {
     NVM_PLATFORM_RESERVE_INDEX         = 0x0,
     NVM_CUR_SUITE_NUM_INDEX            = 0x1,
     NVM_CUR_TEST_NUM_INDEX             = 0x2,
-    NVM_TEST_PROGRESS_INDEX            = 0x3,
-    NVM_TOTAL_PASS_INDEX               = 0x4,
-    NVM_TOTAL_FAIL_INDEX               = 0x5,
-    NVM_TOTAL_SKIP_INDEX               = 0x6,
-    NVM_TOTAL_ERROR_INDEX              = 0x7,
+    NVM_END_TEST_NUM_INDEX             = 0x3,
+    NVM_TEST_PROGRESS_INDEX            = 0x4,
+    NVM_TOTAL_PASS_INDEX               = 0x5,
+    NVM_TOTAL_FAIL_INDEX               = 0x6,
+    NVM_TOTAL_SKIP_INDEX               = 0x7,
+    NVM_TOTAL_ERROR_INDEX              = 0x8,
 } nvm_map_index_t;
 
 /* SP3 SERVICE INDEX */
@@ -137,9 +139,8 @@ typedef enum {
 
 #define VAL_BIT_MASK(len) ((1 << len) - 1)
 /* Set the value in given position */
-#define VAL_SET_BITS(data, pos, len, val) (((uint32_t)(~(uint32_t)0 & ~(uint32_t)(VAL_BIT_MASK(len) << pos)) & data) \
-                                             | (val << pos))
-
+#define VAL_SET_BITS(data, pos, len, val) (((uint32_t)(~(uint32_t)0 & ~(uint32_t) \
+                    (VAL_BIT_MASK(len) << pos)) & data) | (val << pos))
 
 /* Macro to print the message and control the verbosity */
 #define LOG(print_verbosity, x, y, z)               \

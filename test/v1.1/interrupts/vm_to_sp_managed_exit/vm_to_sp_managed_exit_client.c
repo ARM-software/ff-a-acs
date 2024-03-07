@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Arm Limited or its affliates. All rights reserved.
+ * Copyright (c) 2022-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -8,7 +8,7 @@
 #include "test_database.h"
 
 #define NS_WD_TIMEOUT 50000000
-static volatile uint32_t irq_received = false;
+static volatile uint32_t irq_received;
 
 static int wd_irq_handler(void)
 {

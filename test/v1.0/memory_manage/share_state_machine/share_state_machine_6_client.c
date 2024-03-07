@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -111,8 +111,16 @@ static uint32_t ffa_mem_share_helper(uint32_t test_run_data, uint32_t fid)
         goto rxtx_unmap;
     }
 
+#if (PLATFORM_FFA_V_1_0 == 1)
     val_select_server_fn_direct(test_run_data, fid, 0, 0, 0);
     val_select_server_fn_direct(test_run_data_1, fid, 0, 0, 0);
+#else
+    /*Encode Borrower ID's for Retrieval*/
+    uint32_t borrower_id_list = (uint32_t)(recipient_1 << 16) | recipient;
+
+    val_select_server_fn_direct(test_run_data, fid, borrower_id_list, 0, 0);
+    val_select_server_fn_direct(test_run_data_1, fid, borrower_id_list, 0, 0);
+#endif
 
     /* Check that lender has Owner-SA state after FFA_MEM_SHARE call */
     val_memset(pages, 0xab, size);
@@ -138,7 +146,9 @@ static uint32_t ffa_mem_share_helper(uint32_t test_run_data, uint32_t fid)
     /* Sender has already shared memory region to recipient and recipient_1.
      * Try to share the same memory region to recipient again and check for error status code.
      */
-    mem_region_init.multi_share = false;
+    mem_region_init.multi_share = true;
+    mem_region_init.receiver_count = 2;
+
     val_ffa_memory_region_init(&mem_region_init, constituents, constituents_count);
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 = mem_region_init.total_length;
@@ -155,8 +165,16 @@ static uint32_t ffa_mem_share_helper(uint32_t test_run_data, uint32_t fid)
         goto exit;
     }
 
+#if (PLATFORM_FFA_V_1_0 == 1)
     val_select_server_fn_direct(test_run_data, fid, 0, 0, 0);
     val_select_server_fn_direct(test_run_data_1, fid, 0, 0, 0);
+#else
+    /*Encode Borrower ID's for Retrieval*/
+    borrower_id_list = (uint32_t)(recipient_1 << 16) | recipient;
+
+    val_select_server_fn_direct(test_run_data, fid, borrower_id_list, 0, 0);
+    val_select_server_fn_direct(test_run_data_1, fid, borrower_id_list, 0, 0);
+#endif
 
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 = (uint32_t)handle;

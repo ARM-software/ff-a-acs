@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+# Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
@@ -70,7 +70,14 @@ else()
 endif()
 
 # Check for valid suites
-_get_sub_dir_list(SUITE_LIST ${ROOT_DIR}/test/)
+_get_sub_dir_list(SUITE_LIST_V_1_0  ${ROOT_DIR}/test/v1.0)
+_get_sub_dir_list(SUITE_LIST_V_1_1 ${ROOT_DIR}/test/v1.1)
+
+# Append all suites without duplicates across different FFA version
+set(SUITE_LIST ${SUITE_LIST_V_1_0})
+list(APPEND SUITE_LIST ${SUITE_LIST_V_1_1})
+list(REMOVE_DUPLICATES SUITE_LIST)
+
 if(NOT DEFINED SUITE)
     set(SUITE ${SUITE_DFLT} CACHE INTERNAL "Defaulting suite to ${SUITE}" FORCE)
 else()
@@ -191,7 +198,38 @@ else()
     message(STATUS "[ACS] : ENABLE_PIE is set to ${ENABLE_PIE}")
 endif()
 
-# Setup toolchain paramters for compilation and link
+if(DEFINED SUITE_TEST_RANGE)
+    if(DEFINED SUITE)
+        #set(SUITE ${SUITE_DFLT} CACHE INTERNAL "Defaulting suite to ${SUITE}" FORCE)
+        if(NOT ${SUITE} STREQUAL "all")
+            message(WARNING "[ACS] : SUITE is set to ${SUITE} when SUITE_TEST_RANGE is defined ")
+        endif()
+        set(SUITE ${SUITE_DFLT} CACHE INTERNAL "Defaulting suite to ${SUITE}" FORCE)
+    endif()
+
+    add_definitions(-DSUITE_TEST_RANGE)
+    list(LENGTH SUITE_TEST_RANGE SUITE_TEST_RANGE_LENGTH)
+    if(${SUITE_TEST_RANGE_LENGTH} GREATER "2")
+        message(FATAL_ERROR "[ACS] : -DSUITE_TEST_RANGE=<...> value error! accepts two "
+                                             " numbers in quotes separated with ';'")
+    endif()
+    if(${SUITE_TEST_RANGE_LENGTH} EQUAL "2")
+        list(GET SUITE_TEST_RANGE 0 SUITE_TEST_RANGE_MIN)
+        list(GET SUITE_TEST_RANGE 1 SUITE_TEST_RANGE_MAX)
+        message(STATUS "[ACS] : Testing (${SUITE_TEST_RANGE_MIN}, ${SUITE_TEST_RANGE_MAX}) of ${SUITE} suite")
+    endif()
+    if(${SUITE_TEST_RANGE_LENGTH} EQUAL "1")
+        set(SUITE_TEST_RANGE_MIN ${SUITE_TEST_RANGE})
+        set(SUITE_TEST_RANGE_MAX ${SUITE_TEST_RANGE})
+        message(STATUS "[ACS] : Testing ${SUITE_TEST_RANGE_MIN} of ${SUITE} suite")
+    endif()
+    message(STATUS "[ACS] : Test range is (${SUITE_TEST_RANGE_MIN}, ${SUITE_TEST_RANGE_MAX}) of ${SUITE} suite")
+    add_definitions(-DSUITE_TEST_RANGE_MIN="${SUITE_TEST_RANGE_MIN}")
+    add_definitions(-DSUITE_TEST_RANGE_MAX="${SUITE_TEST_RANGE_MAX}")
+    unset(SUITE_TEST_RANGE CACHE)
+endif()
+
+# Setup toolchain parameters for compilation and link
 include(${ROOT_DIR}/tools/cmake/toolchain/common.cmake)
 
 ###

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Arm Limited or its affliates. All rights reserved.
+ * Copyright (c) 2022-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -13,7 +13,7 @@
 static uint32_t *ptr;
 static int wd_irq_handler(void)
 {
-    *(volatile uint32_t*)ptr = (uint32_t)IRQ_TRIGGERED;
+    *(volatile uint32_t *)ptr = (uint32_t)IRQ_TRIGGERED;
     val_twdog_disable();
 
     return 0;

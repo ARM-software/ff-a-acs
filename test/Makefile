@@ -1,5 +1,5 @@
 ##
- # Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ # Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  #
  # SPDX-License-Identifier: BSD-3-Clause
  #
@@ -331,7 +331,7 @@ ffa_acs_test-objs += $(TEST_SRC)/memory_manage/donate_input_error_checks/donate_
                 $(TEST_SRC)/memory_manage/donate_state_machine/donate_state_machine_4_testentry.o \
                 $(TEST_SRC)/memory_manage/donate_state_machine/donate_state_machine_5_client.o \
                 $(TEST_SRC)/memory_manage/donate_state_machine/donate_state_machine_5_server.o \
-                $(TEST_SRC)/memory_manage/donate_state_machine/donate_state_machine_5_testentry.o 
+                $(TEST_SRC)/memory_manage/donate_state_machine/donate_state_machine_5_testentry.o
 
 ffa_acs_test-objs += $(TEST_SRC)/memory_manage/relinquish_mem_unmap_check/relinquish_mem_unmap_check_client.o \
                 $(TEST_SRC)/memory_manage/relinquish_mem_unmap_check/relinquish_mem_unmap_check_server.o \
@@ -383,7 +383,6 @@ ffa_acs_test-objs += $(TEST_SRC1)/setup_discovery/ffa_features/ffa_features_intr
                 $(TEST_SRC1)/direct_messaging/ffa_direct_message_error2/ffa_direct_message_error2_client.o \
                 $(TEST_SRC1)/direct_messaging/ffa_direct_message_error2/ffa_direct_message_error2_server.o \
                 $(TEST_SRC1)/direct_messaging/ffa_direct_message_error2/ffa_direct_message_error2_testentry.o
-                
 
 ffa_acs_test-objs += $(TEST_SRC1)/notifications/notification_bind/notification_bind_testentry.o \
                 $(TEST_SRC1)/notifications/notification_bind/notification_bind_client.o \
@@ -419,9 +418,22 @@ ffa_acs_test-objs += $(TEST_SRC1)/interrupts/sp_to_sp_blocked/sp_to_sp_blocked_c
                 $(TEST_SRC1)/interrupts/vm_to_sp_managed_exit/vm_to_sp_managed_exit_testentry.o \
                 $(TEST_SRC1)/interrupts/vm_to_sp_managed_exit/vm_to_sp_managed_exit_client.o \
                 $(TEST_SRC1)/interrupts/vm_to_sp_managed_exit/vm_to_sp_managed_exit_server.o \
+                $(TEST_SRC1)/interrupts/vm_to_sp_managed_exit/vm_to_sp_managed_exit_1_client.o \
+                $(TEST_SRC1)/interrupts/vm_to_sp_managed_exit/vm_to_sp_managed_exit_1_server.o \
+                $(TEST_SRC1)/interrupts/vm_to_sp_managed_exit/vm_to_sp_managed_exit_1_testentry.o \
+                $(TEST_SRC1)/interrupts/vm_to_sp_managed_exit/vm_to_sp_managed_exit_2_client.o \
+                $(TEST_SRC1)/interrupts/vm_to_sp_managed_exit/vm_to_sp_managed_exit_2_server.o \
+                $(TEST_SRC1)/interrupts/vm_to_sp_managed_exit/vm_to_sp_managed_exit_2_testentry.o \
+                $(TEST_SRC1)/interrupts/vm_to_sp_managed_exit/vm_to_sp_managed_exit_3_client.o \
+                $(TEST_SRC1)/interrupts/vm_to_sp_managed_exit/vm_to_sp_managed_exit_3_server.o \
+                $(TEST_SRC1)/interrupts/vm_to_sp_managed_exit/vm_to_sp_managed_exit_3_testentry.o \
                 $(TEST_SRC1)/interrupts/vm_to_sp_preempt/vm_to_sp_preempt_testentry.o \
                 $(TEST_SRC1)/interrupts/vm_to_sp_preempt/vm_to_sp_preempt_client.o \
-                $(TEST_SRC1)/interrupts/vm_to_sp_preempt/vm_to_sp_preempt_server.o 
+                $(TEST_SRC1)/interrupts/vm_to_sp_preempt/vm_to_sp_preempt_server.o
+
+ffa_acs_test-objs += $(TEST_SRC1)/memory_manage/mem_security_state_ns_bit/mem_security_state_ns_bit_client.o \
+                $(TEST_SRC1)/memory_manage/mem_security_state_ns_bit/mem_security_state_ns_bit_server.o \
+                $(TEST_SRC1)/memory_manage/mem_security_state_ns_bit/mem_security_state_ns_bit_testentry.o \
 
 ccflags-y=$(ACS_MACROS) $(ACS_INCLUDE) -Wall -Werror
 

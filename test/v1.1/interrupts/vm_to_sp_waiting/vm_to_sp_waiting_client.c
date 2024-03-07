@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Arm Limited or its affliates. All rights reserved.
+ * Copyright (c) 2022-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -110,7 +110,7 @@ uint32_t vm_to_sp_waiting_client(uint32_t test_run_data)
     }
 
     /* Wait for WD interrupt */
-    while(--timeout && (*(volatile uint32_t*)pages != IRQ_TRIGGERED));
+    while (--timeout && (*(volatile uint32_t *)pages != IRQ_TRIGGERED));
 
     if (!timeout)
     {

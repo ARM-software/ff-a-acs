@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -76,8 +76,7 @@
 
 #define NO_SUBSTREAMID  0xFFFFFFFF
 
-enum cmd_t
-{
+enum cmd_t{
     /* The frame was misconfigured. */
     ENGINE_FRAME_MISCONFIGURED = ~0u - 1,
 

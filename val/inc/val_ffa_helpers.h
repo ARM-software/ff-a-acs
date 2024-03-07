@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -53,8 +53,19 @@ enum ffa_memory_shareability {
 typedef uint8_t ffa_memory_access_permissions_t;
 
 /**
- * This corresponds to table "Memory region attributes descriptor" of the FF-A
- * 1.0 specification.
+ * FF-A v1.1 REL0 Table 10.18 memory region attributes descriptor NS Bit 6.
+ * Per section 10.10.4.1, NS bit is reserved for FFA_MEM_DONATE/LEND/SHARE
+ * and FFA_MEM_RETRIEVE_REQUEST.
+ */
+enum ffa_memory_security {
+    FFA_MEMORY_SECURITY_UNSPECIFIED = 0,
+    FFA_MEMORY_SECURITY_SECURE = 0,
+    FFA_MEMORY_SECURITY_NON_SECURE,
+};
+
+/**
+ * This corresponds to table 10.18 of the FF-A v1.1 EAC0 specification, "Memory
+ * region attributes descriptor".
  */
 typedef uint8_t ffa_memory_attributes_t;
 
@@ -66,6 +77,9 @@ typedef uint8_t ffa_memory_attributes_t;
 
 #define FFA_MEMORY_TYPE_OFFSET (0x4U)
 #define FFA_MEMORY_TYPE_MASK ((0x3U) << FFA_MEMORY_TYPE_OFFSET)
+
+#define FFA_MEMORY_SECURITY_OFFSET (0x6U)
+#define FFA_MEMORY_SECURITY_MASK ((0x1U) << FFA_MEMORY_SECURITY_OFFSET)
 
 #define FFA_MEMORY_CACHEABILITY_OFFSET (0x2U)
 #define FFA_MEMORY_CACHEABILITY_MASK ((0x3U) << FFA_MEMORY_CACHEABILITY_OFFSET)
@@ -101,6 +115,11 @@ ATTR_FUNCTION_SET(memory_type, ffa_memory_attributes_t, FFA_MEMORY_TYPE_OFFSET,
           FFA_MEMORY_TYPE_MASK)
 ATTR_FUNCTION_GET(memory_type, ffa_memory_attributes_t, FFA_MEMORY_TYPE_OFFSET,
           FFA_MEMORY_TYPE_MASK)
+
+ATTR_FUNCTION_SET(memory_security, ffa_memory_attributes_t,
+          FFA_MEMORY_SECURITY_OFFSET, FFA_MEMORY_SECURITY_MASK)
+ATTR_FUNCTION_GET(memory_security, ffa_memory_attributes_t,
+          FFA_MEMORY_SECURITY_OFFSET, FFA_MEMORY_SECURITY_MASK)
 
 ATTR_FUNCTION_SET(memory_cacheability, ffa_memory_attributes_t,
           FFA_MEMORY_CACHEABILITY_OFFSET, FFA_MEMORY_CACHEABILITY_MASK)
@@ -291,6 +310,8 @@ struct ffa_memory_access {
     uint64_t reserved_0;
 };
 
+#if (PLATFORM_FFA_V_1_0 == 1)
+
 /**
  * Information about a set of pages which are being shared. This corresponds to
  * table "Lend, donate or share memory transaction descriptor" of the FFA
@@ -329,6 +350,61 @@ struct ffa_memory_region {
      */
     struct ffa_memory_access receivers[];
 };
+
+#else
+
+#define EP_MEM_ACCESS_DESC_ARR_OFFSET 0x30U
+/**
+  * Information about a set of pages which are being shared. This corresponds to
+  * table 10.20 of the FF-A v1.1 EAC0 specification, "Lend, donate or share
+  * memory transaction descriptor". Note that it is also used for retrieve
+  * requests and responses.
+  */
+struct ffa_memory_region {
+    /**
+      * The ID of the VM which originally sent the memory region, i.e. the
+      * owner.
+      */
+    ffa_endpoint_id_t sender;
+    ffa_memory_attributes_t attributes;
+
+    /** Flags to control behaviour of the transaction. */
+    ffa_memory_region_flags_t flags;
+    ffa_memory_handle_t handle;
+
+    /**
+      * An implementation defined value associated with the receiver and the
+      * memory region.
+      */
+    uint64_t tag;
+
+    /* Size of the memory access descriptor. */
+    uint32_t memory_access_desc_size;
+
+    /**
+      * The number of `ffa_memory_access` entries included in this
+      * transaction.
+      */
+    uint32_t receiver_count;
+
+    /**
+      * Offset of the 'receivers' field, which relates to the memory access
+      * descriptors.
+      */
+    uint32_t receivers_offset;
+
+    /** Reserved field (12 bytes) must be 0. */
+    uint32_t reserved[3];
+
+    /**
+      * An array of `receiver_count` endpoint memory access descriptors.
+      * Each one specifies a memory region offset, an endpoint and the
+      * attributes with which this memory region should be mapped in that
+      * endpoint's page table.
+      */
+    struct ffa_memory_access receivers[];
+};
+#endif
 
 /**
  * Descriptor used for FFA_MEM_RELINQUISH requests. This corresponds to table

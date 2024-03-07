@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -66,6 +66,9 @@ uint32_t donate_state_machine_2_server(ffa_args_t args)
 #elif (PLATFORM_INNER_OUTER_SHAREABLE_SUPPORT == 1)
     mem_region_init.shareability = FFA_MEMORY_OUTER_SHAREABLE;
 #endif
+    mem_region_init.multi_share = false;
+    mem_region_init.receiver_count = 1;
+
     msg_size = val_ffa_memory_retrieve_request_init(&mem_region_init, handle);
 
     val_memset(&payload, 0, sizeof(ffa_args_t));

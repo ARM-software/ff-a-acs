@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2022-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -59,6 +59,7 @@ int64_t spm_interrupt_enable(uint32_t int_id, bool enable, enum interrupt_pin pi
 
     hvc_ret_values ret = pal_hvc(&args);
 
+#if ((PLATFORM_SP_EL == 1) || (defined(VM1_COMPILE)))
     if (enable)
     {
         enable_irq();
@@ -67,6 +68,7 @@ int64_t spm_interrupt_enable(uint32_t int_id, bool enable, enum interrupt_pin pi
         disable_irq();
         disable_fiq();
     }
+#endif
 
     return (int64_t)ret.ret0;
 }
@@ -84,6 +86,8 @@ int64_t spm_interrupt_deactivate(uint32_t vint_id)
     };
 
     hvc_ret_values ret = pal_hvc(&args);
+#if ((PLATFORM_SP_EL == 1) || (defined(VM1_COMPILE)))
     disable_irq();
+#endif
     return (int64_t)ret.ret0;
 }

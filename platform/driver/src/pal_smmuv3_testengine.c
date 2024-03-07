@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -24,7 +24,10 @@ uint32_t smmuv3_configure_testengine(uint32_t stream_id, uint64_t source, uint64
     uint64_t time_out = TIME_OUT;
     uint32_t i;
 
-    /* TODO Add assert condtion for source and destination address */
+    /* source and destination address NULL check */
+    if (!source || !dest)
+        return PAL_ERROR;
+
     if (num_frames < 1)
         return PAL_ERROR;
 
@@ -33,7 +36,7 @@ uint32_t smmuv3_configure_testengine(uint32_t stream_id, uint64_t source, uint64
     else
         ssd_ns = 1;
 
-    for (i=0; i < num_frames; i++)
+    for (i = 0; i < num_frames; i++)
     {
         begin = source + (i * PAGE_SIZE_4K);
         end_ctrl = begin + (PAGE_SIZE_4K - 1);

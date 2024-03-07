@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -16,7 +16,6 @@ uint32_t share_sepid_server(ffa_args_t args)
     ffa_endpoint_id_t receiver = (args.arg1 >> 16) & 0xffff;
     uint32_t fid = (uint32_t)args.arg4;
     mb_buf_t mb;
-    uint8_t *pages = NULL;
     uint8_t *ptr;
     uint64_t size = 0x1000;
     mem_region_init_t mem_region_init;
@@ -31,7 +30,7 @@ uint32_t share_sepid_server(ffa_args_t args)
     if (mb.send == NULL || mb.recv == NULL)
     {
         LOG(ERROR, "\tFailed to allocate RxTx buffer\n", 0, 0);
-        status = VAL_ERROR_POINT(3);
+        status = VAL_ERROR_POINT(1);
         goto free_memory;
     }
 
@@ -39,16 +38,8 @@ uint32_t share_sepid_server(ffa_args_t args)
     if (val_rxtx_map_64((uint64_t)mb.send, (uint64_t)mb.recv, (uint32_t)(size/PAGE_SIZE_4K)))
     {
         LOG(ERROR, "\tRxTx Map failed\n", 0, 0);
-        status = VAL_ERROR_POINT(4);
+        status = VAL_ERROR_POINT(2);
         goto free_memory;
-    }
-
-    pages = (uint8_t *)val_memory_alloc(size * 2);
-    if (!pages)
-    {
-        LOG(ERROR, "\tMemory allocation failed\n", 0, 0);
-        status = VAL_ERROR_POINT(5);
-        goto rxtx_unmap;
     }
 
     /* Wait for the message. */
@@ -58,7 +49,7 @@ uint32_t share_sepid_server(ffa_args_t args)
     {
         LOG(ERROR, "\tDirect request failed, fid=0x%x, err 0x%x\n",
                   payload.fid, payload.arg2);
-        status =  VAL_ERROR_POINT(6);
+        status =  VAL_ERROR_POINT(3);
         goto rxtx_unmap;
     }
 
@@ -93,7 +84,7 @@ uint32_t share_sepid_server(ffa_args_t args)
     if (payload.fid != FFA_MEM_RETRIEVE_RESP_32)
     {
         LOG(ERROR, "\tMem retrieve request failed err %x\n", payload.arg2, 0);
-        status = VAL_ERROR_POINT(7);
+        status = VAL_ERROR_POINT(4);
         goto rxtx_unmap;
     }
 
@@ -113,18 +104,23 @@ uint32_t share_sepid_server(ffa_args_t args)
     if (val_mem_map_pgt(&mem_desc))
     {
         LOG(ERROR, "\tVa to pa mapping failed\n", 0, 0);
-        status =  VAL_ERROR_POINT(11);
+        status =  VAL_ERROR_POINT(5);
         goto rx_release;
     }
 
-    /* Initiate the DMA transactions to the received memory regions using   device upstream of SMMU */
+    /* Initiate the DMA transactions to the received
+     * memory regions using device upstream of SMMU
+     *
+     */
     if (VAL_IS_ENDPOINT_SECURE(val_get_endpoint_logical_id(sender)))
     {
-        smmuv3_configure_testengine(PLATFORM_SMMU_STREAM_ID, (uint64_t)ptr, (uint64_t)ptr + PAGE_SIZE_4K, size, true);
+        smmuv3_configure_testengine(PLATFORM_SMMU_STREAM_ID,
+         (uint64_t)ptr, (uint64_t)ptr + PAGE_SIZE_4K, size, true);
     }
     else
     {
-        smmuv3_configure_testengine(PLATFORM_SMMU_STREAM_ID, (uint64_t)ptr, (uint64_t)ptr + PAGE_SIZE_4K, size, false);
+        smmuv3_configure_testengine(PLATFORM_SMMU_STREAM_ID,
+         (uint64_t)ptr, (uint64_t)ptr + PAGE_SIZE_4K, size, false);
     }
 
     /* relinquish the memory and notify the sender. */
@@ -134,7 +130,7 @@ uint32_t share_sepid_server(ffa_args_t args)
     if (payload.fid == FFA_ERROR_32)
     {
         LOG(ERROR, "\tMem relinquish failed err %x\n", payload.arg2, 0);
-        status = status ? status : VAL_ERROR_POINT(16);
+        status = status ? status : VAL_ERROR_POINT(7);
         goto rx_release;
     }
 
@@ -142,27 +138,21 @@ rx_release:
     if (val_rx_release())
     {
         LOG(ERROR, "\tval_rx_release failed\n", 0, 0);
-        status = status ? status : VAL_ERROR_POINT(17);
+        status = status ? status : VAL_ERROR_POINT(8);
     }
 
 rxtx_unmap:
     if (val_rxtx_unmap(sender))
     {
         LOG(ERROR, "\tRXTX_UNMAP failed\n", 0, 0);
-        status = status ? status : VAL_ERROR_POINT(18);
+        status = status ? status : VAL_ERROR_POINT(9);
     }
 
 free_memory:
     if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
     {
         LOG(ERROR, "\tfree_rxtx_buffers failed\n", 0, 0);
-        status = status ? status : VAL_ERROR_POINT(19);
-    }
-
-    if (val_memory_free(pages, size))
-    {
-        LOG(ERROR, "\tval_mem_free failed\n", 0, 0);
-        status = status ? status : VAL_ERROR_POINT(20);
+        status = status ? status : VAL_ERROR_POINT(10);
     }
 
     val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -171,7 +161,7 @@ free_memory:
     if (payload.fid == FFA_ERROR_32)
     {
         LOG(ERROR, "\tDirect response failed err %x\n", payload.arg2, 0);
-        status = status ? status : VAL_ERROR_POINT(21);
+        status = status ? status : VAL_ERROR_POINT(11);
     }
 
     return status;

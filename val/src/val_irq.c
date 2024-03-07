@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -7,6 +7,7 @@
 
 #include "val_framework.h"
 #include "val_interfaces.h"
+#include <pal_spm_helpers.h>
 
 void val_irq_setup(void)
 {
@@ -46,4 +47,9 @@ void val_secure_intr_disable(uint32_t int_id, enum interrupt_pin pin)
 uint64_t val_sleep(uint32_t ms)
 {
     return pal_sleep(ms);
+}
+
+uint32_t val_interrupt_get(void)
+{
+    return spm_interrupt_get();
 }

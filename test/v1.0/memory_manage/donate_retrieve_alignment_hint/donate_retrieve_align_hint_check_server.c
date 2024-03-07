@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -28,6 +28,8 @@ static uint32_t mem_donate_back_to_sender(ffa_memory_handle_t handle, uint32_t f
     mem_region_init.data_access = FFA_DATA_ACCESS_RW;
     mem_region_init.instruction_access = FFA_INSTRUCTION_ACCESS_NOT_SPECIFIED;
     mem_region_init.type = FFA_MEMORY_NORMAL_MEM;
+    mem_region_init.multi_share = false;
+    mem_region_init.receiver_count = 1;
     mem_region_init.cacheability = FFA_MEMORY_CACHE_WRITE_BACK;
 #if (PLATFORM_OUTER_SHAREABLE_SUPPORT_ONLY == 1)
     mem_region_init.shareability = FFA_MEMORY_OUTER_SHAREABLE;
@@ -70,6 +72,7 @@ static uint32_t mem_donate_back_to_sender(ffa_memory_handle_t handle, uint32_t f
     mem_region_init.cacheability = 0;
     mem_region_init.shareability = 0;
     mem_region_init.multi_share = false;
+    mem_region_init.receiver_count = 1;
 
     val_ffa_memory_region_init(&mem_region_init, constituents, constituents_count);
     val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -126,6 +129,8 @@ static uint32_t retrieve_align_hint_err_check(ffa_memory_handle_t handle, uint32
     mem_region_init.data_access = FFA_DATA_ACCESS_RW;
     mem_region_init.instruction_access = FFA_INSTRUCTION_ACCESS_NOT_SPECIFIED;
     mem_region_init.type = FFA_MEMORY_NORMAL_MEM;
+    mem_region_init.multi_share = false;
+    mem_region_init.receiver_count = 1;
     mem_region_init.cacheability = FFA_MEMORY_CACHE_NON_CACHEABLE;
 #if (PLATFORM_OUTER_SHAREABLE_SUPPORT_ONLY == 1)
     mem_region_init.shareability = FFA_MEMORY_OUTER_SHAREABLE;
@@ -181,6 +186,8 @@ static uint32_t retrieve_align_hint_check(ffa_memory_handle_t handle, uint32_t f
     mem_region_init.data_access = FFA_DATA_ACCESS_RW;
     mem_region_init.instruction_access = FFA_INSTRUCTION_ACCESS_NOT_SPECIFIED;
     mem_region_init.type = FFA_MEMORY_NORMAL_MEM;
+    mem_region_init.multi_share = false;
+    mem_region_init.receiver_count = 1;
     mem_region_init.cacheability = FFA_MEMORY_CACHE_NON_CACHEABLE;
 #if (PLATFORM_OUTER_SHAREABLE_SUPPORT_ONLY == 1)
     mem_region_init.shareability = FFA_MEMORY_OUTER_SHAREABLE;

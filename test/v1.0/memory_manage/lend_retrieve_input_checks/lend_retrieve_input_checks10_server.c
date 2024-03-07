@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -7,7 +7,8 @@
 
 #include "test_database.h"
 
-static uint32_t borrower_to_lend_memory(uint32_t fid, ffa_endpoint_id_t recipient, mb_buf_t mb, void *pages)
+static uint32_t borrower_to_lend_memory(uint32_t fid,
+ffa_endpoint_id_t recipient, mb_buf_t mb, void *pages)
 {
     ffa_args_t payload;
     uint32_t status = VAL_ERROR_POINT(1);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -13,7 +13,7 @@
 #include "pal_smmuv3_testengine.h"
 #include "pal_spm_helpers.h"
 
-#if (defined(SP2_COMPILE) || defined(VM2_COMPILE) ||\
+#if (defined(SP1_COMPILE) || defined(SP2_COMPILE) || defined(VM2_COMPILE) ||\
      defined(SP3_COMPILE) || defined(VM3_COMPILE))
 /* Use hyp log system call for sp2, sp3, vm2 and vm3 */
 #define pal_uart_putc(x) pal_uart_putc_hypcall((char)x)

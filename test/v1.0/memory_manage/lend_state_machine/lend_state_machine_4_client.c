@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -75,9 +75,17 @@ static uint32_t lend_state_machine_4_helper(uint32_t test_run_data, uint32_t fid
     mem_region_init.flags = flags;
     mem_region_init.data_access = FFA_DATA_ACCESS_RW;
     mem_region_init.instruction_access = FFA_INSTRUCTION_ACCESS_NOT_SPECIFIED;
+
+#if (PLATFORM_FFA_V_1_0 == 1)
     mem_region_init.type = FFA_MEMORY_NOT_SPECIFIED_MEM;
     mem_region_init.cacheability = 0;
     mem_region_init.shareability = 0;
+#else
+    mem_region_init.type = FFA_MEMORY_NORMAL_MEM;
+    mem_region_init.cacheability = FFA_MEMORY_CACHE_WRITE_BACK;
+    mem_region_init.shareability = FFA_MEMORY_INNER_SHAREABLE;
+#endif
+
     mem_region_init.multi_share = true;
     mem_region_init.receiver_count = 2;
     mem_region_init.receivers[0].receiver_permissions.receiver = recipient;
@@ -104,8 +112,11 @@ static uint32_t lend_state_machine_4_helper(uint32_t test_run_data, uint32_t fid
         goto rxtx_unmap;
     }
 
-    val_select_server_fn_direct(test_run_data, fid, 0, 0, 0);
-    val_select_server_fn_direct(test_run_data_1, fid, 0, 0, 0);
+    /*Encode Borrower ID's for Retrieval*/
+    uint32_t borrower_id_list = (uint32_t)(recipient_1 << 16) | recipient;
+
+    val_select_server_fn_direct(test_run_data, fid, borrower_id_list, 0, 0);
+    val_select_server_fn_direct(test_run_data_1, fid, borrower_id_list, 0, 0);
 
     handle = ffa_mem_success_handle(payload);
 
@@ -130,6 +141,7 @@ static uint32_t lend_state_machine_4_helper(uint32_t test_run_data, uint32_t fid
     mem_region_init.receiver = recipient;
     mem_region_init.multi_share = false;
     mem_region_init.receiver_count = 1;
+    mem_region_init.type = FFA_MEMORY_NOT_SPECIFIED_MEM;
 
     val_ffa_memory_region_init(&mem_region_init, constituents, constituents_count);
     val_memset(&payload, 0, sizeof(ffa_args_t));

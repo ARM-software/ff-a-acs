@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Arm Limited or its affliates. All rights reserved.
+ * Copyright (c) 2022-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -8,7 +8,7 @@
 #include "test_database.h"
 
 #define WD_TIME_OUT 0x10000000
-static volatile uint32_t managed_exit_received = false;
+static volatile uint32_t managed_exit_received;
 static uint32_t mei_id;
 
 static int mei_irq_handler(void)
@@ -58,7 +58,7 @@ uint32_t vm_to_sp_managed_exit_server(ffa_args_t args)
     }
 
     /* Wait for WD interrupt */
-    while(--timeout && !managed_exit_received);
+    while (--timeout && !managed_exit_received);
 
     if (!timeout)
     {

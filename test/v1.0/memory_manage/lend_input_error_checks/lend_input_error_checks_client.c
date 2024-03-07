@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -47,6 +47,7 @@ static uint32_t mem_lend_invalid_epid_check(void *tx_buf,
     mem_region_init.cacheability = 0;
     mem_region_init.shareability = 0;
     mem_region_init.multi_share = false;
+    mem_region_init.receiver_count = 1;
 
     val_ffa_memory_region_init(&mem_region_init, constituents, constituents_count);
     val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -117,6 +118,7 @@ static uint32_t mem_lend_address_ranges_overlap_check(void *tx_buf,
     mem_region_init.cacheability = 0;
     mem_region_init.shareability = 0;
     mem_region_init.multi_share = false;
+    mem_region_init.receiver_count = 1;
 
     val_ffa_memory_region_init(&mem_region_init, constituents, constituents_count);
     val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -226,6 +228,7 @@ static uint32_t mem_lend_mmio_check(void *tx_buf, ffa_endpoint_id_t sender, uint
     mem_region_init.cacheability = 0;
     mem_region_init.shareability = 0;
     mem_region_init.multi_share = false;
+    mem_region_init.receiver_count = 1;
 
     val_ffa_memory_region_init(&mem_region_init, constituents, constituents_count);
     val_memset(&payload, 0, sizeof(ffa_args_t));

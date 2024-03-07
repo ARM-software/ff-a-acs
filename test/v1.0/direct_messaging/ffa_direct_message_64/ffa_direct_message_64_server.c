@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -79,13 +79,20 @@ uint32_t ffa_direct_message_64_server(ffa_args_t args)
      * while processing the direct request. */
     val_memset(&payload, 0, sizeof(ffa_args_t));
     val_ffa_yield(&payload);
+#if (PLATFORM_FFA_V_1_0 == 1)
     if (payload.fid != FFA_ERROR_32)
     {
         LOG(ERROR, "\tCall to FFA_YIELD must fail while processing direct msg\n", 0, 0);
+#else
+    if (payload.fid == FFA_ERROR_32)
+    {
+        LOG(ERROR, "\tCall to FFA_YIELD must not fail %x \n", payload.fid, 0);
+#endif
         status = VAL_ERROR_POINT(6);
         goto exit;
     }
 
+#if (PLATFORM_FFA_V_1_0 == 1)
     val_memset(&payload, 0, sizeof(ffa_args_t));
     val_ffa_msg_poll(&payload);
     if (payload.fid != FFA_ERROR_32)
@@ -94,6 +101,7 @@ uint32_t ffa_direct_message_64_server(ffa_args_t args)
         status = VAL_ERROR_POINT(7);
         goto exit;
     }
+#endif
 
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 = ((uint32_t)receiver << 16) | sender;

@@ -1,9 +1,9 @@
 
-# Architecture Compliance Suite for Arm Firmware Framework for Armv8-A
+# Architecture Compliance Suite for Arm Firmware Framework for Arm A-profile
 
-## Arm Firmware Framework for Armv8-A
+## Arm Firmware Framework for Arm A-profile
 
-*Arm Firmware Framework for Armv8-A (FF-A)* describes a software architecture that achieves the following goals:
+*Arm Firmware Framework for Arm A-profile (FF-A)* describes a software architecture that achieves the following goals:
 
 1. Applies the Virtualization Extension to isolate software images provided by different vendors.
 2. Describes the interfaces that standardize communication between the various software images. This includes communication between images in the Secure world and Normal world.
@@ -20,7 +20,7 @@ The following are the main components of Arm FF-A:
 
 **Note** : In this document, the terms Endpoint (EP) and partition are used interchangeably.
 
-For more information, download the [Arm FF-A Specification](https://developer.arm.com/docs/den0077/latest)
+For more information, download the [Arm FF-A Specification](https://developer.arm.com/documentation/den0077/e/?lang=en)
 
 ### Architecture Compliance Suite
 
@@ -36,7 +36,7 @@ For more information on Architecture Compliance Suite see [Validation Methodolog
 - Release Version - v0.8
 - Code Quality: Beta - ACS is being developed, please use this opportunity to ameliorate.
 - The tests are written for Arm FF-A 1.1 specification version.
-- For information about the test coverage scenarios that are implemented in the current release of ACS and the scenarios that are planned for the future releases, see [Testcase checklist](./docs/testcase_checklist.md).
+- For information about the test coverage scenarios that are implemented in the current release of ACS and the scenarios that are planned for the future releases, see [Docs](./docs/).
 
 ## GitHub branch
 - To pick up the release version of the code, checkout the release branch.
@@ -83,6 +83,7 @@ make
 -	-DARM_ARCH_MAJOR=<major_version> The major version of Arm Architecture to target when compiling test suite. Its value must be numeric, and defaults to 8.
 -	-DARM_ARCH_MINOR=<major_version> The minor version of Arm Architecture to target when compiling test suite. Its value must be numeric, and defaults to 0.
 -	-DCMAKE_BUILD_TYPE=<build_type>: Chooses between a debug and release build. It can take either release or debug as values. The default value is release.
+-	-DSUITE_TEST_RANGE="<test_start_name>;<test_end_name>" is to select range of tests for build. All tests under -DSUITE are considered by default if not specified.
 -	-DPLATFORM_SPMC_EL=<el_num>: EL number where the target SPMC component runs. Supported values are 1 and 2. The default value is 2.
 -	-DPLATFORM_SP_EL=<el_num>: EL number where the test secure endpoints are expected to run. Supported values are 0(EL0), 1(EL1), and -1(Platform doesn't support deploying FFA based SPs). The default value is 1.
 -	-DPLATFORM_NS_HYPERVISOR_PRESENT=<0|1>: Does the system support the non-secure hypervisor implementing FF-A features? 1 for yes, 0 for no. The default vaule is 1. System is expected to intergrate and load all the three of nonsecure test endpoints(vm1, vm2 and vm3) if the value is set to 1. Otherwise needs to use single non-secure test endpoint(vm1) which would act as NS OS kernel.
@@ -94,11 +95,11 @@ make
 ```
 cd ff-a-acs ;
 mkdir build ; cd build
-cmake ../ -G"Unix Makefiles" -DCROSS_COMPILE=<path-to-aarch64-gcc>/bin/aarch64-none-elf- -DTARGET=tgt_tfa_fvp -DPLATFORM_NS_HYPERVISOR_PRESENT=0
+cmake ../ -G"Unix Makefiles" -DCROSS_COMPILE=<path-to-aarch64-gcc>/bin/aarch64-none-elf- -DTARGET=tgt_tfa_fvp -DPLATFORM_NS_HYPERVISOR_PRESENT=0 -DSUITE=all -DPLATFORM_FFA_V_1_1=1 -DPLATFORM_SP_EL=<0|1>
 make
 ```
 **NOTE**
-	 The current release has been tested on **tgt_tfa_fvp** reference platforms with build options set to -DPLATFORM_NS_HYPERVISOR_PRESENT=0, -DPLATFORM_SPMC_EL=2, -DPLATFORM_SP_EL=1. These platform represents system configuration where SPMD and SMPC are implemented at EL3 and SEL2 respectively, and three test-SPs(sp1, sp2 and sp3) runs at SEL1 and one test NS-EP (vm1) runs as an OS kernel in normal world. For more information on the unverified tests on reference platform, see [testcase_unverified](./docs/testcase_unverified.md) document.<br />
+	 The current release has been tested on **tgt_tfa_fvp** reference platforms with build options set to -DPLATFORM_NS_HYPERVISOR_PRESENT=0, -DPLATFORM_SPMC_EL=2, -DPLATFORM_SP_EL=<1|0>. These platform represents system configuration where SPMD and SMPC are implemented at EL3 and SEL2 respectively, and three test-SPs(sp1, sp2 and sp3) runs at S-EL1 or S-EL0 and one test NS-EP (vm1) runs as an OS kernel in normal world. For more information on the unverified tests on reference platform, see [testcase_unverified](./docs/testcase_unverified.md) document.<br />
 
 ### Build output
 The ACS build generates the binaries for the following test endpoints:<br />
@@ -128,4 +129,4 @@ Arm FF-A ACS is distributed under BSD-3-Clause License.
 
 --------------
 
-*Copyright (c) 2021-2022, Arm Limited or its affiliates. All rights reserved.*
+*Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.*

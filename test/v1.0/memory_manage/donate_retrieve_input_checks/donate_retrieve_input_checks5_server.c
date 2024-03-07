@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -88,7 +88,8 @@ uint32_t donate_retrieve_input_checks5_server(ffa_args_t args)
 
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_DENIED))
     {
-        LOG(ERROR, "\tFFA_MEM_RETRIEVE_REQ must return DENIED err  %x %x\n", payload.arg2, payload.fid);
+        LOG(ERROR, "\tFFA_MEM_RETRIEVE_REQ must return DENIED err  %x %x\n",
+           payload.arg2, payload.fid);
         status =  VAL_ERROR_POINT(4);
         goto rxtx_unmap;
     }
@@ -115,7 +116,7 @@ uint32_t donate_retrieve_input_checks5_server(ffa_args_t args)
     memory_region = (struct ffa_memory_region *)mb.recv;
     flags = memory_region->flags;
     flags = VAL_EXTRACT_BITS(flags, 0, 0);
-    if(flags)
+    if (flags)
     {
         LOG(ERROR, "\tRelayer must set Zero memory before retrieval flag for zero content\n", 0, 0);
         status =  VAL_ERROR_POINT(6);

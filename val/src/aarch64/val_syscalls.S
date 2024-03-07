@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -27,7 +27,7 @@ val_call_conduit:
     ldr x6, [x21, #48]
     ldr x7, [x21, #56]
 
-#if (PLATFORM_SP_EL == 0)
+#if ((PLATFORM_SP_EL == 0) && !(defined(VM1_COMPILE)))
     svc     #0
 #else
     smc     #0

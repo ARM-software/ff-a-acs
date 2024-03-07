@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -47,9 +47,16 @@ static uint32_t retrieve_zero_flag_check_for_ro_mem(ffa_memory_handle_t handle, 
      */
     mem_region_init.flags = flags;
     mem_region_init.data_access = FFA_DATA_ACCESS_RO;
-    mem_region_init.instruction_access = FFA_INSTRUCTION_ACCESS_NOT_SPECIFIED;
     mem_region_init.type = FFA_MEMORY_NORMAL_MEM;
+#if (PLATFORM_FFA_V_1_0 == 1)
+    mem_region_init.instruction_access = FFA_INSTRUCTION_ACCESS_NOT_SPECIFIED;
     mem_region_init.cacheability = FFA_MEMORY_CACHE_NON_CACHEABLE;
+#else
+    mem_region_init.instruction_access = FFA_INSTRUCTION_ACCESS_NX;
+    mem_region_init.cacheability = FFA_MEMORY_CACHE_WRITE_BACK;
+#endif
+    mem_region_init.multi_share = false;
+    mem_region_init.receiver_count = 1;
 #if (PLATFORM_OUTER_SHAREABLE_SUPPORT_ONLY == 1)
     mem_region_init.shareability = FFA_MEMORY_OUTER_SHAREABLE;
 #elif (PLATFORM_INNER_SHAREABLE_SUPPORT_ONLY == 1)
@@ -164,9 +171,15 @@ uint32_t lend_retrieve_input_checks_server(ffa_args_t args)
     mem_region_init.tag = 0;
     mem_region_init.flags = 0;
     mem_region_init.data_access = FFA_DATA_ACCESS_RO;
+#if (PLATFORM_FFA_V_1_0 == 1)
     mem_region_init.instruction_access = FFA_INSTRUCTION_ACCESS_NOT_SPECIFIED;
+#else
+    mem_region_init.instruction_access = FFA_INSTRUCTION_ACCESS_NX;
+#endif
     mem_region_init.type = FFA_MEMORY_NORMAL_MEM;
     mem_region_init.cacheability = FFA_MEMORY_CACHE_WRITE_BACK;
+    mem_region_init.multi_share = false;
+    mem_region_init.receiver_count = 1;
 #if (PLATFORM_OUTER_SHAREABLE_SUPPORT_ONLY == 1)
     mem_region_init.shareability = FFA_MEMORY_OUTER_SHAREABLE;
 #elif (PLATFORM_INNER_SHAREABLE_SUPPORT_ONLY == 1)
@@ -191,7 +204,7 @@ uint32_t lend_retrieve_input_checks_server(ffa_args_t args)
         goto rxtx_unmap;
     }
 
-    val_memset(pages, 0xab, size);
+    val_memset(pages, 0, size);
     memory_region = (struct ffa_memory_region *)mb.recv;
     composite = ffa_memory_region_get_composite(memory_region, 0);
     ptr = (uint8_t *)composite->constituents[0].address;

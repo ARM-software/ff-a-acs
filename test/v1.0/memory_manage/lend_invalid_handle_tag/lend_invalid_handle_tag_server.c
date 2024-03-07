@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -55,6 +55,9 @@ static uint32_t mem_lend_invalid_handle_tag_check(ffa_memory_handle_t handle, ui
 #elif (PLATFORM_INNER_OUTER_SHAREABLE_SUPPORT == 1)
     mem_region_init.shareability = FFA_MEMORY_OUTER_SHAREABLE;
 #endif
+    mem_region_init.multi_share = false;
+    mem_region_init.receiver_count = 1;
+
     /* Pass invalid handle from the receiver and check for error status code */
     msg_size = val_ffa_memory_retrieve_request_init(&mem_region_init, (handle - 0xff));
 

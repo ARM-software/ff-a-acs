@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Arm Limited or its affliates. All rights reserved.
+ * Copyright (c) 2022-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -9,11 +9,12 @@
 
 #define S_WD_TIMEOUT 50
 #define IRQ_TRIGGERED 0xABCDABCD
-static uint32_t *pages = NULL;
+static uint32_t *pages;
 
 static int wd_irq_handler(void)
 {
-    *(volatile uint32_t*)pages = (uint32_t)IRQ_TRIGGERED;
+    *(volatile uint32_t *)pages = (uint32_t)IRQ_TRIGGERED;
+    val_twdog_intr_disable();
     val_twdog_disable();
 
     return 0;
@@ -38,7 +39,7 @@ uint32_t sp_to_sp_blocked_client(uint32_t test_run_data)
 
     if (val_is_ffa_feature_supported(FFA_MEM_SHARE_32))
     {
-        LOG(TEST, "\t   FFA_MEM_SHARE_32 not supported, skipping the test\n", 0, 0);
+        LOG(TEST, "\t  FFA_MEM_SHARE_32 not supported, skipping the test\n", 0, 0);
         return VAL_SKIP_CHECK;
     }
 
@@ -89,6 +90,7 @@ uint32_t sp_to_sp_blocked_client(uint32_t test_run_data)
     mem_region_init.shareability = FFA_MEMORY_OUTER_SHAREABLE;
 #endif
     mem_region_init.multi_share = false;
+    mem_region_init.receiver_count = 1;
 
     val_ffa_memory_region_init(&mem_region_init, constituents, constituents_count);
     val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -135,7 +137,6 @@ uint32_t sp_to_sp_blocked_client(uint32_t test_run_data)
         status = VAL_ERROR_POINT(7);
         goto free_interrupt;
     }
-    val_twdog_intr_disable();
 
     /* Schedule the preempted SP using FFA_RUN */
     val_memset(&payload, 0, sizeof(ffa_args_t));

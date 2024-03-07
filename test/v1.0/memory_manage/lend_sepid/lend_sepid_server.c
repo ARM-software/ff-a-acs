@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -8,76 +8,14 @@
 #include "test_database.h"
 #include "pal_smmuv3_testengine.h"
 
-static uint32_t borrower_to_lend_memory(uint32_t fid, ffa_endpoint_id_t recipient, mb_buf_t mb, void *pages)
-{
-    ffa_args_t payload;
-    uint32_t status = VAL_ERROR_POINT(1);
-    ffa_endpoint_id_t sender = val_get_curr_endpoint_id();
-    ffa_memory_handle_t handle;
-    mem_region_init_t mem_region_init;
-    struct ffa_memory_region_constituent constituents[1];
-    const uint32_t constituents_count = sizeof(constituents) /
-                sizeof(struct ffa_memory_region_constituent);
-
-    constituents[0].address = val_mem_virt_to_phys((void *)pages);
-    constituents[0].page_count = 2;
-
-    mem_region_init.memory_region = mb.send;
-    mem_region_init.sender = sender;
-    mem_region_init.receiver = recipient;
-    mem_region_init.tag = 0;
-    mem_region_init.flags = 0;
-    mem_region_init.data_access = FFA_DATA_ACCESS_RW;
-    mem_region_init.instruction_access = FFA_INSTRUCTION_ACCESS_NOT_SPECIFIED;
-    mem_region_init.type = FFA_MEMORY_NOT_SPECIFIED_MEM;
-    mem_region_init.cacheability = 0;
-    mem_region_init.shareability = 0;
-    mem_region_init.multi_share = false;
-
-    val_ffa_memory_region_init(&mem_region_init, constituents, constituents_count);
-    val_memset(&payload, 0, sizeof(ffa_args_t));
-    payload.arg1 = mem_region_init.total_length;
-    payload.arg2 = mem_region_init.fragment_length;
-
-    /* Must validate that the memory region is in the !Owner-EA state
-     * for the Lender. It must return DENIED in case of an error. */
-    if (fid == FFA_MEM_LEND_64)
-        val_ffa_mem_lend_64(&payload);
-    else
-        val_ffa_mem_lend_32(&payload);
-
-    if (payload.fid == FFA_ERROR_32 && payload.arg2 == FFA_ERROR_DENIED)
-        return VAL_SUCCESS;
-
-    LOG(ERROR, "\tMEM_LEND request must fail with DENIED err %x\n", payload.arg2, 0);
-
-    if (payload.fid == FFA_SUCCESS_32 || payload.fid == FFA_SUCCESS_64)
-    {
-        handle = ffa_mem_success_handle(payload);
-        val_memset(&payload, 0, sizeof(ffa_args_t));
-        payload.arg1 = (uint32_t)handle;
-        payload.arg2 = (uint32_t)(handle >> 32);
-        payload.arg3 = 0;
-        val_ffa_mem_reclaim(&payload);
-        if (payload.fid == FFA_ERROR_32)
-        {
-            LOG(ERROR, "\tMem Reclaim failed err %x\n", payload.arg2, 0);
-        }
-    }
-
-    return status;
-}
-
 uint32_t lend_sepid_server(ffa_args_t args)
 {
     ffa_args_t payload;
     uint32_t status = VAL_SUCCESS;
     ffa_endpoint_id_t sender = args.arg1 & 0xffff;
     ffa_endpoint_id_t receiver = (args.arg1 >> 16) & 0xffff;
-    ffa_endpoint_id_t recipient_1;
     uint32_t fid = (uint32_t)args.arg4;
     mb_buf_t mb;
-    uint8_t *pages = NULL;
     uint8_t *ptr;
     uint64_t size = 0x1000;
     mem_region_init_t mem_region_init;
@@ -92,7 +30,7 @@ uint32_t lend_sepid_server(ffa_args_t args)
     if (mb.send == NULL || mb.recv == NULL)
     {
         LOG(ERROR, "\tFailed to allocate RxTx buffer\n", 0, 0);
-        status = VAL_ERROR_POINT(2);
+        status = VAL_ERROR_POINT(1);
         goto free_memory;
     }
 
@@ -100,16 +38,8 @@ uint32_t lend_sepid_server(ffa_args_t args)
     if (val_rxtx_map_64((uint64_t)mb.send, (uint64_t)mb.recv, (uint32_t)(size/PAGE_SIZE_4K)))
     {
         LOG(ERROR, "\tRxTx Map failed\n", 0, 0);
-        status = VAL_ERROR_POINT(3);
+        status = VAL_ERROR_POINT(2);
         goto free_memory;
-    }
-
-    pages = (uint8_t *)val_memory_alloc(size * 2);
-    if (!pages)
-    {
-        LOG(ERROR, "\tMemory allocation failed\n", 0, 0);
-        status = VAL_ERROR_POINT(4);
-        goto rxtx_unmap;
     }
 
     /* Wait for the message. */
@@ -119,7 +49,7 @@ uint32_t lend_sepid_server(ffa_args_t args)
     {
         LOG(ERROR, "\tDirect request failed, fid=0x%x, err 0x%x\n",
                   payload.fid, payload.arg2);
-        status =  VAL_ERROR_POINT(5);
+        status =  VAL_ERROR_POINT(3);
         goto rxtx_unmap;
     }
 
@@ -154,7 +84,7 @@ uint32_t lend_sepid_server(ffa_args_t args)
     if (payload.fid != FFA_MEM_RETRIEVE_RESP_32)
     {
         LOG(ERROR, "\tMem retrieve request failed err %x\n", payload.arg2, 0);
-        status =  VAL_ERROR_POINT(6);
+        status =  VAL_ERROR_POINT(4);
         goto rxtx_unmap;
     }
 
@@ -175,36 +105,27 @@ uint32_t lend_sepid_server(ffa_args_t args)
     if (val_mem_map_pgt(&mem_desc))
     {
         LOG(ERROR, "\tVa to pa mapping failed\n", 0, 0);
-        status =  VAL_ERROR_POINT(7);
+        status =  VAL_ERROR_POINT(5);
         goto rx_release;
     }
 
+    val_memset(ptr, 0xcb, size);
     /* Initiate the DMA transactions to the received memory regions using device upstream of SMMU */
     if (VAL_IS_ENDPOINT_SECURE(val_get_endpoint_logical_id(sender)))
     {
-        smmuv3_configure_testengine(PLATFORM_SMMU_STREAM_ID, (uint64_t)ptr, (uint64_t)ptr + PAGE_SIZE_4K, size, true);
+        smmuv3_configure_testengine(PLATFORM_SMMU_STREAM_ID,
+         (uint64_t)ptr, (uint64_t)ptr + PAGE_SIZE_4K, size, true);
     }
     else
     {
-        smmuv3_configure_testengine(PLATFORM_SMMU_STREAM_ID, (uint64_t)ptr, (uint64_t)ptr + PAGE_SIZE_4K, size, false);
+        smmuv3_configure_testengine(PLATFORM_SMMU_STREAM_ID, (uint64_t)ptr,
+                                (uint64_t)ptr + PAGE_SIZE_4K, size, false);
     }
 
-    if (!VAL_IS_ENDPOINT_SECURE(val_get_endpoint_logical_id(sender)) &&
-        !VAL_IS_ENDPOINT_SECURE(val_get_endpoint_logical_id(receiver)))
+    if (val_memcmp(ptr, ptr + PAGE_SIZE_4K, size))
     {
-        recipient_1 = val_get_endpoint_id(VM3);
-    }
-    else
-    {
-        recipient_1 = val_get_endpoint_id(SP3);
-    }
-
-    /* Check that borrower can't lend memory to others */
-    status = borrower_to_lend_memory(fid, recipient_1, mb, ptr);
-    if (status)
-    {
-        status = VAL_ERROR_POINT(8);
-        goto relinquish_mem;
+        LOG(ERROR, "\tData mismatch\n", 0, 0);
+        status =  VAL_ERROR_POINT(6);
     }
 
     val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -213,10 +134,9 @@ uint32_t lend_sepid_server(ffa_args_t args)
     if (payload.fid == FFA_ERROR_32)
     {
         LOG(ERROR, "\tDirect response failed err %x\n", payload.arg2, 0);
-        status = VAL_ERROR_POINT(9);
+        status = VAL_ERROR_POINT(7);
     }
 
-relinquish_mem:
     /* relinquish the memory and notify the sender. */
     ffa_mem_relinquish_init((struct ffa_mem_relinquish *)mb.send, handle, 0, sender, 0x1);
     val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -224,7 +144,7 @@ relinquish_mem:
     if (payload.fid == FFA_ERROR_32)
     {
         LOG(ERROR, "\tMem relinquish failed err %x\n", payload.arg2, 0);
-        status = status ? status : VAL_ERROR_POINT(10);
+        status = status ? status : VAL_ERROR_POINT(8);
         goto rx_release;
     }
 
@@ -232,27 +152,21 @@ rx_release:
     if (val_rx_release())
     {
         LOG(ERROR, "\tval_rx_release failed\n", 0, 0);
-        status = status ? status : VAL_ERROR_POINT(11);
+        status = status ? status : VAL_ERROR_POINT(9);
     }
 
 rxtx_unmap:
     if (val_rxtx_unmap(sender))
     {
         LOG(ERROR, "\tRXTX_UNMAP failed\n", 0, 0);
-        status = status ? status : VAL_ERROR_POINT(12);
+        status = status ? status : VAL_ERROR_POINT(10);
     }
 
 free_memory:
     if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
     {
         LOG(ERROR, "\tfree_rxtx_buffers failed\n", 0, 0);
-        status = status ? status : VAL_ERROR_POINT(13);
-    }
-
-    if (val_memory_free(pages, size * 2))
-    {
-        LOG(ERROR, "\tval_mem_free failed\n", 0, 0);
-        status = status ? status : VAL_ERROR_POINT(14);
+        status = status ? status : VAL_ERROR_POINT(11);
     }
 
     val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -261,7 +175,7 @@ free_memory:
     if (payload.fid == FFA_ERROR_32)
     {
         LOG(ERROR, "\tDirect response failed err %x\n", payload.arg2, 0);
-        status = status ? status : VAL_ERROR_POINT(15);
+        status = status ? status : VAL_ERROR_POINT(12);
     }
 
     return status;

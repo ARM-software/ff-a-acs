@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Arm Limited or its affliates. All rights reserved.
+ * Copyright (c) 2022-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -55,7 +55,7 @@ uint32_t notification_set_client(uint32_t test_run_data)
     payload.arg3 = (uint32_t)(notifications_bm_global & 0xFFFFFFFFU);
     payload.arg4 = (uint32_t)(notifications_bm_global >> 32);
     val_ffa_notification_set(&payload);
-    if (payload.fid != FFA_ERROR_32 && payload.arg2 != FFA_ERROR_INVALID_PARAMETERS)
+    if (payload.fid != FFA_ERROR_32 || payload.arg2 != FFA_ERROR_INVALID_PARAMETERS)
     {
         LOG(ERROR, "\t  Notification_set must return err for invalid id %x\n", payload.arg2, 0);
         status = VAL_ERROR_POINT(3);
@@ -69,7 +69,7 @@ uint32_t notification_set_client(uint32_t test_run_data)
     payload.arg3 = (uint32_t)(notifications_bm_global & 0xFFFFFFFFU);
     payload.arg4 = (uint32_t)(notifications_bm_global >> 32);
     val_ffa_notification_set(&payload);
-    if (payload.fid != FFA_ERROR_32 && payload.arg2 != FFA_ERROR_INVALID_PARAMETERS)
+    if (payload.fid != FFA_ERROR_32 || payload.arg2 != FFA_ERROR_INVALID_PARAMETERS)
     {
         LOG(ERROR, "\t  Notification_set must return err for invalid id %x\n", payload.arg2, 0);
         status = VAL_ERROR_POINT(4);
@@ -83,7 +83,7 @@ uint32_t notification_set_client(uint32_t test_run_data)
     payload.arg3 = (uint32_t)(notifications_bm_pcpu & 0xFFFFFFFFU);
     payload.arg4 = (uint32_t)(notifications_bm_pcpu >> 32);
     val_ffa_notification_set(&payload);
-    if (payload.fid != FFA_ERROR_32 && payload.arg2 != FFA_ERROR_INVALID_PARAMETERS)
+    if (payload.fid != FFA_ERROR_32 || payload.arg2 != FFA_ERROR_INVALID_PARAMETERS)
     {
         LOG(ERROR, "\t  Notification_set must return err for invalid flag %x\n", payload.arg2, 0);
         status = VAL_ERROR_POINT(5);
@@ -99,7 +99,7 @@ uint32_t notification_set_client(uint32_t test_run_data)
     payload.arg3 = (uint32_t)(notifications_bm_pcpu & 0xFFFFFFFFU);
     payload.arg4 = (uint32_t)(notifications_bm_pcpu >> 32);
     val_ffa_notification_set(&payload);
-    if (payload.fid != FFA_ERROR_32 && payload.arg2 != FFA_ERROR_INVALID_PARAMETERS)
+    if (payload.fid != FFA_ERROR_32 || payload.arg2 != FFA_ERROR_INVALID_PARAMETERS)
     {
         LOG(ERROR, "\t  Notification_set must return err for invalid flag %x\n", payload.arg2, 0);
         status = VAL_ERROR_POINT(6);
@@ -115,7 +115,7 @@ uint32_t notification_set_client(uint32_t test_run_data)
     payload.arg3 = (uint32_t)(notifications_bm_global & 0xFFFFFFFFU);
     payload.arg4 = (uint32_t)(notifications_bm_global >> 32);
     val_ffa_notification_set(&payload);
-    if (payload.fid != FFA_ERROR_32 && payload.arg2 != FFA_ERROR_INVALID_PARAMETERS)
+    if (payload.fid != FFA_ERROR_32 || payload.arg2 != FFA_ERROR_INVALID_PARAMETERS)
     {
         LOG(ERROR, "\t  Notification_set must return err for invalid flag %x\n", payload.arg2, 0);
         status = VAL_ERROR_POINT(7);
@@ -129,7 +129,7 @@ uint32_t notification_set_client(uint32_t test_run_data)
     payload.arg3 = (uint32_t)(notifications_bm_invalid & 0xFFFFFFFFU);
     payload.arg4 = (uint32_t)(notifications_bm_invalid >> 32);
     val_ffa_notification_set(&payload);
-    if (payload.fid != FFA_ERROR_32 && payload.arg2 != FFA_ERROR_DENIED)
+    if (payload.fid != FFA_ERROR_32 || payload.arg2 != FFA_ERROR_DENIED)
     {
         LOG(ERROR, "\t  Notification_set must return err for invalid bitmap %x\n", payload.arg2, 0);
         status = VAL_ERROR_POINT(8);

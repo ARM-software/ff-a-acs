@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -24,11 +24,18 @@ uint32_t ffa_version_client(uint32_t test_run_data)
         val_ffa_version(&payload);
         if (payload.fid != check[i].expected_status)
         {
+            /* Filter Index-1: Valid non-zero input version */
+            #if (PLATFORM_FFA_V_1_1 == 1 || PLATFORM_FFA_V_ALL == 1)
+            if (!(i == 1 && ((check[i].major == payload.fid >> 16)
+                         &&  (check[i].minor <= (payload.fid & 0xFFFF)))))
+            #endif
+            {
             LOG(ERROR, "\tCheck failed for iteration = %d\n", i, 0);
             LOG(ERROR, "\tExpected=0x%x but Actual=0x%x\n",
                         check[i].expected_status,
                         payload.fid);
             return VAL_ERROR_POINT(1);
+            }
         }
 
         /* Reserved registers (MBZ) */

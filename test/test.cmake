@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+# Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
@@ -15,16 +15,22 @@ file(GLOB TEST_SRC
 )
 else()
 file(GLOB TEST_SRC
-    "${ROOT_DIR}/test/${SUITE}/*/*.h"
-    "${ROOT_DIR}/test/${SUITE}/*/*.c"
-    "${ROOT_DIR}/test/${SUITE}/*/*/*.c"
-    "${ROOT_DIR}/test/${SUITE}/*/*/*.S"
+    "${ROOT_DIR}/test/v1.0/${SUITE}/*/*.h"
+    "${ROOT_DIR}/test/v1.0/${SUITE}/*/*.c"
+    "${ROOT_DIR}/test/v1.0/${SUITE}/*/*/*.c"
+    "${ROOT_DIR}/test/v1.0/${SUITE}/*/*/*.S"
+    "${ROOT_DIR}/test/v1.1/${SUITE}/*/*.h"
+    "${ROOT_DIR}/test/v1.1/${SUITE}/*/*.c"
+    "${ROOT_DIR}/test/v1.1/${SUITE}/*/*/*.c"
+    "${ROOT_DIR}/test/v1.1/${SUITE}/*/*/*.S"
 )
 endif()
 
-list(APPEND TEST_SRC
-    ${ROOT_DIR}/test/common/test_database.c
-)
+if((${PLATFORM_FFA_V_ALL} EQUAL 1) OR (${PLATFORM_FFA_V_1_1} EQUAL 1))
+    list(APPEND TEST_SRC ${ROOT_DIR}/test/common/test_database_v_1_1.c)
+elseif(${PLATFORM_FFA_V_1_0} EQUAL 1)
+    list(APPEND TEST_SRC ${ROOT_DIR}/test/common/test_database_v_1_0.c)
+endif()
 
 # Create TEST library
 add_library(${TEST_LIB} STATIC ${TEST_SRC})

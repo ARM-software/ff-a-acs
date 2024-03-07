@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -31,10 +31,27 @@ uint32_t ffa_direct_message_32_client(uint32_t test_run_data)
     val_ffa_msg_send_direct_req_32(&req_data_32);
     if (req_data_32.fid != FFA_MSG_SEND_DIRECT_RESP_32)
     {
-        LOG(ERROR, "\tDirect request failed, fid=0x%x, err 0x%x\n",
-                  req_data_32.fid, req_data_32.arg2);
-        status = VAL_ERROR_POINT(2);
-        goto exit;
+#if (PLATFORM_FFA_V_1_0 != 1)
+        if  (req_data_32.fid == FFA_YIELD_32)
+        {
+            req_data_32.arg1 = ((uint32_t)val_get_endpoint_id(server_logical_id) << 16);
+            val_ffa_run(&req_data_32);
+            if (req_data_32.fid != FFA_MSG_SEND_DIRECT_RESP_32)
+            {
+                LOG(ERROR, "\tFFA_RUN Failed err %x\n", req_data_32.fid, 0);
+                status = VAL_ERROR_POINT(2);
+                goto exit;
+            }
+        }
+        else
+#endif
+        {
+            LOG(ERROR, "\tDirect request failed, fid=0x%x, err 0x%x\n",
+            req_data_32.fid, req_data_32.arg2);
+            status = VAL_ERROR_POINT(3);
+            goto exit;
+        }
+
     }
 
     /* Direct respond received, Compare the respond req_data_32 */
@@ -45,7 +62,7 @@ uint32_t ffa_direct_message_32_client(uint32_t test_run_data)
         req_data_32.arg7 != expected_resp_data_32.arg7)
     {
         LOG(ERROR, "\tDirect response data mismatched\n", 0, 0);
-        status = VAL_ERROR_POINT(3);
+        status = VAL_ERROR_POINT(4);
         goto exit;
     }
 
@@ -58,7 +75,7 @@ uint32_t ffa_direct_message_32_client(uint32_t test_run_data)
     {
         LOG(ERROR, "\tWrong source and dest id check failed, fid=0x%x\n, err=0x%x",
             payload.fid, payload.arg2);
-        status = VAL_ERROR_POINT(4);
+        status = VAL_ERROR_POINT(5);
         goto exit;
     }
 
@@ -71,7 +88,7 @@ uint32_t ffa_direct_message_32_client(uint32_t test_run_data)
     {
         LOG(ERROR, "\tSame source and dest id check failed, fid=0x%x\n, err=0x%x",
             payload.fid, payload.arg2);
-        status = VAL_ERROR_POINT(5);
+        status = VAL_ERROR_POINT(6);
         goto exit;
     }
 
@@ -85,7 +102,7 @@ uint32_t ffa_direct_message_32_client(uint32_t test_run_data)
     {
         LOG(ERROR, "\tW2 reserved register mbz check failed, fid=0x%x\n, err=0x%x",
                  payload.fid, payload.arg2);
-        status = VAL_ERROR_POINT(6);
+        status = VAL_ERROR_POINT(7);
         goto exit;
     }
 

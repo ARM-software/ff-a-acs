@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -67,6 +67,8 @@ uint32_t share_state_machine_1_server(ffa_args_t args)
     mem_region_init.data_access = FFA_DATA_ACCESS_RW;
     mem_region_init.instruction_access = FFA_INSTRUCTION_ACCESS_NOT_SPECIFIED;
     mem_region_init.type = FFA_MEMORY_NORMAL_MEM;
+    mem_region_init.multi_share = true;
+    mem_region_init.receiver_count = 2;
     mem_region_init.cacheability = FFA_MEMORY_CACHE_WRITE_BACK;
 #if (PLATFORM_OUTER_SHAREABLE_SUPPORT_ONLY == 1)
     mem_region_init.shareability = FFA_MEMORY_OUTER_SHAREABLE;
@@ -75,6 +77,20 @@ uint32_t share_state_machine_1_server(ffa_args_t args)
 #elif (PLATFORM_INNER_OUTER_SHAREABLE_SUPPORT == 1)
     mem_region_init.shareability = FFA_MEMORY_OUTER_SHAREABLE;
 #endif
+
+#if (PLATFORM_FFA_V_1_1 == 1 || PLATFORM_FFA_V_ALL == 1)
+    uint32_t borrower_list = (uint32_t)args.arg5;
+    uint16_t borrower_1 = (uint16_t)(borrower_list & 0xFFFF);
+    uint16_t borrower_2 = (uint16_t)((borrower_list >> 16) & 0xFFFF);
+
+    mem_region_init.receivers[0].receiver_permissions.receiver = borrower_1;
+    mem_region_init.receivers[0].receiver_permissions.permissions = FFA_DATA_ACCESS_RW;
+    mem_region_init.receivers[0].receiver_permissions.flags = 0;
+    mem_region_init.receivers[1].receiver_permissions.receiver = borrower_2;
+    mem_region_init.receivers[1].receiver_permissions.permissions = FFA_DATA_ACCESS_RW;
+    mem_region_init.receivers[1].receiver_permissions.flags = 0;
+#endif
+
     msg_size = val_ffa_memory_retrieve_request_init(&mem_region_init, handle);
 
     val_memset(&payload, 0, sizeof(ffa_args_t));

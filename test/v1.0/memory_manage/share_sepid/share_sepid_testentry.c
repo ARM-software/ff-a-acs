@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -9,7 +9,7 @@
 
 void share_sepid_testentry(uint32_t test_num)
 {
-    /* TODO: Update server endpoint id with SEPID */
+    /* Update server endpoint id with SEPID */
 
     /* Execute test for EP combination: client=VM1, server=SP2 */
     if (IS_TEST_FAIL(val_execute_test(test_num, VM1, SP2)))

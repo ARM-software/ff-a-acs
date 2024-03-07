@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -16,8 +16,6 @@ static uint32_t ffa_mem_donate_helper(uint32_t test_run_data, uint32_t fid)
     ffa_endpoint_id_t sender = val_get_endpoint_id(client_logical_id);
     ffa_endpoint_id_t recipient = val_get_endpoint_id(server_logical_id);
     mb_buf_t mb;
-    uint8_t *pages = NULL;
-    uint32_t i;
     uint64_t size = 0x1000;
     uint32_t msg_size;
     ffa_memory_handle_t handle;
@@ -43,18 +41,10 @@ static uint32_t ffa_mem_donate_helper(uint32_t test_run_data, uint32_t fid)
         goto free_memory;
     }
 
-    pages = (uint8_t *)val_memory_alloc(size * 2);
-    if (!pages)
-    {
-        LOG(ERROR, "\tMemory allocation failed\n", 0, 0);
-        status = VAL_ERROR_POINT(3);
-        goto rxtx_unmap;
-    }
 
     val_select_server_fn_direct(test_run_data, fid, 0, 0, 0);
 
-    val_memset(pages, 0xab, size);
-    constituents[0].address = val_mem_virt_to_phys((void *)pages);
+    constituents[0].address = (void *)PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION;
     constituents[0].page_count = 2;
 
     mem_region_init.memory_region = mb.send;
@@ -82,7 +72,7 @@ static uint32_t ffa_mem_donate_helper(uint32_t test_run_data, uint32_t fid)
     if (payload.fid == FFA_ERROR_32)
     {
         LOG(ERROR, "\tMEM_DONATE request failed err %x\n", payload.arg2, 0);
-        status = VAL_ERROR_POINT(4);
+        status = VAL_ERROR_POINT(3);
         goto rxtx_unmap;
     }
 
@@ -103,7 +93,7 @@ static uint32_t ffa_mem_donate_helper(uint32_t test_run_data, uint32_t fid)
     if (payload.fid != FFA_ERROR_32)
     {
         LOG(ERROR, "\tMEM_DONATE request failed err %x\n", payload.arg2, 0);
-        status = VAL_ERROR_POINT(5);
+        status = VAL_ERROR_POINT(4);
         goto rxtx_unmap;
     }
 
@@ -116,7 +106,7 @@ static uint32_t ffa_mem_donate_helper(uint32_t test_run_data, uint32_t fid)
     if (payload.fid == FFA_ERROR_32)
     {
         LOG(ERROR, "\tDirect request failed err %x\n", payload.arg2, 0);
-        status = VAL_ERROR_POINT(6);
+        status = VAL_ERROR_POINT(5);
         goto rxtx_unmap;
     }
 
@@ -151,19 +141,8 @@ static uint32_t ffa_mem_donate_helper(uint32_t test_run_data, uint32_t fid)
     if (payload.fid != FFA_MEM_RETRIEVE_RESP_32)
     {
         LOG(ERROR, "\tMem retrieve request failed err %x\n", payload.arg2, 0);
-        status =  VAL_ERROR_POINT(7);
+        status =  VAL_ERROR_POINT(6);
         goto rxtx_unmap;
-    }
-
-    /* Check source and destination data are same */
-    for (i = 0; i < size; ++i)
-    {
-        if (pages[i] != pages[i+size])
-        {
-            LOG(ERROR, "\tSource Destination data mismatch.\n", 0, 0);
-            status = VAL_ERROR_POINT(8);
-            goto rxtx_unmap;
-        }
     }
 
     val_select_server_fn_direct(test_run_data, 0, 0, 0, 0);
@@ -171,27 +150,21 @@ static uint32_t ffa_mem_donate_helper(uint32_t test_run_data, uint32_t fid)
     if (val_rx_release())
     {
         LOG(ERROR, "\tval_rx_release failed\n", 0, 0);
-        status = status ? status : VAL_ERROR_POINT(9);
+        status = status ? status : VAL_ERROR_POINT(7);
     }
 
 rxtx_unmap:
     if (val_rxtx_unmap(sender))
     {
         LOG(ERROR, "\tRXTX_UNMAP failed\n", 0, 0);
-        status = status ? status : VAL_ERROR_POINT(10);
+        status = status ? status : VAL_ERROR_POINT(8);
     }
 
 free_memory:
     if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
     {
         LOG(ERROR, "\tfree_rxtx_buffers failed\n", 0, 0);
-        status = status ? status : VAL_ERROR_POINT(11);
-    }
-
-    if (val_memory_free(pages, size))
-    {
-        LOG(ERROR, "\tval_mem_free failed\n", 0, 0);
-        status = status ? status : VAL_ERROR_POINT(12);
+        status = status ? status : VAL_ERROR_POINT(9);
     }
 
     payload = val_select_server_fn_direct(test_run_data, 0, 0, 0, 0);

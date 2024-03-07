@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -13,20 +13,22 @@
 
 //#define PGT_DEBUG 1
 
+#if ((PLATFORM_SP_EL == 1) || (defined(VM1_COMPILE)))
 static uint32_t bits_per_level;
 static uint64_t pgt_addr_mask;
-static uint8_t tt_l2_base_1_used = 0;
-static uint8_t tt_l2_base_2_used = 0;
-static uint8_t tt_l2_base_3_used = 0;
-static uint8_t tt_l2_base_4_used = 0;
-static uint8_t tt_l2_base_5_used = 0;
-static uint8_t tt_l2_base_6_used = 0;
-static uint8_t tt_l3_base_1_used = 0;
-static uint8_t tt_l3_base_2_used = 0;
-static uint8_t tt_l3_base_3_used = 0;
-static uint8_t tt_l3_base_4_used = 0;
-static uint8_t tt_l3_base_5_used = 0;
-static uint8_t tt_l3_base_6_used = 0;
+static uint8_t tt_l2_base_1_used;
+static uint8_t tt_l2_base_2_used;
+static uint8_t tt_l2_base_3_used;
+static uint8_t tt_l2_base_4_used;
+static uint8_t tt_l2_base_5_used;
+static uint8_t tt_l2_base_6_used;
+static uint8_t tt_l3_base_1_used;
+static uint8_t tt_l3_base_2_used;
+static uint8_t tt_l3_base_3_used;
+static uint8_t tt_l3_base_4_used;
+static uint8_t tt_l3_base_5_used;
+static uint8_t tt_l3_base_6_used;
+#endif
 
 /* Linker symbols used to figure out the memory layout of secure partition. */
 extern uintptr_t __TEXT_START__, __TEXT_END__;
@@ -45,6 +47,8 @@ extern uintptr_t __BSS_START__, __BSS_END__;
 #define EP_BSS_START  ((uintptr_t)&__BSS_START__)
 #define EP_BSS_END    ((uintptr_t)&__BSS_END__)
 
+
+#if ((PLATFORM_SP_EL == 1) || (defined(VM1_COMPILE)))
 /**
  * @brief Update the descriptors for given VA-PA mapping
  * @param tt_desc - Data like ttbr, number of tt levels..
@@ -244,6 +248,7 @@ static uint32_t ilog2(uint64_t size)
     }
     return 0;
 }
+#endif
 
 /**
  * @brief Create page table for given memory addresses and attributes
@@ -254,6 +259,11 @@ static uint32_t ilog2(uint64_t size)
 static uint32_t val_pgt_create(pgt_descriptor_t pgt_desc,
                         memory_region_descriptor_t *mem_desc)
 {
+#if ((PLATFORM_SP_EL == 0) && !(defined(VM1_COMPILE)))
+    (void)pgt_desc;
+    (void)mem_desc;
+    return VAL_SUCCESS;
+#else
     tt_descriptor_t tt_desc;
     uint32_t num_pgt_levels;
     uint64_t page_size = val_curr_endpoint_page_size();
@@ -325,6 +335,7 @@ static uint32_t val_pgt_create(pgt_descriptor_t pgt_desc,
     }
 
     return VAL_SUCCESS;
+#endif
 }
 
 /**
@@ -369,8 +380,10 @@ static uint32_t val_map_endpoint_region(pgt_descriptor_t pgt_desc)
 
     while (no_of_regions--)
     {
-        mem_desc.virtual_address = (uint64_t)((memory_region_descriptor_t *)region_list)->virtual_address;
-        mem_desc.physical_address = (uint64_t)((memory_region_descriptor_t *)region_list)->physical_address;
+        mem_desc.virtual_address = (uint64_t)
+        ((memory_region_descriptor_t *)region_list)->virtual_address;
+        mem_desc.physical_address = (uint64_t)
+        ((memory_region_descriptor_t *)region_list)->physical_address;
         mem_desc.length = (uint64_t)((memory_region_descriptor_t *)region_list)->length;
         mem_desc.attributes = (uint64_t)((memory_region_descriptor_t *)region_list)->attributes;
 
@@ -469,8 +482,8 @@ uint32_t val_setup_mmu(void)
     /* Enable MMU */
     val_sctlr_write((1 << 0) | // M=1 Enable the stage 1 MMU
                     (1 << 2) | // C=1 Enable data and unified caches
-                    (1 << 12)| // I=1 Enable instruction caches
-                    (1 << 23)| // PSTATE.PAN is left unchanged on taking an exception to EL1
+                    (1 << 12) | // I=1 Enable instruction caches
+                    (1 << 23) | // PSTATE.PAN is left unchanged on taking an exception to EL1
                     val_sctlr_read(currentEL),
                     currentEL);
 #ifdef PGT_DEBUG

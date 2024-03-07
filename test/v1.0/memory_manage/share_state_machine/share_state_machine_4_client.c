@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -121,7 +121,14 @@ static uint32_t ffa_mem_share_helper(uint32_t test_run_data, uint32_t fid)
         goto rxtx_unmap;
     }
 
+#if (PLATFORM_FFA_V_1_0 == 1)
     val_select_server_fn_direct(test_run_data, fid1, 0, 0, 0);
+#else
+    /*Encode Borrower ID's for Retrieval*/
+    uint32_t borrower_id_list = (uint32_t)(recipient_1 << 16) | recipient;
+
+    val_select_server_fn_direct(test_run_data, fid1, borrower_id_list, 0, 0);
+#endif
 
     handle = ffa_mem_success_handle(payload);
     /* Pass memory handle to the server using direct message */
@@ -136,6 +143,8 @@ static uint32_t ffa_mem_share_helper(uint32_t test_run_data, uint32_t fid)
      * Try to share the same memory region to recipient and check for error status code.
      */
     mem_region_init.multi_share = false;
+    mem_region_init.receiver_count = 1;
+
     val_ffa_memory_region_init(&mem_region_init, constituents, constituents_count);
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 = mem_region_init.total_length;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -95,6 +95,7 @@ static uint32_t is_matching_endpoint_found(const val_endpoint_info_t *expected_e
             return 0;
         }
 
+#if (PLATFORM_SP_EL == 1)
         if (VAL_IS_ENDPOINT_SECURE(val_get_curr_endpoint_logical_id()))
         {
             if (expected_ep[0].ep_properties != info_get[i].properties)
@@ -107,6 +108,7 @@ static uint32_t is_matching_endpoint_found(const val_endpoint_info_t *expected_e
             }
         }
         else
+#endif
         {
             if (expected_ep[0].ep_properties < info_get[i].properties)
             {

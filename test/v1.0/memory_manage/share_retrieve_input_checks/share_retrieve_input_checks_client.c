@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -63,7 +63,11 @@ static uint32_t ffa_mem_share_handle_helper(uint32_t test_run_data, uint32_t fid
     mem_region_init.data_access = FFA_DATA_ACCESS_RW;
     mem_region_init.instruction_access = FFA_INSTRUCTION_ACCESS_NOT_SPECIFIED;
     mem_region_init.type = FFA_MEMORY_NORMAL_MEM;
+#if (PLATFORM_FFA_V_1_0 == 1)
     mem_region_init.cacheability = FFA_MEMORY_CACHE_NON_CACHEABLE;
+#else
+    mem_region_init.cacheability = FFA_MEMORY_CACHE_WRITE_BACK;
+#endif
 #if (PLATFORM_OUTER_SHAREABLE_SUPPORT_ONLY == 1)
     mem_region_init.shareability = FFA_MEMORY_OUTER_SHAREABLE;
 #elif (PLATFORM_INNER_SHAREABLE_SUPPORT_ONLY == 1)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -7,7 +7,7 @@
 
 #include "test_database.h"
 
-static int g_handler = 0;
+static int g_handler;
 static uint8_t *ptr;
 
 /**
@@ -106,6 +106,8 @@ static uint32_t share_ro_retrieve_rw_32_server(ffa_args_t args)
     mem_region_init.data_access = FFA_DATA_ACCESS_RW;
     mem_region_init.instruction_access = FFA_INSTRUCTION_ACCESS_NOT_SPECIFIED;
     mem_region_init.type = FFA_MEMORY_NORMAL_MEM;
+    mem_region_init.multi_share = false;
+    mem_region_init.receiver_count = 1;
     mem_region_init.cacheability = FFA_MEMORY_CACHE_WRITE_BACK;
 #if (PLATFORM_OUTER_SHAREABLE_SUPPORT_ONLY == 1)
     mem_region_init.shareability = FFA_MEMORY_OUTER_SHAREABLE;

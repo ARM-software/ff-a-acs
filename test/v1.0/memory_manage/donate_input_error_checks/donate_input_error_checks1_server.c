@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -64,6 +64,8 @@ uint32_t donate_input_error_checks1_server(ffa_args_t args)
     mem_region_init.instruction_access = FFA_INSTRUCTION_ACCESS_NX;
     mem_region_init.type = FFA_MEMORY_NORMAL_MEM;
     mem_region_init.cacheability = FFA_MEMORY_CACHE_WRITE_BACK;
+    mem_region_init.multi_share = false;
+    mem_region_init.receiver_count = 1;
 #if (PLATFORM_OUTER_SHAREABLE_SUPPORT_ONLY == 1)
     mem_region_init.shareability = FFA_MEMORY_OUTER_SHAREABLE;
 #elif (PLATFORM_INNER_SHAREABLE_SUPPORT_ONLY == 1)
@@ -118,6 +120,7 @@ uint32_t donate_input_error_checks1_server(ffa_args_t args)
     mem_region_init.cacheability = 0;
     mem_region_init.shareability = 0;
     mem_region_init.multi_share = false;
+    mem_region_init.receiver_count = 1;
 
     val_ffa_memory_region_init(&mem_region_init, constituents, constituents_count);
     val_memset(&payload, 0, sizeof(ffa_args_t));

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -74,7 +74,7 @@ static uint32_t donate_input_error_checks4_helper(uint32_t test_run_data, uint32
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_DENIED))
     {
         LOG(ERROR, "\tMem_donate request must return DENIED for Read only access to memory region %x\n",
-                                                                             payload.arg2, 0);
+           payload.arg2, 0);
         status = VAL_ERROR_POINT(3);
         goto rxtx_unmap;
     }

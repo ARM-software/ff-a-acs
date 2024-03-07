@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -23,10 +23,11 @@
  * to configure MMU with any of supported translation granule
  * size 4k, 64k and 16k.
  * Also the image size must be eqaul to 1MB when 4KB translation
- * granule used. The image size requirement could be more in the case of 16KB or 64KB translation granule.
- * */
+ * granule used. The image size requirement could be
+ * more in the case of 16KB or 64KB translation granule.
+ */
 // Common macro for all test SPs image entry point offset
-#define PLATFORM_SP_IMAGE_OFFSET 0x1000
+#define PLATFORM_SP_IMAGE_OFFSET 0x4000
 // Common macro for all test VMs image entry point offset
 #define PLATFORM_VM_IMAGE_OFFSET 0x0
 
@@ -76,7 +77,7 @@
 /* Base address of watchdog assigned to SP1 */
 #define PLATFORM_WDOG_BASE    0x1C0F0000 //(SP805)
 #define PLATFORM_WDOG_SIZE    0x10000
-#define PLATFORM_WDOG_LOAD_VALUE (0x3E7 * 10 * 1000) // 10sec
+#define PLATFORM_WDOG_LOAD_VALUE (0x3E7 * 100 * 1000) // 100sec
 #define PLATFORM_WDOG_INTR 32
 
 /* Base address of trusted watchdog (SP805) */
@@ -92,10 +93,13 @@
 
 /*
  * Base address of read only memory region
- * TODO: Need to update read_only memory
+ * Need to update read_only memory
  */
 #define PLATFORM_MEM_READ_ONLY_BASE  0x00000000
 #define PLATFORM_MEM_READ_ONLY_SIZE  0x1000
+
+/* SMMU upstream device memory region 8KB */
+#define PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION 0x78000000
 
 /* SMMU stream id */
 #define PLATFORM_SMMU_STREAM_ID   1

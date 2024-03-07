@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Arm Limited or its affliates. All rights reserved.
+ * Copyright (c) 2022-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -9,11 +9,11 @@
 
 #define IRQ_TRIGGERED 0xABCDABCD
 #define NS_WD_TIMEOUT 50000000
-static uint32_t *pages = NULL;
+static uint32_t *pages;
 
 static int wd_irq_handler(void)
 {
-    *(volatile uint32_t*)pages = (uint32_t)IRQ_TRIGGERED;
+    *(volatile uint32_t *)pages = (uint32_t)IRQ_TRIGGERED;
     val_ns_wdog_disable();
 
     return 0;
@@ -89,6 +89,7 @@ uint32_t vm_to_sp_preempt_client(uint32_t test_run_data)
     mem_region_init.shareability = FFA_MEMORY_OUTER_SHAREABLE;
 #endif
     mem_region_init.multi_share = false;
+    mem_region_init.receiver_count = 1;
 
     val_ffa_memory_region_init(&mem_region_init, constituents, constituents_count);
     val_memset(&payload, 0, sizeof(ffa_args_t));

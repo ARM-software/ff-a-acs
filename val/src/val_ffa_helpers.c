@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -21,11 +21,22 @@ static void ffa_memory_region_init_header(mem_region_init_t *mem_region_init,
 
     memory_region->sender = mem_region_init->sender;
     memory_region->attributes = attributes;
+
+#if (PLATFORM_FFA_V_1_0 == 1)
     memory_region->reserved_0 = 0;
+    memory_region->reserved_1 = 0;
+#else
+    memory_region->reserved[0] = 0;
+    memory_region->reserved[1] = 0;
+    memory_region->reserved[2] = 0;
+    memory_region->receivers_offset = EP_MEM_ACCESS_DESC_ARR_OFFSET;
+    memory_region->memory_access_desc_size = sizeof(struct ffa_memory_access);
+#endif
+
     memory_region->flags = mem_region_init->flags;
     memory_region->handle = handle;
     memory_region->tag = mem_region_init->tag;
-    memory_region->reserved_1 = 0;
+
     if (!mem_region_init->multi_share)
     {
         memory_region->receiver_count = 1;
@@ -49,16 +60,32 @@ static void ffa_memory_region_retrieve_init_header(mem_region_init_t *mem_region
 
     memory_region->sender = mem_region_init->sender;
     memory_region->attributes = attributes;
+
+
+#if (PLATFORM_FFA_V_1_0 == 1)
     memory_region->reserved_0 = 0;
+    memory_region->reserved_1 = 0;
+#else
+    memory_region->reserved[0] = 0;
+    memory_region->reserved[1] = 0;
+    memory_region->reserved[2] = 0;
+    memory_region->receivers_offset = EP_MEM_ACCESS_DESC_ARR_OFFSET;
+    memory_region->memory_access_desc_size = sizeof(struct ffa_memory_access);
+#endif
+
     memory_region->flags = mem_region_init->flags;
     memory_region->handle = handle;
     memory_region->tag = mem_region_init->tag;
-    memory_region->reserved_1 = 0;
-    memory_region->receiver_count = 1;
-    memory_region->receivers[0].receiver_permissions.receiver = mem_region_init->receiver;
-    memory_region->receivers[0].receiver_permissions.permissions = permissions;
-    memory_region->receivers[0].receiver_permissions.flags = 0;
-    memory_region->receivers[0].reserved_0 = 0;
+
+    if (!mem_region_init->multi_share)
+    {
+        memory_region->receiver_count = 1;
+        memory_region->receivers[0].receiver_permissions.receiver = mem_region_init->receiver;
+        memory_region->receivers[0].receiver_permissions.permissions = permissions;
+        memory_region->receivers[0].receiver_permissions.flags = 0;
+        memory_region->receivers[0].reserved_0 = 0;
+    }
+
 }
 
 /**
@@ -83,6 +110,13 @@ uint32_t val_ffa_memory_region_init(mem_region_init_t *mem_region_init,
     uint32_t constituents_offset;
     struct ffa_memory_region *memory_region = mem_region_init->memory_region;
 
+    /* Check for Invalid combination of multi_share and receiver count */
+    if (mem_region_init->multi_share ^ (mem_region_init->receiver_count>>1))
+    {
+        LOG(ERROR, "\t Invalid Combination receiver_count %x, multi_share %x\n",
+          mem_region_init->receiver_count, mem_region_init->multi_share);
+    }
+
     /* Set memory region's permissions. */
     ffa_set_data_access_attr(&permissions, mem_region_init->data_access);
     ffa_set_instruction_access_attr(&permissions, mem_region_init->instruction_access);
@@ -96,12 +130,11 @@ uint32_t val_ffa_memory_region_init(mem_region_init_t *mem_region_init,
     if (mem_region_init->multi_share)
     {
         memory_region->receiver_count = mem_region_init->receiver_count;
-        for(i=0; i < mem_region_init->receiver_count; i++)
+        for (i = 0; i < mem_region_init->receiver_count; i++)
         {
             memory_region->receivers[i].receiver_permissions.receiver =
                               mem_region_init->receivers[i].receiver_permissions.receiver;
-            memory_region->receivers[i].receiver_permissions.permissions =
-                              mem_region_init->receivers[i].receiver_permissions.permissions;
+            memory_region->receivers[i].receiver_permissions.permissions = permissions;
             memory_region->receivers[i].receiver_permissions.flags =
                               mem_region_init->receivers[i].receiver_permissions.flags;
             memory_region->receivers[i].reserved_0 = 0;
@@ -114,10 +147,21 @@ uint32_t val_ffa_memory_region_init(mem_region_init_t *mem_region_init,
      * calculate here is aligned to a 64-bit boundary and so 64-bit values
      * can be copied without alignment faults.
      */
-    mem_region_init->memory_region->receivers[0].composite_memory_region_offset =
-        (uint32_t)(sizeof(struct ffa_memory_region) +
-        mem_region_init->memory_region->receiver_count *
-            sizeof(struct ffa_memory_access));
+    if (mem_region_init->multi_share)
+    {
+        for (i = 0; i < mem_region_init->receiver_count; i++)
+        {
+            mem_region_init->memory_region->receivers[i].composite_memory_region_offset =
+            (uint32_t)(sizeof(struct ffa_memory_region) +
+            mem_region_init->memory_region->receiver_count *
+                sizeof(struct ffa_memory_access));
+        }
+    }
+    else
+    {
+        mem_region_init->memory_region->receivers[0].composite_memory_region_offset =
+        (uint32_t)(sizeof(struct ffa_memory_region) + 1 * sizeof(struct ffa_memory_access));
+    }
 
     composite_memory_region =
         ffa_memory_region_get_composite(mem_region_init->memory_region, 0);
@@ -170,8 +214,20 @@ uint32_t val_ffa_memory_region_init(mem_region_init_t *mem_region_init,
 uint32_t val_ffa_memory_retrieve_request_init(mem_region_init_t *mem_region_init,
                                 ffa_memory_handle_t handle)
 {
+
+#if (PLATFORM_FFA_V_1_1 == 1 || PLATFORM_FFA_V_ALL == 1)
+    struct ffa_memory_region *memory_region = mem_region_init->memory_region;
+#endif
+    uint32_t i = 0;
     ffa_memory_access_permissions_t permissions = 0;
     ffa_memory_attributes_t attributes = 0;
+
+    /* Check for Invalid combination of multi_share and reciever count */
+    if (mem_region_init->multi_share ^ (mem_region_init->receiver_count>>1))
+    {
+        LOG(ERROR, "\t Invalid Combination multi_share %x, receiver_count %x\n",
+          mem_region_init->receiver_count, mem_region_init->multi_share);
+    }
 
     /* Set memory region's permissions. */
     ffa_set_data_access_attr(&permissions, mem_region_init->data_access);
@@ -184,13 +240,40 @@ uint32_t val_ffa_memory_retrieve_request_init(mem_region_init_t *mem_region_init
 
     ffa_memory_region_retrieve_init_header(mem_region_init, attributes, handle, permissions);
 
+#if (PLATFORM_FFA_V_1_1 == 1 || PLATFORM_FFA_V_ALL == 1)
+    if (mem_region_init->multi_share)
+    {
+        memory_region->receiver_count = mem_region_init->receiver_count;
+        for (i = 0; i < mem_region_init->receiver_count; i++)
+        {
+            memory_region->receivers[i].receiver_permissions.receiver =
+                                mem_region_init->receivers[i].receiver_permissions.receiver;
+            memory_region->receivers[i].receiver_permissions.permissions = permissions;
+            memory_region->receivers[i].receiver_permissions.flags =
+                               mem_region_init->receivers[i].receiver_permissions.flags;
+            memory_region->receivers[i].reserved_0 = 0;
+        }
+     }
+#endif
+
     /*
      * Offset 0 in this case means that the hypervisor should allocate the
      * address ranges. This is the only configuration supported by Hafnium,
      * as it enforces 1:1 mappings in the stage 2 page tables.
      */
-    mem_region_init->memory_region->receivers[0].composite_memory_region_offset = 0;
-    mem_region_init->memory_region->receivers[0].reserved_0 = 0;
+    if (mem_region_init->multi_share)
+    {
+        for (i = 0; i < mem_region_init->receiver_count; i++)
+        {
+            mem_region_init->memory_region->receivers[i].composite_memory_region_offset = 0;
+            mem_region_init->memory_region->receivers[i].reserved_0 = 0;
+        }
+    }
+    else
+    {
+        mem_region_init->memory_region->receivers[0].composite_memory_region_offset = 0;
+        mem_region_init->memory_region->receivers[0].reserved_0 = 0;
+    }
 
     return (uint32_t)(sizeof(struct ffa_memory_region) +
            mem_region_init->memory_region->receiver_count * sizeof(struct ffa_memory_access));

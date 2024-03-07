@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -15,7 +15,6 @@ uint32_t donate_retrieve_input_checks3_server(ffa_args_t args)
     ffa_endpoint_id_t receiver = (args.arg1 >> 16) & 0xffff;
     uint32_t fid = (uint32_t)args.arg4;
     mb_buf_t mb;
-    uint8_t *pages = NULL;
     uint64_t size = 0x1000;
     mem_region_init_t mem_region_init;
     ffa_memory_handle_t handle;
@@ -38,14 +37,6 @@ uint32_t donate_retrieve_input_checks3_server(ffa_args_t args)
         goto free_memory;
     }
 
-    pages = (uint8_t *)val_memory_alloc(size);
-    if (!pages)
-    {
-        LOG(ERROR, "\tMemory allocation failed\n", 0, 0);
-        status = VAL_ERROR_POINT(3);
-        goto rxtx_unmap;
-    }
-
     /* Wait for the message. */
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload = val_resp_client_fn_direct((uint32_t)args.arg3, 0, 0, 0, 0, 0);
@@ -53,7 +44,7 @@ uint32_t donate_retrieve_input_checks3_server(ffa_args_t args)
     {
         LOG(ERROR, "\tDirect request failed, fid=0x%x, err 0x%x\n",
                   payload.fid, payload.arg2);
-        status =  VAL_ERROR_POINT(4);
+        status =  VAL_ERROR_POINT(3);
         goto rxtx_unmap;
     }
 
@@ -78,7 +69,10 @@ uint32_t donate_retrieve_input_checks3_server(ffa_args_t args)
     mem_region_init.shareability = FFA_MEMORY_INNER_SHAREABLE;
 #elif (PLATFORM_INNER_OUTER_SHAREABLE_SUPPORT == 1)
     mem_region_init.shareability = FFA_MEMORY_OUTER_SHAREABLE;
-#endif    
+#endif
+    mem_region_init.multi_share = false;
+    mem_region_init.receiver_count = 1;
+
     msg_size = val_ffa_memory_retrieve_request_init(&mem_region_init, handle);
 
     val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -91,8 +85,9 @@ uint32_t donate_retrieve_input_checks3_server(ffa_args_t args)
 
     if (payload.fid != FFA_ERROR_32 && payload.arg2 != FFA_ERROR_DENIED)
     {
-        LOG(ERROR, "\tMem retrieve request must failed with DENIED err %x and fid=%x\n", payload.arg2, payload.fid);
-        status =  VAL_ERROR_POINT(5);
+        LOG(ERROR, "\tMem retrieve request must failed with DENIED err %x and fid=%x\n",
+            payload.arg2, payload.fid);
+        status =  VAL_ERROR_POINT(4);
         goto rxtx_unmap;
     }
 
@@ -102,27 +97,21 @@ uint32_t donate_retrieve_input_checks3_server(ffa_args_t args)
     if (payload.fid == FFA_ERROR_32)
     {
         LOG(ERROR, "\tDirect response failed err %x\n", payload.arg2, 0);
-        status = VAL_ERROR_POINT(6);
+        status = VAL_ERROR_POINT(5);
     }
 
 rxtx_unmap:
     if (val_rxtx_unmap(sender))
     {
         LOG(ERROR, "\tRXTX_UNMAP failed\n", 0, 0);
-        status = status ? status : VAL_ERROR_POINT(7);
+        status = status ? status : VAL_ERROR_POINT(6);
     }
 
 free_memory:
     if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
     {
         LOG(ERROR, "\tfree_rxtx_buffers failed\n", 0, 0);
-        status = status ? status : VAL_ERROR_POINT(8);
-    }
-
-    if (val_memory_free(pages, size))
-    {
-        LOG(ERROR, "\tval_mem_free failed\n", 0, 0);
-        status = status ? status : VAL_ERROR_POINT(9);
+        status = status ? status : VAL_ERROR_POINT(7);
     }
 
     val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -131,7 +120,7 @@ free_memory:
     if (payload.fid == FFA_ERROR_32)
     {
         LOG(ERROR, "\tDirect response failed err %x\n", payload.arg2, 0);
-        status = status ? status : VAL_ERROR_POINT(10);
+        status = status ? status : VAL_ERROR_POINT(8);
     }
 
     return status;

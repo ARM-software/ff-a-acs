@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -72,6 +72,22 @@ uint32_t lend_retrieve_input_checks5_server(ffa_args_t args)
     mem_region_init.instruction_access = FFA_INSTRUCTION_ACCESS_NX;
     mem_region_init.type = FFA_MEMORY_NORMAL_MEM;
     mem_region_init.cacheability = FFA_MEMORY_CACHE_WRITE_BACK;
+    mem_region_init.multi_share = true;
+    mem_region_init.receiver_count = 2;
+
+#if (PLATFORM_FFA_V_1_1 == 1 || PLATFORM_FFA_V_ALL == 1)
+    uint32_t borrower_list = (uint32_t)args.arg5;
+    uint16_t borrower_1 = (uint16_t)(borrower_list & 0xFFFF);
+    uint16_t borrower_2 = (uint16_t)((borrower_list >> (sizeof(ffa_endpoint_id_t)*8)) & 0xFFFF);
+
+    mem_region_init.receivers[0].receiver_permissions.receiver = borrower_1;
+    mem_region_init.receivers[0].receiver_permissions.permissions = FFA_DATA_ACCESS_RW;
+    mem_region_init.receivers[0].receiver_permissions.flags = 0;
+    mem_region_init.receivers[1].receiver_permissions.receiver = borrower_2;
+    mem_region_init.receivers[1].receiver_permissions.permissions = FFA_DATA_ACCESS_RW;
+    mem_region_init.receivers[1].receiver_permissions.flags = 0;
+#endif
+
 #if (PLATFORM_OUTER_SHAREABLE_SUPPORT_ONLY == 1)
     mem_region_init.shareability = FFA_MEMORY_OUTER_SHAREABLE;
 #elif (PLATFORM_INNER_SHAREABLE_SUPPORT_ONLY == 1)
@@ -79,6 +95,7 @@ uint32_t lend_retrieve_input_checks5_server(ffa_args_t args)
 #elif (PLATFORM_INNER_OUTER_SHAREABLE_SUPPORT == 1)
     mem_region_init.shareability = FFA_MEMORY_OUTER_SHAREABLE;
 #endif
+
     msg_size = val_ffa_memory_retrieve_request_init(&mem_region_init, handle);
 
     val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -89,9 +106,10 @@ uint32_t lend_retrieve_input_checks5_server(ffa_args_t args)
     else
         val_ffa_mem_retrieve_32(&payload);
 
-    if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_DENIED))
+    if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
     {
-        LOG(ERROR, "\tMem retrieve request must failed for invalid instruction access.\n", 0, 0);
+        LOG(ERROR, "\tMemRetrieve request must fail for invalid instruction access fid %x err %x.\n"
+            , (uint64_t)payload.fid, (uint64_t)payload.arg2);
         status =  VAL_ERROR_POINT(5);
         goto rxtx_unmap;
     }

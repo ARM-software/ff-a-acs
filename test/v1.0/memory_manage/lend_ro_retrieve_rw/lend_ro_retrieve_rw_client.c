@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -29,13 +29,13 @@ static uint32_t lend_ro_retrieve_rw_helper(uint32_t test_run_data, uint32_t fid)
     mb.recv = val_memory_alloc(size);
     if (mb.send == NULL || mb.recv == NULL)
     {
-        LOG(ERROR, "\tFailed to allocate RxTx buffer\n",0,0);
+        LOG(ERROR, "\tFailed to allocate RxTx buffer\n", 0, 0);
         status = VAL_ERROR_POINT(1);
         goto free_memory;
     }
 
     /* Map TX and RX buffers */
-    if(val_rxtx_map_64((uint64_t)mb.send, (uint64_t)mb.recv, (uint32_t)(size/PAGE_SIZE_4K)))
+    if (val_rxtx_map_64((uint64_t)mb.send, (uint64_t)mb.recv, (uint32_t)(size/PAGE_SIZE_4K)))
     {
         LOG(ERROR, "\tRxTx Map failed\n", 0, 0);
         status = VAL_ERROR_POINT(2);
@@ -68,7 +68,7 @@ static uint32_t lend_ro_retrieve_rw_helper(uint32_t test_run_data, uint32_t fid)
     mem_region_init.cacheability = 0;
     mem_region_init.shareability = 0;
     mem_region_init.multi_share = false;
-
+    mem_region_init.receiver_count = 1;
 
     val_ffa_memory_region_init(&mem_region_init, constituents, constituents_count);
     val_memset(&payload, 0, sizeof(ffa_args_t));

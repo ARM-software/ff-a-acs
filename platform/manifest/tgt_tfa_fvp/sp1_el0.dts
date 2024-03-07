@@ -1,0 +1,62 @@
+/*
+ * Copyright (c) 2024, Arm Limited or its affiliates. All rights reserved.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
+ */
+
+/dts-v1/;
+
+/ {
+    compatible = "arm,ffa-manifest-1.0";
+
+    /* Properties */
+    description = "Base-1";
+    ffa-version = <0x00010001>; /* 31:16 - Major, 15:0 - Minor */
+    uuid = <0x1e67b5b4 0xe14f904a 0x13fb1fb8 0xcbdae1da>;
+    /* Must be equal to no. of pe in system for EL1SP, otherwise set to 1 */
+    execution-ctx-count = <1>;
+    exception-level = <1>; /* S-EL0 */
+    execution-state = <0>; /* AARCH64 */
+    load-address = <0x7000000>;
+    entrypoint-offset = <0x00004000>;
+    xlat-granule = <0>; /* 4KiB */
+    boot-order = <0>;
+    messaging-method = <3>; /* Direct messaging only */
+    notification-support; /* Support receipt of notifications. */
+    ns-interrupts-action = <2>; /* Non secure interrupts are signaled. */
+
+    /* Boot protocol */
+    gp-register-num = <0x0>;
+
+    device-regions {
+        compatible = "arm,ffa-manifest-device-regions";
+
+        uart2 {
+            base-address = <0x1c0b0000>;
+            pages-count = <16>;
+            attributes = <0xb>; /* NS-read-write */
+        };
+
+        nvm {
+            base-address = <0x00000000 0x82800000>;
+            pages-count = <64>;
+            attributes = <0xb>; /* NS-read-write */
+        };
+
+        watchdog {
+            base-address = <0x00000000 0x1C0F0000>;
+            pages-count = <64>;
+            attributes = <0xb>; /* NS-read-write */
+        };
+
+        sec_twdog {
+            /* SP805 Trusted Watchdog Module */
+            base-address = <0x00000000 0x2a490000>;
+            pages-count = <32>; /* Two 64KB pages */
+            attributes = <0x3>; /* read-write */
+            interrupts = <56 0x900>;
+        };
+    };
+
+};

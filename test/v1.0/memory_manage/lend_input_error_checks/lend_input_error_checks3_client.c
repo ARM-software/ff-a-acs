@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -64,9 +64,22 @@ static uint32_t lend_input_error_checks3_helper(uint32_t test_run_data, uint32_t
     /* Instruction access permission. Bits[3:2] must be set to b'00 as follows:
      * By the Lender in an invocation of FFA_MEM_SHARE or FFA_MEM_LEND ABIs. */
     mem_region_init.instruction_access = FFA_INSTRUCTION_ACCESS_NX;
+#if (PLATFORM_FFA_V_1_0 == 1)
     mem_region_init.type = FFA_MEMORY_NOT_SPECIFIED_MEM;
     mem_region_init.cacheability = 0;
     mem_region_init.shareability = 0;
+#else
+    mem_region_init.type = FFA_MEMORY_NORMAL_MEM;
+    mem_region_init.cacheability = FFA_MEMORY_CACHE_WRITE_BACK;
+#if (PLATFORM_OUTER_SHAREABLE_SUPPORT_ONLY == 1)
+    mem_region_init.shareability = FFA_MEMORY_OUTER_SHAREABLE;
+#elif (PLATFORM_INNER_SHAREABLE_SUPPORT_ONLY == 1)
+    mem_region_init.shareability = FFA_MEMORY_INNER_SHAREABLE;
+#elif (PLATFORM_INNER_OUTER_SHAREABLE_SUPPORT == 1)
+    mem_region_init.shareability = FFA_MEMORY_OUTER_SHAREABLE;
+#endif
+#endif
+
     mem_region_init.multi_share = true;
     mem_region_init.receiver_count = 2;
     mem_region_init.receivers[0].receiver_permissions.receiver = recipient;
@@ -88,7 +101,8 @@ static uint32_t lend_input_error_checks3_helper(uint32_t test_run_data, uint32_t
 
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
     {
-        LOG(ERROR, "\tmem_lend request failed for invalid instruction access permission %x\n", payload.arg2, 0);
+        LOG(ERROR, "\tmem_lend request failed for invalid instruction access permission %x\n",
+           payload.arg2, 0);
         status = VAL_ERROR_POINT(4);
         goto rxtx_unmap;
     }

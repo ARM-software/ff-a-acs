@@ -23,7 +23,7 @@ The following aspects of the partition manifest are Implementation-defined:
 - Time of creation of manifest file. This could be at build time, boot time or combination of both.
 - Mechanism used by the hypervisor and SPM to obtain the information in the manifest file and interpret its contents
 
-Arm FF-A ACS also provides the partition manifests for its test partitions with manifest format supported by TF-A reference platform. These use the [dts format](https://trustedfirmware-a.readthedocs.io/en/latest/components/psa-ffa-manifest-binding.html#psa-ff-a-manifest-binding-to-device-tree) which can be bind to the Device Tree. This helps in out-of-box testing with TF-A platform. If the platform supports different manifest format, this document helps in mapping these reference manifest files to your target platform. Since reference manifests are specific to TF-A manifest format, not all parameters are required to populate for your platform. Therefore, this document describes the following minimum list of manifest parameters that the ACS partitions rely on for their partition set up and those must be mapped and populated for the platform:
+Arm FF-A ACS also provides the partition manifests for its test partitions with manifest format supported by TF-A reference platform. These use the [dts format](https://trustedfirmware-a.readthedocs.io/en/latest/components/ffa-manifest-binding.html) which can be bind to the Device Tree. This helps in out-of-box testing with TF-A platform. If the platform supports different manifest format, this document helps in mapping these reference manifest files to your target platform. Since reference manifests are specific to TF-A manifest format, not all parameters are required to populate for your platform. Therefore, this document describes the following minimum list of manifest parameters that the ACS partitions rely on for their partition set up and those must be mapped and populated for the platform:
 
 - FF-A version
 - UUID
@@ -31,6 +31,7 @@ Arm FF-A ACS also provides the partition manifests for its test partitions with 
 - Number of execution contexts
 - Run-Time EL
 - Execution state
+- Exception level
 - Messaging method
 - Managed exit (default is preemptable)
 - Notification support

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -16,7 +16,6 @@ uint32_t donate_sepid_server(ffa_args_t args)
     ffa_endpoint_id_t receiver = (args.arg1 >> 16) & 0xffff;
     uint32_t fid = (uint32_t)args.arg4;
     mb_buf_t mb;
-    uint8_t *pages = NULL;
     uint8_t *ptr;
     uint64_t size = 0x1000;
     mem_region_init_t mem_region_init;
@@ -47,14 +46,6 @@ uint32_t donate_sepid_server(ffa_args_t args)
         goto free_memory;
     }
 
-    pages = (uint8_t *)val_memory_alloc(size * 2);
-    if (!pages)
-    {
-        LOG(ERROR, "\tMemory allocation failed\n", 0, 0);
-        status = VAL_ERROR_POINT(3);
-        goto rxtx_unmap;
-    }
-
     /* Wait for the message. */
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload = val_resp_client_fn_direct((uint32_t)args.arg3, 0, 0, 0, 0, 0);
@@ -62,7 +53,7 @@ uint32_t donate_sepid_server(ffa_args_t args)
     {
         LOG(ERROR, "\tDirect request failed, fid=0x%x, err 0x%x\n",
                   payload.fid, payload.arg2);
-        status =  VAL_ERROR_POINT(4);
+        status =  VAL_ERROR_POINT(3);
         goto rxtx_unmap;
     }
 
@@ -97,7 +88,7 @@ uint32_t donate_sepid_server(ffa_args_t args)
     if (payload.fid != FFA_MEM_RETRIEVE_RESP_32)
     {
         LOG(ERROR, "\tMem retrieve request failed err %x\n", payload.arg2, 0);
-        status =  VAL_ERROR_POINT(5);
+        status =  VAL_ERROR_POINT(4);
         goto rxtx_unmap;
     }
 
@@ -118,18 +109,21 @@ uint32_t donate_sepid_server(ffa_args_t args)
     if (val_mem_map_pgt(&mem_desc))
     {
         LOG(ERROR, "\tVa to pa mapping failed\n", 0, 0);
-        status =  VAL_ERROR_POINT(6);
+        status =  VAL_ERROR_POINT(5);
         goto mem_donate;
     }
 
+    val_memset(ptr, 0xcd, size);
     /* Initiate the DMA transactions to the received memory regions using device upstream of SMMU */
     if (VAL_IS_ENDPOINT_SECURE(val_get_endpoint_logical_id(sender)))
     {
-        smmuv3_configure_testengine(PLATFORM_SMMU_STREAM_ID, (uint64_t)ptr, (uint64_t)ptr + PAGE_SIZE_4K, size, true);
+        smmuv3_configure_testengine(PLATFORM_SMMU_STREAM_ID,
+         (uint64_t)ptr, (uint64_t)ptr + PAGE_SIZE_4K, size, true);
     }
     else
     {
-        smmuv3_configure_testengine(PLATFORM_SMMU_STREAM_ID, (uint64_t)ptr, (uint64_t)ptr + PAGE_SIZE_4K, size, false);
+        smmuv3_configure_testengine(PLATFORM_SMMU_STREAM_ID,
+         (uint64_t)ptr, (uint64_t)ptr + PAGE_SIZE_4K, size, false);
     }
 
 mem_donate:
@@ -198,19 +192,13 @@ free_memory:
         status = status ? status : VAL_ERROR_POINT(11);
     }
 
-    if (val_memory_free(pages, size))
-    {
-        LOG(ERROR, "\tval_mem_free failed\n", 0, 0);
-        status = status ? status : VAL_ERROR_POINT(12);
-    }
-
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 =  ((uint32_t)sender << 16) | receiver;
     val_ffa_msg_send_direct_resp_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
         LOG(ERROR, "\tDirect response failed err %x\n", payload.arg2, 0);
-        status = status ? status : VAL_ERROR_POINT(13);
+        status = status ? status : VAL_ERROR_POINT(12);
     }
 
     return status;

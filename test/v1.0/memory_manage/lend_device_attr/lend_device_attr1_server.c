@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -112,12 +112,14 @@ uint32_t lend_device_attr1_server(ffa_args_t args)
 
     handle = payload.arg3;
     /* Test-1: sender->FFA_MEMORY_DEV_NGNRNE receiver->FFA_MEMORY_DEV_NGNRE */
-    status = mem_lend_device_attr_check(handle, fid, mb.send, receiver, sender, FFA_MEMORY_DEV_NGNRE);
+    status = mem_lend_device_attr_check(handle,
+             fid, mb.send, receiver, sender, FFA_MEMORY_DEV_NGNRE);
     if (status)
         goto rxtx_unmap;
 
     /* Test-2: sender->FFA_MEMORY_DEV_NGNRNE receiver->FFA_MEMORY_DEV_NGRE */
-    status = mem_lend_device_attr_check(handle, fid, mb.send, receiver, sender, FFA_MEMORY_DEV_NGRE);
+    status = mem_lend_device_attr_check(handle, fid,
+             mb.send, receiver, sender, FFA_MEMORY_DEV_NGRE);
     if (status)
         goto rxtx_unmap;
 
@@ -145,7 +147,8 @@ uint32_t lend_device_attr1_server(ffa_args_t args)
 
     handle = payload.arg3;
     /* Test-4: sender->FFA_MEMORY_DEV_NGNRE receiver->FFA_MEMORY_DEV_NGRE */
-    status = mem_lend_device_attr_check(handle, fid, mb.send, receiver, sender, FFA_MEMORY_DEV_NGRE);
+    status = mem_lend_device_attr_check(handle,
+             fid, mb.send, receiver, sender, FFA_MEMORY_DEV_NGRE);
     if (status)
         goto rxtx_unmap;
 

@@ -1,0 +1,31 @@
+/*
+ * Copyright (c) 2024, Arm Limited or its affiliates. All rights reserved.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
+ */
+
+/dts-v1/;
+
+/ {
+    compatible = "arm,ffa-manifest-1.0";
+
+    /* Properties */
+    description = "Base-1";
+    ffa-version = <0x00010001>; /* 31:16 - Major, 15:0 - Minor */
+    uuid = <0x735cb579 0xb9448c1d 0xe1619385 0xd2d80a77>;
+    auxiliary-id = <0xae>;
+    execution-ctx-count = <1>;
+    exception-level = <1>; /* S-EL0 */
+    execution-state = <0>; /* AARCH64 */
+    load-address = <0x7200000>;
+    entrypoint-offset = <0x4000>;
+    xlat-granule = <0>; /* 4KiB */
+    boot-order = <2>;
+    messaging-method = <3>; /* Direct messaging only */
+    ns-interrupts-action = <0>; /* Non secure interrupts are queued. */
+
+    /* Boot protocol */
+    gp-register-num = <0x0>;
+
+};

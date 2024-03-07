@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -20,6 +20,12 @@ static uint32_t ffa_feature_query(uint32_t fid, char *str)
 
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 = fid;
+#if (PLATFORM_FFA_V_1_1 == 1 || PLATFORM_FFA_V_ALL == 1)
+    if (fid == FFA_MEM_RETRIEVE_REQ_32)
+    {
+        payload.arg2 = 0x2;
+    }
+#endif
     val_ffa_features(&payload);
 
     val_strcat(string, str, sizeof(string));
@@ -211,7 +217,11 @@ static uint32_t ffa_feature_query(uint32_t fid, char *str)
             LOG(DBG, "\tOutstanding retrievals count %d\n", data, 0);
 
             /* Output w2[31:1] and w3[31:8] are reserved(MBZ) */
+#if (PLATFORM_FFA_V_1_0 == 1)
             data = VAL_EXTRACT_BITS(payload.arg2, 1, 31);
+#else
+            data = VAL_EXTRACT_BITS(payload.arg2, 3, 31);
+#endif
             data1 = VAL_EXTRACT_BITS(payload.arg3, 8, 31);
             if (data || data1)
                 status = VAL_ERROR_POINT(10);

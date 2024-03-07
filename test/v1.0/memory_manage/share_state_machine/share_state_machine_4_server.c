@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -75,6 +75,22 @@ uint32_t share_state_machine_4_server(ffa_args_t args)
 #elif (PLATFORM_INNER_OUTER_SHAREABLE_SUPPORT == 1)
     mem_region_init.shareability = FFA_MEMORY_OUTER_SHAREABLE;
 #endif
+    mem_region_init.multi_share = true;
+    mem_region_init.receiver_count = 2;
+
+#if (PLATFORM_FFA_V_1_1 == 1 || PLATFORM_FFA_V_ALL == 1)
+    uint32_t borrower_list = (uint32_t)args.arg5;
+    uint16_t borrower_1 = (uint16_t)(borrower_list & 0xFFFF);
+    uint16_t borrower_2 = (uint16_t)(borrower_list >> 16 & 0xFFFF);
+
+    mem_region_init.receivers[0].receiver_permissions.receiver = borrower_1;
+    mem_region_init.receivers[0].receiver_permissions.permissions = FFA_DATA_ACCESS_RW;
+    mem_region_init.receivers[0].receiver_permissions.flags = 0;
+    mem_region_init.receivers[1].receiver_permissions.receiver = borrower_2;
+    mem_region_init.receivers[1].receiver_permissions.permissions = FFA_DATA_ACCESS_RW;
+    mem_region_init.receivers[1].receiver_permissions.flags = 0;
+#endif
+
     msg_size = val_ffa_memory_retrieve_request_init(&mem_region_init, handle);
 
     val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -95,7 +111,7 @@ uint32_t share_state_machine_4_server(ffa_args_t args)
     /* Wait for the message. */
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload = val_resp_client_fn_direct((uint32_t)args.arg3, 0, 0, 0, 0, 0);
-    if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_64)
+    if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_32)
     {
         LOG(ERROR, "\tDirect request failed, fid=0x%x, err 0x%x\n",
                   payload.fid, payload.arg2);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -52,17 +52,21 @@ exit_loop_\op:
 
 val_entry:
 
-#if (PLATFORM_SP_EL != 0)
+
    /* Install vector table */
     adr     x0, vector_table
-#if defined(VM1_COMPILE)
+#if defined(VM1_COMPILE) && (PLATFORM_NS_HYPERVISOR_PRESENT == 0)
     msr     vbar_el2, x0
 #else
     msr     vbar_el1, x0
 #endif
 
     /* MMU must be disabled at partition boot entry for VM and EL1 SP */
+ #if defined(VM1_COMPILE) && (PLATFORM_NS_HYPERVISOR_PRESENT == 0)
+    mrs    x0, sctlr_el2
+ #else
     mrs    x0, sctlr_el1
+ #endif
     and    x1, x0, #SCTLR_M_BIT
     cmp    xzr, x1
     b.eq   1f
@@ -71,7 +75,11 @@ val_entry:
 
     /* Enable I-Cache */
     orr    x0, x0, #SCTLR_I_BIT
+ #if defined(VM1_COMPILE) && (PLATFORM_NS_HYPERVISOR_PRESENT == 0)
+    msr    sctlr_el2, x0
+ #else
     msr    sctlr_el1, x0
+ #endif
     isb
 
     /*
@@ -99,7 +107,6 @@ image_load_addr:
     msr cpacr_el1, x0
     isb
 
-#endif /* PLATFORM_SP_EL != 0 */
 
     /* Relocate symbols */
 pie_fixup:

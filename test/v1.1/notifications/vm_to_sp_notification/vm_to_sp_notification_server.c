@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Arm Limited or its affliates. All rights reserved.
+ * Copyright (c) 2022-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -7,7 +7,7 @@
 
 #include "test_database.h"
 
-static volatile uint32_t npi_flag = 0;
+static volatile uint32_t npi_flag;
 
 static int npi_irq_handler(void)
 {

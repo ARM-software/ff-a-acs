@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Arm Limited or its affliates. All rights reserved.
+ * Copyright (c) 2022-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -8,7 +8,7 @@
 #include "test_database.h"
 
 #ifndef TARGET_LINUX
-static volatile uint32_t sri_flag = 0;
+static volatile uint32_t sri_flag;
 static int sri_irq_handler(void)
 {
     sri_flag = 1;
@@ -65,7 +65,6 @@ uint32_t vm_to_sp_notification_pcpu_client(uint32_t test_run_data)
 #endif
 
     val_select_server_fn_direct(test_run_data, 0, 0, 0, 0);
-    
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 =  ((uint32_t)sender << 16) | recipient;
     /* Notification id */

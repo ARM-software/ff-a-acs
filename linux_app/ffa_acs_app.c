@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2023, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -20,8 +20,7 @@ void print_help(void)
 int parse_cmdline(int argc, char **argv)
 {
     int c = 0;
-    struct option long_opt[] =
-    {
+    struct option long_opt[] = {
         {"help", no_argument, NULL, 'h'},
         {NULL, 0, NULL, 0}
     };

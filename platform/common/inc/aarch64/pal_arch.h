@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -55,7 +55,6 @@
 /*
  * The MPIDR_MAX_AFFLVL count starts from 0. Take care to
  * add one while using this macro to define array sizes.
- * TODO: Support only the first 3 affinity levels for now.
  */
 #define MPIDR_MAX_AFFLVL    U(2)
 

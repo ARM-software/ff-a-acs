@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -65,6 +65,7 @@ static uint32_t donate_retrieve_input_checks3_helper(uint32_t test_run_data, uin
     mem_region_init.cacheability = 0;
     mem_region_init.shareability = 0;
     mem_region_init.multi_share = false;
+    mem_region_init.receiver_count = 1;
 
     val_ffa_memory_region_init(&mem_region_init, constituents, constituents_count);
     val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -111,30 +112,24 @@ static uint32_t donate_retrieve_input_checks3_helper(uint32_t test_run_data, uin
 
     val_select_server_fn_direct(test_run_data, 0, 0, 0, 0);
 
-    if (val_rx_release())
-    {
-        LOG(ERROR, "\tval_rx_release failed\n", 0, 0);
-        status = status ? status : VAL_ERROR_POINT(7);
-    }
-
 rxtx_unmap:
     if (val_rxtx_unmap(sender))
     {
         LOG(ERROR, "\tRXTX_UNMAP failed\n", 0, 0);
-        status = status ? status : VAL_ERROR_POINT(8);
+        status = status ? status : VAL_ERROR_POINT(7);
     }
 
 free_memory:
     if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
     {
         LOG(ERROR, "\tfree_rxtx_buffers failed\n", 0, 0);
-        status = status ? status : VAL_ERROR_POINT(9);
+        status = status ? status : VAL_ERROR_POINT(8);
     }
 
     if (val_memory_free(pages, size))
     {
         LOG(ERROR, "\tval_mem_free failed\n", 0, 0);
-        status = status ? status : VAL_ERROR_POINT(10);
+        status = status ? status : VAL_ERROR_POINT(9);
     }
 
     payload = val_select_server_fn_direct(test_run_data, 0, 0, 0, 0);

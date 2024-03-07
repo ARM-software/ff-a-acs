@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -100,6 +100,28 @@ char *val_strcat(char *str1, char *str2, size_t output_buff_size)
   str1[length] = '\0';
 
   return str1;
+}
+
+/**
+  @brief  Compare two strings with size consideration
+  @param  str1  - Pointer of first string
+  @param  str2  - Pointer of second string
+  @return Zero if strings are equal, else non-zero
+**/
+int val_strcmp(char *str1, char *str2)
+{
+    uint32_t ctr = 0;
+
+    while (str1[ctr] == str2[ctr])
+    {
+        if (str1[ctr] == '\0' || str2[ctr] == '\0')
+            break;
+        ctr++;
+    }
+    if (str1[ctr] == '\0' && str2[ctr] == '\0')
+        return 0;
+    else
+        return -1;
 }
 
 /**

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -23,9 +23,10 @@ uint32_t ffa_run_client(uint32_t test_run_data)
     payload.arg1 = recipient;
     val_ffa_run(&payload);
 
-    if (( payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
+    if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
     {
-	LOG(ERROR, "\tInvalid endpoint id or vCPU id check failed, %x %x\n", payload.arg2, payload.fid);
+        LOG(ERROR, "\tInvalid endpoint id or vCPU id check failed, %x %x\n",
+           payload.arg2, payload.fid);
         status = VAL_ERROR_POINT(1);
     }
 

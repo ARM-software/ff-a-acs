@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -19,6 +19,8 @@ static uint8_t g_nvmem[NVM_SIZE];
 #else
 #define NVM_SIZE PLATFORM_NVM_SIZE
 #endif
+
+extern const uint32_t  total_tests;
 
 /* Global */
 test_status_buffer_t    g_status_buffer = {
@@ -244,7 +246,7 @@ uint32_t val_nvm_write(uint32_t offset, void *buffer, size_t size)
 {
 #ifndef SKIP_NVM_PROGRAMMING
    ffa_args_t  payload;
-   uint32_t    data32 = *(uint32_t*)buffer;
+   uint32_t    data32 = *(uint32_t *)buffer;
 
    if (nvm_check_bounds(offset, buffer, size))
         return VAL_ERROR;
@@ -315,7 +317,7 @@ uint32_t val_nvm_read(uint32_t offset, void *buffer, size_t size)
          return VAL_ERROR;
       }
 
-      *(uint32_t*)buffer = (uint32_t)payload.arg3;
+      *(uint32_t *)buffer = (uint32_t)payload.arg3;
       return VAL_SUCCESS;
    }
 #else
@@ -422,6 +424,10 @@ uint32_t val_get_last_run_test_info(test_info_t *test_info)
             &test_info->test_num, sizeof(uint32_t)))
         return VAL_ERROR;
 
+    if (val_nvm_read(VAL_NVM_OFFSET(NVM_END_TEST_NUM_INDEX),
+            &test_info->end_test_num, sizeof(uint32_t)))
+        return VAL_ERROR;
+
     if (val_nvm_read(VAL_NVM_OFFSET(NVM_TEST_PROGRESS_INDEX),
             &test_info->test_progress, sizeof(uint32_t)))
         return VAL_ERROR;
@@ -446,7 +452,8 @@ uint32_t val_get_last_run_test_info(test_info_t *test_info)
      * */
     if (!reboot_run)
     {
-         test_info->test_num         = VAL_INVALID_TEST_NUM;
+         test_info->test_num          = VAL_INVALID_TEST_NUM;
+         test_info->end_test_num      = total_tests;
          test_info->suite_num         = 0;
          test_info->test_progress     = 0;
          val_memset(&regre_report, 0x0, sizeof(regre_report_t));
@@ -457,6 +464,11 @@ uint32_t val_get_last_run_test_info(test_info_t *test_info)
          if (val_nvm_write(VAL_NVM_OFFSET(NVM_CUR_TEST_NUM_INDEX),
                  &test_info->test_num, sizeof(uint32_t)))
              return VAL_ERROR;
+
+         if (val_nvm_write(VAL_NVM_OFFSET(NVM_END_TEST_NUM_INDEX),
+                 &test_info->end_test_num, sizeof(uint32_t)))
+             return VAL_ERROR;
+
          if (val_nvm_write(VAL_NVM_OFFSET(NVM_TEST_PROGRESS_INDEX),
                  &test_info->test_progress, sizeof(uint32_t)))
              return VAL_ERROR;

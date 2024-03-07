@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -197,11 +197,17 @@ DECLARE_TEST_FN(relinquish_mem_unmap_check_vmvm);
 DECLARE_TEST_FN(relinquish_mem_unmap_check_spsp);
 DECLARE_TEST_FN(reclaim_input_error_checks);
 DECLARE_TEST_FN(reclaim_zero_flag);
+DECLARE_TEST_FN(mem_security_state_ns_bit);
+DECLARE_TEST_FN(ffa_mem_perm_set);
+DECLARE_TEST_FN(ffa_mem_perm_get);
+DECLARE_TEST_FN(static_mapping_dma);
 #endif
 
 #if (SUITE == all || SUITE == notifications)
 DECLARE_TEST_FN(vm_to_sp_notification);
+DECLARE_TEST_FN(vm_to_sp_notification_el0);
 DECLARE_TEST_FN(vm_to_sp_notification_pcpu);
+DECLARE_TEST_FN(vm_to_sp_notification_pcpu_el0);
 DECLARE_TEST_FN(notification_bitmap_create);
 DECLARE_TEST_FN(notification_bitmap_destroy);
 DECLARE_TEST_FN(notification_bind);
@@ -214,8 +220,16 @@ DECLARE_TEST_FN(notification_info_get);
 #if (SUITE == all || SUITE == interrupts)
 DECLARE_TEST_FN(vm_to_sp_preempt);
 DECLARE_TEST_FN(vm_to_sp_managed_exit);
+DECLARE_TEST_FN(vm_to_sp_managed_exit_1);
+DECLARE_TEST_FN(vm_to_sp_managed_exit_2);
+DECLARE_TEST_FN(vm_to_sp_managed_exit_3);
 DECLARE_TEST_FN(sp_to_sp_blocked);
 DECLARE_TEST_FN(sp_to_sp_waiting);
 DECLARE_TEST_FN(vm_to_sp_waiting);
+DECLARE_TEST_FN(sp_waiting_el0);
+DECLARE_TEST_FN(ns_intr_queued_el0);
+DECLARE_TEST_FN(sp_el0_blocked);
+DECLARE_TEST_FN(sp_el0_running);
+DECLARE_TEST_FN(sp_preempted_el0);
 #endif
 #endif /* _TEST_DATABASE_H_ */

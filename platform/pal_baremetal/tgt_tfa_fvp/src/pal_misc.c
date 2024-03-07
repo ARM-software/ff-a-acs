@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -49,7 +49,7 @@ uint32_t pal_get_endpoint_device_map(void **region_list, size_t *no_of_mem_regio
 
 uint32_t pal_terminate_simulation(void)
 {
-    while(1);
+    while (1);
     return PAL_SUCCESS;
 }
 

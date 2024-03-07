@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -45,6 +45,8 @@ static uint32_t retrieve_zero_flag_check(ffa_memory_handle_t handle, uint32_t fi
      * else the Relayer must return INVALID_PARAMETER.
      */
     mem_region_init.flags = flags;
+    mem_region_init.multi_share = false;
+    mem_region_init.receiver_count = 1;
     mem_region_init.data_access = FFA_DATA_ACCESS_RW;
     mem_region_init.instruction_access = FFA_INSTRUCTION_ACCESS_NOT_SPECIFIED;
     mem_region_init.type = FFA_MEMORY_NORMAL_MEM;
@@ -102,6 +104,8 @@ static uint32_t retrieve_with_invalid_cache_attr_check(ffa_memory_handle_t handl
     mem_region_init.sender = sender;
     mem_region_init.receiver = receiver;
     mem_region_init.tag = 0;
+    mem_region_init.multi_share = false;
+    mem_region_init.receiver_count = 1;
     mem_region_init.flags = 0;
     mem_region_init.data_access = FFA_DATA_ACCESS_RW;
     mem_region_init.instruction_access = FFA_INSTRUCTION_ACCESS_NOT_SPECIFIED;
@@ -153,6 +157,8 @@ static uint32_t retrieve_with_invalid_total_length_check(ffa_memory_handle_t han
     mem_region_init.sender = sender;
     mem_region_init.receiver = receiver;
     mem_region_init.tag = 0;
+    mem_region_init.multi_share = false;
+    mem_region_init.receiver_count = 1;
     mem_region_init.flags = 0;
     mem_region_init.data_access = FFA_DATA_ACCESS_RW;
     mem_region_init.instruction_access = FFA_INSTRUCTION_ACCESS_NOT_SPECIFIED;
@@ -205,6 +211,8 @@ static uint32_t retrieve_with_invalid_mem_transaction_type_check(ffa_memory_hand
 
     mem_region_init.memory_region = tx_buf;
     mem_region_init.sender = sender;
+    mem_region_init.multi_share = false;
+    mem_region_init.receiver_count = 1;
     mem_region_init.receiver = receiver;
     mem_region_init.tag = 0;
     /* Relayer must return INVALID_PARAMETERS if the transaction type specified by the
@@ -261,6 +269,8 @@ static uint32_t retrieve_with_invalid_sender_id(ffa_memory_handle_t handle, uint
     mem_region_init.receiver = receiver;
     mem_region_init.tag = 0;
     mem_region_init.flags = 0;
+    mem_region_init.multi_share = false;
+    mem_region_init.receiver_count = 1;
     mem_region_init.data_access = FFA_DATA_ACCESS_RW;
     mem_region_init.instruction_access = FFA_INSTRUCTION_ACCESS_NOT_SPECIFIED;
     mem_region_init.type = FFA_MEMORY_NORMAL_MEM;
@@ -315,6 +325,8 @@ static uint32_t retrieve_with_invalid_inst_perm(ffa_memory_handle_t handle, uint
     mem_region_init.receiver = receiver;
     mem_region_init.tag = 0;
     mem_region_init.flags = 0;
+    mem_region_init.multi_share = false;
+    mem_region_init.receiver_count = 1;
     mem_region_init.data_access = FFA_DATA_ACCESS_RW;
     /* Instruction access permission. Bits[3:2] must be set to b'00 as follows:
      * By the Borrower in an invocation of the FFA_MEM_RETRIEVE_REQ ABI. */
@@ -417,11 +429,13 @@ uint32_t share_retrieve_input_checks_server(ffa_args_t args)
     if (status)
         goto rxtx_unmap;
 
-    status = retrieve_with_invalid_sender_id(handle, fid, mb.send, receiver, val_get_endpoint_id(SP3));
+    status = retrieve_with_invalid_sender_id(handle,
+             fid, mb.send, receiver, val_get_endpoint_id(SP3));
     if (status)
         goto rxtx_unmap;
 
-    status = retrieve_with_invalid_inst_perm(handle, fid, mb.send, receiver, val_get_endpoint_id(SP3));
+    status = retrieve_with_invalid_inst_perm(handle,
+             fid, mb.send, receiver, val_get_endpoint_id(SP3));
 
 rxtx_unmap:
     if (val_rxtx_unmap(sender))

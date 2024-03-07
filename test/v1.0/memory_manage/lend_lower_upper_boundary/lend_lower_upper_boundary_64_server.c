@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -7,8 +7,8 @@
 
 #include "test_database.h"
 
-static int g_handler_lower = 0;
-static int g_handler_upper = 0;
+static int g_handler_lower;
+static int g_handler_upper;
 static uint8_t *ptr;
 
 /**

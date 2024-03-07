@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -17,11 +17,13 @@ __attribute__ ((aligned (4096))) uint8_t val_stack[STACK_SIZE];
  *   @param    - void
  *   @return   - void (Never returns)
 **/
+#if ((PLATFORM_SP_EL == 1) || (defined(VM1_COMPILE)))
 void val_main(void)
 {
+
 #ifndef TARGET_LINUX
     /* Configure and enable Stage-1 MMU */
-     if (val_setup_mmu())
+    if (val_setup_mmu())
     {
         goto exit;
     }
@@ -35,6 +37,7 @@ void val_main(void)
 #endif
         val_irq_setup();
     }
+
     val_run_test_suite();
 
 #ifndef TARGET_LINUX
@@ -43,3 +46,26 @@ exit:
     LOG(ALWAYS, "Entering standby.. \n", 0, 0);
     pal_terminate_simulation();
 }
+#else
+void val_main(void)
+{
+    ffa_args_t payload;
+
+    val_memset(&payload, 0, sizeof(ffa_args_t));
+
+    /* FFA_SUCCESS case: Returns 16-bit ID of calling FF-A component. */
+    val_ffa_id_get(&payload);
+    if (payload.fid != FFA_SUCCESS_32)
+    {
+        LOG(ERROR, "\tEL0: Check failed for ffa_id_get success case\n", 0, 0);
+        goto exit;
+    }
+
+    LOG(ALWAYS, "EL0 entry.. id %lx\n", payload.arg2, 0);
+    val_run_test_suite();
+
+exit:
+    LOG(ALWAYS, "Entering standby.. \n", 0, 0);
+    pal_terminate_simulation();
+}
+#endif

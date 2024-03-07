@@ -8,7 +8,7 @@
 #include "pal_pl011_uart.h"
 
 static volatile uint64_t g_uart = PLATFORM_UART_BASE;
-static uint8_t is_uart_init_done = 0;
+static uint8_t is_uart_init_done;
 
 /**
  *   @brief    - This function initializes the UART
