@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -62,6 +62,34 @@ uint32_t pal_watchdog_enable(void);
  *   @return   - SUCCESS/FAILURE
 **/
 uint32_t pal_watchdog_disable(void);
+
+/**
+ *   @brief    - Initializes and enable physical system timer with interrupt
+ *   @param    - us   : timeout (Microseconds)
+ *   @return   - SUCCESS/FAILURE
+**/
+uint32_t pal_ap_phy_refclk_en(uint32_t us);
+
+/**
+ *   @brief    - Disables physical system timer and interrupt
+ *   @param    - int_mask   : mask interrupt
+ *   @return   - SUCCESS/FAILURE
+**/
+uint32_t pal_ap_phy_refclk_dis(bool int_mask);
+
+/**
+ *   @brief    - Initializes and enable virtual system timer with interrupt
+ *   @param    - us   : timeout (Microseconds)
+ *   @return   - SUCCESS/FAILURE
+**/
+uint32_t pal_ap_virt_refclk_en(uint32_t us);
+
+/**
+ *   @brief    - Disables virtual system timer and interrupt
+ *   @param    - int_mask   : mask interrupt
+ *   @return   - SUCCESS/FAILURE
+**/
+uint32_t pal_ap_virt_refclk_dis(bool int_mask);
 
 /**
  *   @brief    - Initializes and enable the hardware watchdog timer

@@ -83,7 +83,6 @@ uint32_t vm_to_sp_notification_client(uint32_t test_run_data)
 #endif
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 =  ((uint32_t)sender << 16) | recipient;
-    payload.arg2 = FFA_NOTIFICATIONS_FLAG_DELAY_SRI;
     payload.arg3 = (uint32_t)(notifications_bitmap & 0xFFFFFFFFU);
     payload.arg4 = (uint32_t)(notifications_bitmap >> 32);
     val_ffa_notification_set(&payload);

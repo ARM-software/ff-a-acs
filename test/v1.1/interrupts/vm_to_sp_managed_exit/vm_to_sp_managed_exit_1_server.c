@@ -7,7 +7,7 @@
 
 #include "test_database.h"
 
-#define WD_TIME_OUT 0x1000000
+#define WD_TIME_OUT 100U
 
 static volatile uint32_t managed_exit_received;
 static uint32_t mei_id;
@@ -129,7 +129,6 @@ exit:
 static uint32_t mei_disabled_sp_setup(ffa_args_t args)
 {
     ffa_args_t payload;
-    uint64_t timeout = WD_TIME_OUT;
     uint32_t status = VAL_SUCCESS;
     ffa_endpoint_id_t sender = args.arg1 & 0xffff;
     ffa_endpoint_id_t receiver = (args.arg1 >> 16) & 0xffff;
@@ -146,7 +145,7 @@ static uint32_t mei_disabled_sp_setup(ffa_args_t args)
     }
 
     /* Wait for WD interrupt */
-    while (--timeout);
+    val_sp_sleep(WD_TIME_OUT);
 
 exit:
     val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -168,7 +167,7 @@ uint32_t vm_to_sp_managed_exit_1_server(ffa_args_t args)
 
     curr_ep_logical_id = val_get_curr_endpoint_logical_id();
 
-    if (curr_ep_logical_id == SP3)
+    if (curr_ep_logical_id == SP2)
     {
         status = mei_enabled_sp_setup(args);
     }

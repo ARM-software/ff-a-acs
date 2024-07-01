@@ -26,8 +26,7 @@
     boot-order = <2>;
     notification-support;
     messaging-method = <3>; /* Direct messaging only */
-    managed-exit; /* Managed exit is supported */
-    run-time-model = <0>; /* Run to completion */
+    ns-interrupts-action = <0>; /* Non secure interrupts are queued. */
 
     /* Boot protocol */
     gp-register-num = <0x0>;

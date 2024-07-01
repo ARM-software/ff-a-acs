@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -18,6 +18,9 @@ extern uint64_t val_sctlr_read(uint64_t el_num);
 extern uint64_t val_ttbr0_read(uint64_t el_num);
 extern uint64_t val_read_mpidr(void);
 extern uint64_t val_read_current_el(void);
+extern uint64_t val_elr_el2_read(void);
+extern uint64_t val_esr_el2_read(void);
+extern uint64_t val_far_el2_read(void);
 extern uint64_t val_elr_el1_read(void);
 extern uint64_t val_esr_el1_read(void);
 extern uint64_t val_far_el1_read(void);

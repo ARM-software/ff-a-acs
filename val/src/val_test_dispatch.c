@@ -12,7 +12,11 @@ extern uint64_t val_image_load_offset;
 #else
 uint64_t val_image_load_offset = 0;
 #endif
-uint32_t g_current_test_num;
+mp_test_status_t g_mp_state = {
+    .g_other_pe_test_state = {[0 ... PLATFORM_NO_OF_CPUS - 1] = VAL_MP_STATE_WAIT},
+    .g_other_pe_test_result = {[0 ... (PLATFORM_NO_OF_CPUS - 1)] = VAL_STATUS_INVALID}
+};
+
 extern const uint32_t  total_tests;
 
 /* Validate endpoint config for the given system */
@@ -34,7 +38,8 @@ static uint32_t validate_test_config(uint32_t client_logical_id __UNUSED,
 #if (PLATFORM_SP_EL == -1)
     if (client_logical_id == SP1 || server_logical_id == SP1
         || client_logical_id == SP2 || server_logical_id == SP2
-        || client_logical_id == SP3 || server_logical_id == SP3)
+        || client_logical_id == SP3 || server_logical_id == SP3
+        || client_logical_id == SP4 || server_logical_id == SP4)
     {
         LOG(TEST,
             "\tNo support for FFA S-ENDPOINT, skipping the check\n",
@@ -45,7 +50,8 @@ static uint32_t validate_test_config(uint32_t client_logical_id __UNUSED,
 
 #if (PLATFORM_SPMC_EL == 1 && PLATFORM_SP_EL == 1)
     if (client_logical_id == SP2 || client_logical_id == SP3
-        || server_logical_id == SP2 || server_logical_id == SP3)
+        || server_logical_id == SP2 || server_logical_id == SP3
+        || client_logical_id == SP4 || server_logical_id == SP4)
     {
         LOG(TEST,
             "\tBoth SP & SPMC at EL1 config isn't supported, skipping the check\n",
@@ -55,7 +61,7 @@ static uint32_t validate_test_config(uint32_t client_logical_id __UNUSED,
 #endif
 
 #if (PLATFORM_SP_SEND_DIRECT_REQ == 0)
-    if (client_logical_id <= SP3 && server_logical_id != NO_SERVER_EP)
+    if (client_logical_id <= SP4 && server_logical_id != NO_SERVER_EP)
     {
         LOG(TEST,
             "\tSP doesn't support DIRECT_REQ, skipping the check\n",
@@ -65,7 +71,7 @@ static uint32_t validate_test_config(uint32_t client_logical_id __UNUSED,
 #endif
 
 #if (PLATFORM_VM_SEND_DIRECT_RESP == 0)
-    if (server_logical_id > SP3 && server_logical_id != NO_SERVER_EP)
+    if (server_logical_id > SP4 && server_logical_id != NO_SERVER_EP)
     {
         LOG(TEST,
             "\tNS-ENDPOINT doesn't support DIRECT_RESP,\
@@ -315,8 +321,8 @@ void val_test_dispatch(void)
             * therefore perform cache ops on location to avoid any
             * sharing issue
             * */
-           g_current_test_num = i;
-           val_dataCacheCleanInvalidateVA((uint64_t)&g_current_test_num);
+           g_mp_state.g_current_test_num = i;
+           val_dataCacheCleanInvalidateVA((uint64_t)&g_mp_state);
 
            /* Execute FFA_VERSION call before each test case */
            input_version_number = (uint32_t)(((FFA_VERSION_MAJOR << 16)
@@ -669,63 +675,182 @@ ffa_args_t val_resp_client_fn_direct(uint32_t test_run_data,
 }
 
 /**
- *   @brief    - VAL API to manage FFA calls received on secondary cpu
- *   @param    - Void
- *   @return   - Void
-**/
-static void val_secondary_cpu_sp_service(void)
-{
-    uint32_t data_pattern;
-    ffa_endpoint_id_t target_id, my_id;
-    ffa_args_t payload;
-
-    /* Recieve direct request using secondary cpu */
-    val_memset(&payload, 0, sizeof(ffa_args_t));
-    val_ffa_msg_wait(&payload);
-    for ( ; ; )
-    {
-        if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_32)
-        {
-            LOG(ERROR, "\tDirect request failed, fid=0x%x, err %x\n",
-                      payload.fid, payload.arg2);
-            VAL_PANIC("\tCan't recover\n");
-        }
-
-        target_id = SENDER_ID(payload.arg1);
-        my_id = RECEIVER_ID(payload.arg1);
-        data_pattern = (uint32_t)payload.arg3;
-
-        /* Send direct respond back */
-        val_memset(&payload, 0, sizeof(ffa_args_t));
-        payload.arg1 = ((uint32_t)my_id << 16) | target_id;
-        payload.arg3 = data_pattern;
-        val_ffa_msg_send_direct_resp_32(&payload);
-    }
-}
-
-/**
  *   @brief    - VAL API to execute test on secondary cpu
  *   @param    - Void
  *   @return   - Void
 **/
 void val_secondary_cpu_test_entry(void)
 {
-    sec_cpu_test_t      sec_cpu_fn_ptr;
+    sec_cpu_client_test_t      sec_cpu_client_fn_ptr;
+    uint32_t status = VAL_ERROR;
+    uint64_t mpid = val_read_mpidr() & MPID_MASK;
+    uint32_t cpu_id = val_get_cpuid(mpid);;
 
     if (val_get_curr_endpoint_logical_id() == VM1)
     {
-        val_dataCacheInvalidateVA((uint64_t)&g_current_test_num);
-        sec_cpu_fn_ptr = (sec_cpu_test_t)(test_list[g_current_test_num].sec_cpu_fn);
-        if (sec_cpu_fn_ptr == NULL)
+        /* Set MP Test state context to in progress */
+        g_mp_state.g_other_pe_test_state[cpu_id] = VAL_MP_STATE_INPROGRESS;
+        val_dataCacheInvalidateVA((uint64_t)&g_mp_state.g_other_pe_test_state);
+        val_dataCacheInvalidateVA((uint64_t)&g_mp_state.g_current_test_num);
+
+        sec_cpu_client_fn_ptr = \
+          (sec_cpu_client_test_t)(test_list[g_mp_state.g_current_test_num].sec_cpu_client_fn);
+        if (sec_cpu_client_fn_ptr == NULL)
         {
-               VAL_PANIC("\tInvalid sec cpu test function\n");
+            VAL_PANIC("\tInvalid sec cpu test function\n");
         }
-        sec_cpu_fn_ptr = sec_cpu_fn_ptr + val_image_load_offset;
+
+        sec_cpu_client_fn_ptr = sec_cpu_client_fn_ptr + val_image_load_offset;
         /* Execute sec cpu test function */
-        sec_cpu_fn_ptr();
+        status = sec_cpu_client_fn_ptr(g_mp_state.g_current_test_num);
+
+        /* Update global Multi PE test state */
+        g_mp_state.g_other_pe_test_result[cpu_id] = status;
+        g_mp_state.g_other_pe_test_state[cpu_id] = VAL_MP_STATE_COMPLETE;
+        val_dataCacheInvalidateVA((uint64_t)&g_mp_state.g_other_pe_test_result);
+        val_dataCacheInvalidateVA((uint64_t)&g_mp_state.g_other_pe_test_state);
+
+        /* Power off Secondary PE after test run*/
+        val_power_off_cpu();
     }
     else
     {
-        val_secondary_cpu_sp_service();
+        /* unsused */
+        (void)status;
+        (void)cpu_id;
+        (void)mpid;
+
+        val_sec_cpu_wait_for_test_fn_req();
     }
+}
+
+/**
+ *   @brief    - Executes given server test function of the test on Sec CPU
+ *   @param    - Direct message request parameters sent by client endpoint
+ *   @return   - status
+**/
+static uint32_t val_sec_cpu_execute_server_test_fn(ffa_args_t args)
+{
+    uint32_t       test_num = GET_TEST_NUM(args.arg3);
+    uint32_t       status = VAL_ERROR;
+    sec_cpu_server_test_t  sec_cpu_server_fn_ptr;
+
+    sec_cpu_server_fn_ptr = (sec_cpu_server_test_t)(test_list[test_num].sec_cpu_server_fn);
+    if (sec_cpu_server_fn_ptr == NULL)
+    {
+       VAL_PANIC("\tInvalid server test function\n");
+    }
+
+    /* Execute server function of given test num */
+    sec_cpu_server_fn_ptr = sec_cpu_server_fn_ptr + val_image_load_offset;
+    status = sec_cpu_server_fn_ptr(args);
+
+    return status;
+}
+
+/**
+ *   @brief    - Test entry for non-dispatcher Sec CPU endpoints. This executes
+ *               client or server test functions based on dispatcher's command
+ *   @param    - void
+ *   @return   - void
+**/
+void val_sec_cpu_wait_for_test_fn_req(void)
+{
+    ffa_args_t        payload;
+    uint32_t          test_run_data;
+    uint32_t          status = VAL_ERROR;
+    ffa_endpoint_id_t target_id, my_id;
+
+    val_memset(&payload, 0, sizeof(ffa_args_t));
+
+    /* Receive the test_num and client_fn/server_fn to run
+     * OR receiver service id for nvm and wd functionality
+     */
+
+    val_ffa_msg_wait(&payload);
+
+    while (1)
+    {
+        if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_32)
+        {
+            LOG(ERROR, "\tInvalid fid received, fid=0x%x, error=0x%x\n", payload.fid, payload.arg2);
+            return;
+        }
+
+        target_id = SENDER_ID(payload.arg1);
+        my_id = RECEIVER_ID(payload.arg1);
+        test_run_data = (uint32_t)payload.arg3;
+
+        if (GET_TEST_TYPE(test_run_data) == SERVER_TEST)
+        {
+            status = val_sec_cpu_execute_server_test_fn(payload);
+        }
+        else
+        {
+            // TODO Sec CPU Non Primary VM Client handling
+            VAL_PANIC("\tNo Support for Sec CPU non Primary VM Client \n");
+        }
+
+        /* Send test status back */
+        val_memset(&payload, 0, sizeof(ffa_args_t));
+        payload.arg1 = ((uint32_t)my_id << 16) | target_id;
+        payload.arg3 = status;
+        val_ffa_msg_send_direct_resp_32(&payload);
+    }
+}
+
+
+/**
+ *   @brief    - Retrieve other pe current test status
+ *   @param    - mpid , current test number
+ *   @return   - test result
+**/
+uint32_t val_get_multi_pe_test_status(uint64_t mpid, uint32_t test_num)
+{
+    uint32_t cpu_id = val_get_cpuid(mpid);
+    uint32_t mp_test_num = 0;
+    uint32_t count = 5;
+    uint32_t status = VAL_ERROR;
+
+    val_dataCacheInvalidateVA((uint64_t)&g_mp_state.g_current_test_num);
+    mp_test_num = g_mp_state.g_current_test_num;
+
+    if (mp_test_num != test_num)
+    {
+        VAL_PANIC("\tInconsistent test_num and g_test_num \n");
+    }
+
+    /** check and wait for all pe to reach test completion */
+    while (1)
+    {
+        val_dataCacheInvalidateVA((uint64_t)&g_mp_state.g_other_pe_test_state);
+        if (g_mp_state.g_other_pe_test_state[cpu_id] != VAL_MP_STATE_INPROGRESS || count == 5)
+        {
+            break;
+        }
+
+        /** sleep for 1ms */
+        val_sleep(1);
+        count--;
+    }
+
+    val_dataCacheInvalidateVA((uint64_t)&g_mp_state.g_other_pe_test_result);
+    val_dataCacheInvalidateVA((uint64_t)&g_mp_state.g_other_pe_test_state);
+
+    if (g_mp_state.g_other_pe_test_state[cpu_id] == VAL_MP_STATE_COMPLETE)
+    {
+        status = g_mp_state.g_other_pe_test_result[cpu_id];
+
+        /* Reset Global MP Test data */
+        g_mp_state.g_other_pe_test_state[cpu_id] = VAL_MP_STATE_WAIT;
+        g_mp_state.g_other_pe_test_result[cpu_id] = VAL_STATUS_INVALID;
+        val_dataCacheInvalidateVA((uint64_t)&g_mp_state.g_other_pe_test_result);
+        val_dataCacheInvalidateVA((uint64_t)&g_mp_state.g_other_pe_test_state);
+    }
+    else
+    {
+        VAL_PANIC("\tOther-PE test state incomplete \n");
+    }
+
+    return status;
 }

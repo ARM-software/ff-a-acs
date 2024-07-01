@@ -9,26 +9,19 @@
 
 #define NS_IRQ_TRIGGERED 0xABCDABCD
 #define S_IRQ_TRIGGERED 0xAABBCCDD
-#define NS_WD_TIMEOUT 50000
-#define WD_TIME_OUT 0x100000000000
+#define NS_WD_TIMEOUT 80000U
+#define WD_TIME_OUT   10U
 
 static uint32_t *pages;
 static uint32_t status = VAL_SUCCESS;
 
 static int wd_irq_handler(void)
 {
-    uint64_t timeout = WD_TIME_OUT;
 
-    *(volatile uint32_t *)pages = (uint32_t)NS_IRQ_TRIGGERED;
     val_ns_wdog_disable();
-
-    while (--timeout);
-    if (timeout)
-    {
-        LOG(ERROR, "\t  TWD interrupt triggered and EL0 partition preempted\n", 0, 0);
-        status =  VAL_ERROR_POINT(1);
-    }
-
+    /* Wait for WD interrupt */
+    sp_sleep(WD_TIME_OUT);
+    *(volatile uint32_t *)pages = (uint32_t)NS_IRQ_TRIGGERED;
     return 0;
 }
 
@@ -41,7 +34,6 @@ uint32_t sp_preempted_el0_client(uint32_t test_run_data)
     ffa_endpoint_id_t recipient = val_get_endpoint_id(server_logical_id);
     mb_buf_t mb;
     uint64_t size = 0x1000;
-    uint64_t timeout = WD_TIME_OUT;
     ffa_memory_region_flags_t flags = 0;
     ffa_memory_handle_t handle;
     mem_region_init_t mem_region_init;
@@ -79,6 +71,8 @@ uint32_t sp_preempted_el0_client(uint32_t test_run_data)
         status = VAL_ERROR_POINT(4);
         goto rxtx_unmap;
     }
+
+    val_memset(pages, 0, size);
 
     val_select_server_fn_direct(test_run_data, 0, 0, 0, 0);
 
@@ -163,8 +157,7 @@ uint32_t sp_preempted_el0_client(uint32_t test_run_data)
         goto free_interrupt;
     }
 
-    while (--timeout && (*(volatile uint32_t *)pages != S_IRQ_TRIGGERED));
-    if (!timeout)
+    if ((*(volatile uint32_t *)pages != S_IRQ_TRIGGERED))
     {
         LOG(ERROR, "\t  TWD interrupt not triggered\n", 0, 0);
         status = status ? status : VAL_ERROR_POINT(10);

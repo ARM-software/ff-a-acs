@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -79,9 +79,19 @@ sctlr_el1_write:
     isb
     ret
 
+    .global val_esr_el2_read
+val_esr_el2_read:
+    mrs     x0, esr_el2
+    ret
+
     .global val_esr_el1_read
 val_esr_el1_read:
     mrs     x0, esr_el1
+    ret
+
+    .global val_elr_el2_read
+val_elr_el2_read:
+    mrs     x0, elr_el2
     ret
 
     .global val_elr_el1_read
@@ -92,6 +102,11 @@ val_elr_el1_read:
     .global val_elr_el1_write
 val_elr_el1_write:
     msr     elr_el1, x0
+    ret
+
+    .global val_far_el2_read
+val_far_el2_read:
+    mrs     x0, far_el2
     ret
 
     .global val_far_el1_read

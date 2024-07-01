@@ -7,7 +7,7 @@
 
 #include "test_database.h"
 
-#define WD_TIME_OUT 0x10000000
+#define WD_TIME_OUT 100U
 static volatile uint32_t managed_exit_received;
 static uint32_t mei_id;
 
@@ -15,17 +15,16 @@ static int mei_irq_handler(void)
 {
     managed_exit_received = true;
     val_secure_intr_disable(mei_id, INTERRUPT_TYPE_FIQ);
-
     return 0;
 }
 
 uint32_t vm_to_sp_managed_exit_server(ffa_args_t args)
 {
     ffa_args_t payload;
-    uint64_t timeout = WD_TIME_OUT;
     uint32_t status = VAL_SUCCESS;
     ffa_endpoint_id_t sender = args.arg1 & 0xffff;
     ffa_endpoint_id_t receiver = (args.arg1 >> 16) & 0xffff;
+    managed_exit_received = false;
 
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 = FFA_FEATURE_MEI;
@@ -58,9 +57,9 @@ uint32_t vm_to_sp_managed_exit_server(ffa_args_t args)
     }
 
     /* Wait for WD interrupt */
-    while (--timeout && !managed_exit_received);
+    val_sp_sleep(WD_TIME_OUT);
 
-    if (!timeout)
+    if (managed_exit_received != true)
     {
         LOG(ERROR, "\t  WD interrupt not triggered\n", 0, 0);
         status =  VAL_ERROR_POINT(4);

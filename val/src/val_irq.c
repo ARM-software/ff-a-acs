@@ -7,7 +7,9 @@
 
 #include "val_framework.h"
 #include "val_interfaces.h"
+#ifndef TARGET_LINUX
 #include <pal_spm_helpers.h>
+#endif
 
 void val_irq_setup(void)
 {
@@ -46,10 +48,28 @@ void val_secure_intr_disable(uint32_t int_id, enum interrupt_pin pin)
 
 uint64_t val_sleep(uint32_t ms)
 {
+#ifndef TARGET_LINUX
     return pal_sleep(ms);
+#else
+    return 0;
+#endif
 }
 
 uint32_t val_interrupt_get(void)
 {
+#ifndef TARGET_LINUX
     return spm_interrupt_get();
+#else
+    return 0;
+#endif
 }
+
+void val_sp_sleep(uint64_t ms)
+{
+#ifndef TARGET_LINUX
+    sp_sleep(ms);
+#else
+    return;
+#endif
+}
+

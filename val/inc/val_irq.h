@@ -20,5 +20,6 @@ uint64_t val_sleep(uint32_t ms);
 void val_secure_intr_enable(uint32_t int_id, enum interrupt_pin pin);
 void val_secure_intr_disable(uint32_t int_id, enum interrupt_pin pin);
 uint32_t val_interrupt_get(void);
+void val_sp_sleep(uint64_t ms);
 
 #endif /* _VAL_IRQ_H_ */

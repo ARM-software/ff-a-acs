@@ -85,6 +85,11 @@
 #define PLATFORM_TWDOG_SIZE          0x10000
 #define PLATFORM_TWDOG_INTID         56
 
+/* Base address of AP_REFCLK_CNTBase1 System Timer */
+#define PLATFORM_AP_REFCLK_CNTBASE1     0x2A830000
+#define PLATFORM_AP_REFCLK_SIZE         0x1000
+#define PALTFORM_AP_REFCLK_CNTPSIRQ1    58
+
 #define PLATFORM_NS_WD_BASE  0x2A440000
 #define PLATFORM_NS_WD_SIZE  0x1000
 #define PLATFORM_NS_WD_INTR  59
@@ -93,9 +98,8 @@
 
 /*
  * Base address of read only memory region
- * Need to update read_only memory
  */
-#define PLATFORM_MEM_READ_ONLY_BASE  0x00000000
+#define PLATFORM_MEM_READ_ONLY_BASE  0xfe300000
 #define PLATFORM_MEM_READ_ONLY_SIZE  0x1000
 
 /* SMMU upstream device memory region 8KB */
@@ -115,6 +119,13 @@
 #define GICR_SIZE       0x100000
 #define GICC_SIZE       0x2000
 
+/* Non-secure EL1 physical timer interrupt */
+#define IRQ_PHY_TIMER_EL1           30
+/* Non-secure EL1 virtual timer interrupt */
+#define IRQ_VIRT_TIMER_EL1          27
+/* Non-secure EL2 physical timer interrupt */
+#define IRQ_PHY_TIMER_EL2           26
+
 /*
  * Secure Partition manifest info.
  */
@@ -123,6 +134,7 @@
 #define PLATFORM_SP1_ID             (1 | (1 << 15))
 #define PLATFORM_SP2_ID             (2 | (1 << 15))
 #define PLATFORM_SP3_ID             (3 | (1 << 15))
+#define PLATFORM_SP4_ID             (4 | (1 << 15))
 
 #define PLATFORM_PRIMARY_SCHEDULER_EL  1
 

@@ -27,6 +27,7 @@ static uint32_t lend_retrieve_input_checks7_helper(uint32_t test_run_data, uint3
     struct ffa_memory_region_constituent constituents[1];
     const uint32_t constituents_count = sizeof(constituents) /
                 sizeof(struct ffa_memory_region_constituent);
+    uint32_t borrower_id_list = 0;
 
     mb.send = val_memory_alloc(size);
     mb.recv = val_memory_alloc(size);
@@ -104,8 +105,7 @@ static uint32_t lend_retrieve_input_checks7_helper(uint32_t test_run_data, uint3
     }
 
     /*Encode Borrower ID's for Retrieval*/
-    uint32_t borrower_id_list = (uint32_t)(recipient_1 << 16)
-                                | recipient;
+    borrower_id_list = (uint32_t)(recipient_1 << 16) | recipient;
 
     val_select_server_fn_direct(test_run_data_2, fid, borrower_id_list, 0, 0);
     handle = ffa_mem_success_handle(payload);

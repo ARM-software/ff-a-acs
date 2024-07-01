@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+# Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
@@ -29,6 +29,13 @@ else()
     set(COMPILE_PIE_SWITCH "")
 endif()
 
+if(${ENABLE_BTI})
+    set(COMPILE_BTI_PAD "-mbranch-protection=bti")
+    add_definitions(-DENABLE_BTI)
+else()
+    set(COMPILE_BTI_PAD "")
+endif()
+
 if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
     set(COMPILE_DEBUG_OPTIONS "-g -Wa,--gdwarf-2")
 else()
@@ -36,5 +43,5 @@ else()
 endif()
 
 
-set(CMAKE_C_FLAGS          "${TARGET_SWITCH}  ${COMPILE_PIE_SWITCH} ${COMPILE_DEBUG_OPTIONS} -ffunction-sections -fdata-sections -mstrict-align -Os -ffreestanding -Wall -Werror -std=gnu99 -mgeneral-regs-only -Wmissing-prototypes -Wmissing-declarations -Wstrict-prototypes -Wextra -Wconversion -Wsign-conversion -Wcast-align -Wstrict-overflow -DCMAKE_GNUARM_COMPILE")
-set(CMAKE_ASM_FLAGS        "${TARGET_SWITCH} ${COMPILE_DEBUG_OPTIONS} -c -x assembler-with-cpp -Wall -Werror -ffunction-sections -fdata-sections -Wmissing-prototypes -Wmissing-declarations -Wstrict-prototypes -Wextra -Wconversion -Wsign-conversion -Wcast-align -Wstrict-overflow -DCMAKE_GNUARM_COMPILE")
+set(CMAKE_C_FLAGS          "${TARGET_SWITCH} ${COMPILE_BTI_PAD} ${COMPILE_PIE_SWITCH} ${COMPILE_DEBUG_OPTIONS} -ffunction-sections -fdata-sections -mstrict-align -Os -ffreestanding -Wall -Werror -std=gnu99 -mgeneral-regs-only -Wmissing-prototypes -Wmissing-declarations -Wstrict-prototypes -Wextra -Wconversion -Wsign-conversion -Wcast-align -Wstrict-overflow -DCMAKE_GNUARM_COMPILE")
+set(CMAKE_ASM_FLAGS        "${TARGET_SWITCH} ${COMPILE_BTI_PAD} ${COMPILE_DEBUG_OPTIONS} -c -x assembler-with-cpp -Wall -Werror -ffunction-sections -fdata-sections -Wmissing-prototypes -Wmissing-declarations -Wstrict-prototypes -Wextra -Wconversion -Wsign-conversion -Wcast-align -Wstrict-overflow -DCMAKE_GNUARM_COMPILE")

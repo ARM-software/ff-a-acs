@@ -12,6 +12,10 @@
     "sp3" : {
          "image": "../../../build/output/sp3.bin",
          "pm": "sp3_el0.dts"
-     }
+     },
 
+     "sp4" : {
+          "image": "../../../build/output/sp4.bin",
+          "pm": "sp4_el0.dts"
+      }
 }

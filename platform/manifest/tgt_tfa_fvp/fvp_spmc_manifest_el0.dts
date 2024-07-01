@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -50,6 +50,13 @@
 			vcpu_count = <1>;
 			mem_size = <1048576>;
 		};
+		vm4 {
+			is_ffa_partition;
+			debug_name = "ff-a-acs SP4";
+			load_address = <0x7300000>;
+			vcpu_count = <1>;
+			mem_size = <1048576>;
+		};
 	};
 
 	cpus {
@@ -71,7 +78,7 @@
 		CPU_1
 	};
 
-   memory@0 {
+    memory@0 {
         device_type = "memory";
         reg = <0x0 0xfd000000 0x0 0x2000000>,
               <0x0 0x7000000 0x0 0x1000000>,
@@ -84,4 +91,18 @@
               <0x0 0x88000000 0x0 0x10000000>;
     };
 
+    memory@2 {
+        device_type = "device-memory";
+        reg = <0x0 0x2bfe0000 0x0 0x20000>, /* SMMUv3TestEngine */
+              <0x0 0x2a830000 0x0 0x1000>,  /* AP_REF_CLKBASE1 */
+              <0x0 0x2a490000 0x0 0x20000>, /* SP805 Trusted Watchdog */
+              <0x0 0x1c130000 0x0 0x10000>; /* Virtio block device */
+    };
+
+    memory@3 {
+        device_type = "ns-device-memory";
+        reg = <0x0 0x1c0b0000 0x0 0x10000>, /* UART2 */
+              <0x0 0x82800000 0x0 0x40000>, /* nvm */
+              <0x0 0x1c0f0000 0x0 0x40000>; /* watchdog */
+    };
 };

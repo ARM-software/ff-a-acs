@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -16,8 +16,8 @@ void lend_lower_upper_boundary_64_vmsp_testentry(uint32_t test_num)
 
 void lend_lower_upper_boundary_64_spsp_testentry(uint32_t test_num)
 {
-    /* Execute test for EP combination: client=SP1, server=SP2 */
-    if (IS_TEST_FAIL(val_execute_test(test_num, SP1, SP2)))
+    /* Execute test for EP combination: client=SP2, server=SP1 */
+    if (IS_TEST_FAIL(val_execute_test(test_num, SP2, SP1)))
         return;
 }
 

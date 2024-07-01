@@ -21,11 +21,23 @@
     entrypoint-offset = <0x4000>;
     xlat-granule = <0>; /* 4KiB */
     boot-order = <1>;
-    messaging-method = <3>; /* Direct messaging only */
+    messaging-method = <7>; /* Direct and Indirect messaging only */
     notification-support; /* Support receipt of notifications. */
     run-time-model = <0>;
 
     /* Boot protocol */
     gp-register-num = <0x0>;
+
+    device-regions {
+        compatible = "arm,ffa-manifest-device-regions";
+
+        ref_clk_system {
+            /* AP_REFCLK_1 System Timer Module */
+            base-address = <0x00000000 0x2a830000>;
+            pages-count = <1>; /* Two 4KB page */
+            attributes = <0x3>; /* read-write */
+            interrupts = <58 0x900>;
+        };
+    };
 
 };

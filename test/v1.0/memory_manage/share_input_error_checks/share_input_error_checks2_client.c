@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -75,7 +75,7 @@ static uint32_t ffa_mem_share_handle_helper(uint32_t test_run_data, uint32_t fid
     else
         val_ffa_mem_share_32(&payload);
 
-    if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
+    if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_DENIED))
     {
         LOG(ERROR, "\tMem_share request must failed err %x %x\n", payload.arg2, payload.fid);
         status = VAL_ERROR_POINT(3);

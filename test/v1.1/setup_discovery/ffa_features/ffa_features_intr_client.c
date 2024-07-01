@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2022-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -10,32 +10,58 @@
 uint32_t ffa_features_intr_client(uint32_t test_run_data)
 {
     ffa_args_t payload;
+    uint32_t client_logical_id = GET_CLIENT_LOGIC_ID(test_run_data);
+    ffa_endpoint_id_t sender = val_get_endpoint_id(client_logical_id);
 
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 = FFA_FEATURE_SRI;
     val_ffa_features(&payload);
-    if (payload.fid == FFA_ERROR_32)
+
+    if (VAL_IS_ENDPOINT_SECURE(val_get_endpoint_logical_id(sender)))
     {
+        if (payload.fid != FFA_ERROR_32 || payload.arg2 != FFA_ERROR_NOT_SUPPORTED)
+        {
+            LOG(ERROR, "\t  Non NWd EP SRI request must return no support %x \n", payload.arg2, 0);
+            return VAL_ERROR_POINT(1);
+        }
+    }
+    else
+    {
+        if (payload.fid == FFA_ERROR_32)
+        {
         LOG(ERROR, "\t  Failed to retrieve SRI err %x\n", payload.arg2, 0);
         return VAL_ERROR_POINT(1);
+        }
     }
 
-    val_memset(&payload, 0, sizeof(ffa_args_t));
-    payload.arg1 = FFA_FEATURE_NPI;
-    val_ffa_features(&payload);
-    if (payload.fid == FFA_ERROR_32)
+    if (VAL_IS_ENDPOINT_SECURE(val_get_endpoint_logical_id(sender)))
     {
-        LOG(ERROR, "\t  Failed to retrieve NPI err %x\n", payload.arg2, 0);
-        return VAL_ERROR_POINT(2);
-    }
+        val_memset(&payload, 0, sizeof(ffa_args_t));
+        payload.arg1 = FFA_FEATURE_NPI;
+        val_ffa_features(&payload);
 
-    val_memset(&payload, 0, sizeof(ffa_args_t));
-    payload.arg1 = FFA_FEATURE_MEI;
-    val_ffa_features(&payload);
-    if (payload.fid == FFA_ERROR_32)
-    {
-        LOG(ERROR, "\t  Failed to retrieve MEI err %x\n", payload.arg2, 0);
-        return VAL_ERROR_POINT(3);
+#if (PLATFORM_SP_EL == 0)
+        if (payload.fid != FFA_ERROR_32 || payload.arg2 != FFA_ERROR_NOT_SUPPORTED)
+        {
+            LOG(ERROR, "\t FFA_Features Must Fail to retrieve NPI err %x\n", payload.arg2, 0);
+            return VAL_ERROR_POINT(2);
+        }
+#else
+        if (payload.fid == FFA_ERROR_32)
+        {
+            LOG(ERROR, "\t  Failed to retrieve NPI err %x\n", payload.arg2, 0);
+            return VAL_ERROR_POINT(2);
+        }
+#endif
+
+        val_memset(&payload, 0, sizeof(ffa_args_t));
+        payload.arg1 = FFA_FEATURE_MEI;
+        val_ffa_features(&payload);
+        if (payload.fid == FFA_ERROR_32)
+        {
+            LOG(ERROR, "\t  Failed to retrieve MEI err %x\n", payload.arg2, 0);
+            return VAL_ERROR_POINT(3);
+        }
     }
 
     /* Unused argument */

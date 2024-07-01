@@ -19,6 +19,7 @@ set(PAL_SRC
     ${ROOT_DIR}/platform/pal_baremetal/${TARGET}/src/pal_irq.c
     ${ROOT_DIR}/platform/driver/src/pal_pl011_uart.c
     ${ROOT_DIR}/platform/driver/src/pal_sp805_watchdog.c
+    ${ROOT_DIR}/platform/driver/src/pal_ap_refclk_timer.c
     ${ROOT_DIR}/platform/driver/src/pal_nvm.c
     ${ROOT_DIR}/platform/driver/src/gic/pal_arm_gic_v2v3.c
     ${ROOT_DIR}/platform/driver/src/gic/pal_gic_common.c

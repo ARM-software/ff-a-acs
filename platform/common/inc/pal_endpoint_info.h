@@ -17,6 +17,11 @@
 #define FFA_MESSAGING_MASK                 0x7
 
 #if (PLATFORM_FFA_V_1_0 != 1)
+#define FFA_PARTITION_INFO_FLAG_RETCOUNT   0x00000001
+#define FFA_PARTITION_INFO_FLAG_RETDESC    0x00000000
+#endif
+
+#if (PLATFORM_FFA_V_1_0 != 1)
 #define FFA_PARTITION_ID_PE_EP_ID          0x00
 #define FFA_PARTITION_ID_SEPID_INDEP       0x10
 #define FFA_PARTITION_ID_SEPID_DEP         0x20
@@ -76,12 +81,18 @@
                                     FFA_NOTIFICATION_SUPPORT | \
                                     FFA_DIRECT_REQUEST_SEND | \
                                     FFA_PARTITION_EXEC_STATE_ARCH64)
+#define PLATFORM_SP4_EP_PROPERTIES (FFA_RECEIPT_DIRECT_REQUEST_SUPPORT | \
+                                    FFA_NOTIFICATION_SUPPORT | \
+                                    FFA_DIRECT_REQUEST_SEND | \
+                                    FFA_PARTITION_EXEC_STATE_ARCH64)
 #endif
 #define PLATFORM_SP1_UUID {0x1e67b5b4, 0xe14f904a, 0x13fb1fb8, 0xcbdae1da}
 
 #define PLATFORM_SP2_UUID {0x092358d1, 0xb94723f0, 0x64447c82, 0xc88f57f5}
 
 #define PLATFORM_SP3_UUID {0x735cb579, 0xb9448c1d, 0xe1619385, 0xd2d80a77}
+
+#define PLATFORM_SP4_UUID {0x2658cda4, 0xcf6713e1, 0x49cd10f9, 0x31ef6813}
 
 /*
  * Execution contexts assignment for test endpoints:
@@ -102,5 +113,6 @@
 #define PLATFORM_SP2_EC_COUNT PLATFORM_NO_OF_CPUS
 #endif
 #define PLATFORM_SP3_EC_COUNT 0x1
+#define PLATFORM_SP4_EC_COUNT 0x1
 
 #endif /* _PAL_ENDPOINT_INFO_H_ */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -47,6 +47,19 @@ static val_endpoint_info_t endpoint_info_table[] = {
         PLATFORM_SP3_EC_COUNT,
         PLATFORM_SP3_EP_PROPERTIES,
         PLATFORM_SP3_UUID,
+    },
+    {
+        "SP4",
+        PLATFORM_SP4_ID,
+        VAL_TG0_4K,
+#if (PLATFORM_SP_EL == EL1)
+        EL1_64,
+#else
+        EL0_64,
+#endif
+        PLATFORM_SP4_EC_COUNT,
+        PLATFORM_SP4_EP_PROPERTIES,
+        PLATFORM_SP4_UUID,
     },
 	{
         "VM1",
@@ -258,6 +271,7 @@ uint32_t val_assign_tg0_to_endpoint(void)
         val_set_endpoint_tt_tg0(SP1, VAL_TG0_64K);
         val_set_endpoint_tt_tg0(SP2, VAL_TG0_64K);
         val_set_endpoint_tt_tg0(SP3, VAL_TG0_64K);
+        val_set_endpoint_tt_tg0(SP4, VAL_TG0_64K);
         val_set_endpoint_tt_tg0(VM1, VAL_TG0_64K);
         val_set_endpoint_tt_tg0(VM2, VAL_TG0_64K);
         val_set_endpoint_tt_tg0(VM3, VAL_TG0_64K);
@@ -267,6 +281,7 @@ uint32_t val_assign_tg0_to_endpoint(void)
         val_set_endpoint_tt_tg0(SP1, VAL_TG0_16K);
         val_set_endpoint_tt_tg0(SP2, VAL_TG0_16K);
         val_set_endpoint_tt_tg0(SP3, VAL_TG0_16K);
+        val_set_endpoint_tt_tg0(SP4, VAL_TG0_16K);
         val_set_endpoint_tt_tg0(VM1, VAL_TG0_16K);
         val_set_endpoint_tt_tg0(VM2, VAL_TG0_16K);
         val_set_endpoint_tt_tg0(VM3, VAL_TG0_16K);

@@ -374,6 +374,7 @@ uint32_t val_watchdog_disable(void)
 {
 #ifndef SKIP_WD_PROGRAMMING
    ffa_args_t  payload;
+   uint64_t ep_info;
 
    if (val_get_curr_endpoint_logical_id() == SP1)
    {
@@ -386,6 +387,13 @@ uint32_t val_watchdog_disable(void)
                                   val_get_endpoint_id(SP1);
       payload.arg3 = WD_DISABLE_SERVICE;
       val_ffa_msg_send_direct_req_32(&payload);
+      while (payload.fid == FFA_INTERRUPT_32)
+      {
+          ep_info = payload.arg1;
+          val_memset(&payload, 0, sizeof(ffa_args_t));
+          payload.arg1 = ep_info;
+          val_ffa_run(&payload);
+      }
       if (payload.fid != FFA_MSG_SEND_DIRECT_RESP_32)
       {
          LOG(ERROR, "\tInvalid fid received, fid=0x%x, err=0x%x\n", payload.fid, payload.arg2);

@@ -26,6 +26,9 @@ static uint32_t donate_state_machine_3_helper(uint32_t test_run_data, uint32_t f
     const uint32_t constituents_count = sizeof(constituents) /
                 sizeof(struct ffa_memory_region_constituent);
     uint32_t status_32, status_64;
+#if ((PLATFORM_FFA_V_ALL == 1) || (PLATFORM_FFA_V_1_1 == 1))
+    uint32_t borrower_id_list = 0;
+#endif
 
     status_64 = val_is_ffa_feature_supported(FFA_MEM_LEND_64);
     status_32 = val_is_ffa_feature_supported(FFA_MEM_LEND_32);
@@ -121,7 +124,7 @@ static uint32_t donate_state_machine_3_helper(uint32_t test_run_data, uint32_t f
     val_select_server_fn_direct(test_run_data_1, fid, 0, 0, 0);
     #else
     /*Encode Borrower ID's for Retrieval*/
-    uint32_t borrower_id_list = (uint32_t)(recipient_1 << 16) | recipient;
+    borrower_id_list = (uint32_t)(recipient_1 << 16) | recipient;
 
     val_select_server_fn_direct(test_run_data, fid, borrower_id_list, 0, 0);
     val_select_server_fn_direct(test_run_data_1, fid, borrower_id_list, 0, 0);

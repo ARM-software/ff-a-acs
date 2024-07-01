@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -21,6 +21,7 @@
 #include "val_sysreg.h"
 #include "val_irq.h"
 #include "val_wd.h"
+#include "val_timer.h"
 
 /* Test entry prototype */
 typedef void (*test_entry_fptr_t)(uint32_t test_num);
@@ -30,7 +31,8 @@ typedef uint32_t (*client_test_t)(uint32_t test_run_data);
 typedef uint32_t (*server_test_t)(ffa_args_t args);
 
 /* Secondary cpu test func prototype */
-typedef void (*sec_cpu_test_t)(void);
+typedef uint32_t (*sec_cpu_client_test_t)(uint32_t test_num);
+typedef uint32_t (*sec_cpu_server_test_t)(ffa_args_t args);
 
 /* Test suite enum - offset num in structure */
 typedef enum {
@@ -55,7 +57,8 @@ typedef struct {
     test_entry_fptr_t   testentry_fn;
     client_test_t       client_fn;
     server_test_t       server_fn;
-    sec_cpu_test_t      sec_cpu_fn;
+    sec_cpu_client_test_t      sec_cpu_client_fn;
+    sec_cpu_server_test_t      sec_cpu_server_fn;
 } test_db_t;
 
 /* Test fn types */

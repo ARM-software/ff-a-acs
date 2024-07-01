@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -16,7 +16,7 @@ uint32_t ffa_rx_release_client(uint32_t test_run_data)
     val_ffa_rx_release(&payload);
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_DENIED))
     {
-        LOG(ERROR, "\tCheck failed for rx_release denied case\n", 0, 0);
+        LOG(ERROR, "\tCheck failed for rx_release denied case %x %x \n", payload.fid, payload.arg2);
         return VAL_ERROR_POINT(1);
     }
 

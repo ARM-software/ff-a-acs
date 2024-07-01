@@ -17,13 +17,14 @@
 #define EP_ID3 SP3
 #endif
 
-static ffa_args_t ffa_partition_info_get(const uint32_t uuid[4])
+static ffa_args_t ffa_partition_info_get(const uint32_t uuid[4], uint32_t flags)
 {
     ffa_args_t args = {
                 .arg1 = uuid[0],
                 .arg2 = uuid[1],
                 .arg3 = uuid[2],
                 .arg4 = uuid[3],
+                .arg5 = flags,
     };
 
     val_ffa_partition_info_get(&args);
@@ -36,7 +37,9 @@ static uint32_t ffa_partition_info_wrong_test(void)
     uint32_t uuid[4] = {1};
     const uint32_t null_uuid[4] = {0};
     uint32_t status = VAL_SUCCESS;
-    ffa_args_t payload = ffa_partition_info_get(uuid);
+    uint32_t flags = FFA_PARTITION_INFO_FLAG_RETDESC;
+
+    ffa_args_t payload = ffa_partition_info_get(uuid, flags);
 
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
     {
@@ -46,7 +49,7 @@ static uint32_t ffa_partition_info_wrong_test(void)
     }
 
     /* First sanity call */
-    payload = ffa_partition_info_get(null_uuid);
+    payload = ffa_partition_info_get(null_uuid, flags);
     if (payload.fid == FFA_ERROR_32)
     {
         LOG(ERROR, "\tInvalid fid received, fid=0x%x\n",
@@ -56,7 +59,7 @@ static uint32_t ffa_partition_info_wrong_test(void)
     }
 
     /* Second sanity call without releasing rx buffer - BUSY error code check */
-    payload = ffa_partition_info_get(null_uuid);
+    payload = ffa_partition_info_get(null_uuid, flags);
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_BUSY))
     {
         LOG(ERROR, "\tBusy error check failed, fid=0x%x, err=0x%x\n",
@@ -127,7 +130,7 @@ static uint32_t is_matching_endpoint_found(const val_endpoint_info_t *expected_e
 
 static uint32_t ffa_partition_info_helper(void *rx_buff, const uint32_t uuid[4],
                                const val_endpoint_info_t *expected,
-                               const uint16_t expected_count)
+                               const uint16_t expected_count, uint32_t flags)
 {
     ffa_args_t payload;
     uint32_t status = VAL_SUCCESS;
@@ -135,7 +138,7 @@ static uint32_t ffa_partition_info_helper(void *rx_buff, const uint32_t uuid[4],
     ffa_partition_info_t *info;
     uint32_t i;
 
-    payload = ffa_partition_info_get(uuid);
+    payload = ffa_partition_info_get(uuid, flags);
     if (payload.fid == FFA_ERROR_32)
     {
         LOG(ERROR, "\tffa_partition_info_get failed\n", 0, 0);
@@ -172,14 +175,28 @@ static uint32_t ffa_partition_info_helper(void *rx_buff, const uint32_t uuid[4],
         }
     }
 
-    info = (ffa_partition_info_t *)rx_buff;
-    for (i = 0; i < expected_count; i++)
+    if (flags == FFA_PARTITION_INFO_FLAG_RETDESC)
     {
-        if (!is_matching_endpoint_found(&expected[i], &info[0], payload.arg2))
+        info = (ffa_partition_info_t *)rx_buff;
+        for (i = 0; i < expected_count; i++)
         {
-            status = VAL_ERROR_POINT(9);
-            goto rx_release;
+            if (!is_matching_endpoint_found(&expected[i], &info[0], payload.arg2))
+            {
+                status = VAL_ERROR_POINT(9);
+                goto rx_release;
+            }
         }
+    }
+    else if (flags == FFA_PARTITION_INFO_FLAG_RETCOUNT)
+    {
+        if (payload.arg3)
+        {
+            LOG(ERROR, "\tIf Bit[0] = b’1, size field MBZ.\n", 0, 0);
+            status = VAL_ERROR_POINT(10);
+            return status;
+        }
+        else
+            return status;
     }
 
 rx_release:
@@ -187,7 +204,7 @@ rx_release:
     if (val_rx_release())
     {
         LOG(ERROR, "\tRx release failed\n", 0, 0);
-        status = VAL_ERROR_POINT(10);
+        status = VAL_ERROR_POINT(11);
     }
 
     return status;
@@ -208,7 +225,7 @@ uint32_t ffa_partition_info_get_client(uint32_t test_run_data)
     if (rx_buff == NULL || tx_buff == NULL)
     {
         LOG(ERROR, "\tFailed to allocate RxTx buffer\n", 0, 0);
-        status = VAL_ERROR_POINT(11);
+        status = VAL_ERROR_POINT(12);
         goto free_memory;
     }
 
@@ -216,14 +233,14 @@ uint32_t ffa_partition_info_get_client(uint32_t test_run_data)
     if (val_rxtx_map_64((uint64_t)tx_buff, (uint64_t)rx_buff, (uint32_t)(size/PAGE_SIZE_4K)))
     {
         LOG(ERROR, "\t  RxTx Map failed\n", 0, 0);
-        status = VAL_ERROR_POINT(12);
+        status = VAL_ERROR_POINT(13);
         goto free_memory;
     }
 
     ep_info = val_get_endpoint_info();
     if (!ep_info)
     {
-        status = VAL_ERROR_POINT(13);
+        status = VAL_ERROR_POINT(14);
         LOG(ERROR, "\t Endpoint info failed\n", 0, 0);
         goto unmap_rxtx;
     }
@@ -231,21 +248,24 @@ uint32_t ffa_partition_info_get_client(uint32_t test_run_data)
     /* Endpoint can request information for a subset of partitions in the
      * system by specifying the non-Nil UUID.
      */
-    if (ffa_partition_info_helper(rx_buff, ep_info[EP_ID1].uuid, &ep_info[EP_ID1], 1))
-    {
-        status = VAL_ERROR_POINT(14);
-        goto unmap_rxtx;
-    }
-
-    if (ffa_partition_info_helper(rx_buff, ep_info[EP_ID2].uuid, &ep_info[EP_ID2], 1))
+    if (ffa_partition_info_helper(rx_buff, ep_info[EP_ID1].uuid, &ep_info[EP_ID1],
+                                   1, FFA_PARTITION_INFO_FLAG_RETDESC))
     {
         status = VAL_ERROR_POINT(15);
         goto unmap_rxtx;
     }
 
-    if (ffa_partition_info_helper(rx_buff, ep_info[EP_ID3].uuid, &ep_info[EP_ID3], 1))
+    if (ffa_partition_info_helper(rx_buff, ep_info[EP_ID2].uuid, &ep_info[EP_ID2],
+                                   1, FFA_PARTITION_INFO_FLAG_RETDESC))
     {
         status = VAL_ERROR_POINT(16);
+        goto unmap_rxtx;
+    }
+
+    if (ffa_partition_info_helper(rx_buff, ep_info[EP_ID3].uuid, &ep_info[EP_ID3],
+                                   1, FFA_PARTITION_INFO_FLAG_RETDESC))
+    {
+        status = VAL_ERROR_POINT(17);
         goto unmap_rxtx;
     }
 
@@ -255,11 +275,21 @@ uint32_t ffa_partition_info_get_client(uint32_t test_run_data)
     if (VAL_IS_ENDPOINT_SECURE(val_get_curr_endpoint_logical_id()))
     {
         count = VAL_S_EP_COUNT;
-        if (ffa_partition_info_helper(rx_buff, null_uuid, &ep_info[SP1], count))
+        if (ffa_partition_info_helper(rx_buff, null_uuid, &ep_info[SP1],
+                                       count, FFA_PARTITION_INFO_FLAG_RETDESC))
         {
-            status = VAL_ERROR_POINT(17);
+            status = VAL_ERROR_POINT(18);
             goto unmap_rxtx;
         }
+
+        #if (PLATFORM_FFA_V_1_0 != 1)
+        if (ffa_partition_info_helper(rx_buff, null_uuid, &ep_info[SP1],
+                                       count, FFA_PARTITION_INFO_FLAG_RETCOUNT))
+        {
+            status = VAL_ERROR_POINT(19);
+            goto unmap_rxtx;
+        }
+        #endif
     }
     else
     {
@@ -269,16 +299,26 @@ uint32_t ffa_partition_info_get_client(uint32_t test_run_data)
         else
             count = VAL_S_EP_COUNT;
 
-        if (ffa_partition_info_helper(rx_buff, null_uuid, &ep_info[EP_ID1], count))
+        if (ffa_partition_info_helper(rx_buff, null_uuid, &ep_info[EP_ID1],
+                                       count, FFA_PARTITION_INFO_FLAG_RETDESC))
         {
-            status = VAL_ERROR_POINT(18);
+            status = VAL_ERROR_POINT(20);
             goto unmap_rxtx;
         }
+
+        #if (PLATFORM_FFA_V_1_0 != 1)
+        if (ffa_partition_info_helper(rx_buff, null_uuid, &ep_info[EP_ID1],
+                                       count, FFA_PARTITION_INFO_FLAG_RETCOUNT))
+        {
+            status = VAL_ERROR_POINT(21);
+            goto unmap_rxtx;
+        }
+        #endif
     }
 
     if (ffa_partition_info_wrong_test())
     {
-        status = VAL_ERROR_POINT(19);
+        status = VAL_ERROR_POINT(22);
         goto unmap_rxtx;
     }
 
@@ -286,15 +326,14 @@ unmap_rxtx:
     if (val_rxtx_unmap(val_get_endpoint_id(client_logical_id)))
     {
         LOG(ERROR, "\tval_rxtx_unmap failed\n", 0, 0);
-        status = status ? status : VAL_ERROR_POINT(20);
+        status = status ? status : VAL_ERROR_POINT(23);
     }
 
 free_memory:
     if (val_memory_free(rx_buff, size) || val_memory_free(tx_buff, size))
     {
         LOG(ERROR, "\tval_memory_free failed\n", 0, 0);
-        status = status ? status : VAL_ERROR_POINT(21);
+        status = status ? status : VAL_ERROR_POINT(24);
     }
     return status;
 }
-

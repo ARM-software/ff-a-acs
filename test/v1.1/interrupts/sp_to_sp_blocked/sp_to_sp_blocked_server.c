@@ -8,12 +8,11 @@
 #include "test_database.h"
 
 #define IRQ_TRIGGERED 0xABCDABCD
-#define WD_TIME_OUT 0x10000000
+#define WD_TIME_OUT   100
 
 uint32_t sp_to_sp_blocked_server(ffa_args_t args)
 {
     ffa_args_t payload;
-    uint64_t timeout = WD_TIME_OUT;
     uint32_t status = VAL_SUCCESS;
     ffa_endpoint_id_t sender = args.arg1 & 0xffff;
     ffa_endpoint_id_t receiver = (args.arg1 >> 16) & 0xffff;
@@ -120,9 +119,9 @@ uint32_t sp_to_sp_blocked_server(ffa_args_t args)
     }
 
     /* Wait for WD interrupt */
-    while (--timeout && (*(volatile uint32_t *)ptr != IRQ_TRIGGERED));
+    sp_sleep(WD_TIME_OUT);
 
-    if (!timeout)
+    if (*(volatile uint32_t *)ptr != IRQ_TRIGGERED)
     {
         LOG(ERROR, "\t  WD interrupt not triggered\n", 0, 0);
         status =  VAL_ERROR_POINT(7);

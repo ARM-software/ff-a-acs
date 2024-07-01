@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -12,7 +12,7 @@
 
 /* ACS Version Info */
 #define ACS_MAJOR_VERSION   0
-#define ACS_MINOR_VERSION   8
+#define ACS_MINOR_VERSION   9
 
 #define IMAGE_SIZE        0x100000
 
@@ -35,9 +35,10 @@
 #define SP1           1
 #define SP2           2
 #define SP3           3
-#define VM1           4
-#define VM2           5
-#define VM3           6
+#define SP4           4
+#define VM1           5
+#define VM2           6
+#define VM3           7
 
 #define HYPERVISOR_ID 0
 
@@ -50,7 +51,7 @@
 #if (PLATFORM_NS_HYPERVISOR_PRESENT == 1 && PLATFORM_SP_EL == -1)
 #define VAL_S_EP_COUNT  0x0
 #else
-#define VAL_S_EP_COUNT  0x3
+#define VAL_S_EP_COUNT  0x4
 #endif
 #define VAL_TOTAL_EP_COUNT VAL_NS_EP_COUNT + VAL_S_EP_COUNT
 

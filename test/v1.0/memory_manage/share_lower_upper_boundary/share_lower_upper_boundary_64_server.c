@@ -120,7 +120,7 @@ static uint32_t share_lower_upper_boundary_64_server(ffa_args_t args)
     mem_region_init.tag = 0;
     mem_region_init.flags = 0;
     mem_region_init.data_access = FFA_DATA_ACCESS_RW;
-    mem_region_init.instruction_access = FFA_INSTRUCTION_ACCESS_NX;
+    mem_region_init.instruction_access = FFA_INSTRUCTION_ACCESS_NOT_SPECIFIED;
     mem_region_init.type = FFA_MEMORY_NORMAL_MEM;
     mem_region_init.cacheability = FFA_MEMORY_CACHE_WRITE_BACK;
 #if (PLATFORM_OUTER_SHAREABLE_SUPPORT_ONLY == 1)
@@ -130,6 +130,9 @@ static uint32_t share_lower_upper_boundary_64_server(ffa_args_t args)
 #elif (PLATFORM_INNER_OUTER_SHAREABLE_SUPPORT == 1)
     mem_region_init.shareability = FFA_MEMORY_OUTER_SHAREABLE;
 #endif
+    mem_region_init.multi_share = false;
+    mem_region_init.receiver_count = 1;
+
     msg_size = val_ffa_memory_retrieve_request_init(&mem_region_init, handle);
 
     val_memset(&payload, 0, sizeof(ffa_args_t));

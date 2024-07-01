@@ -8,8 +8,8 @@
 #include "test_database.h"
 
 
-#define S_WD_TIMEOUT 50
-#define WD_TIME_OUT 0x100000
+#define S_WD_TIMEOUT 5U
+#define WD_TIME_OUT  10U
 static uint32_t *pages;
 #define IRQ_TRIGGERED 0xABCDABCD
 
@@ -139,7 +139,7 @@ static uint32_t sp_el0_server_interrupt(ffa_args_t args)
 
     val_twdog_enable(S_WD_TIMEOUT);
 
-    /* Check for FFA_INTERRUPT */
+    /* Enter Blocked State */
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 =  ((uint32_t)sender << 16) | receiver_1;
     val_ffa_msg_send_direct_req_64(&payload);
@@ -228,7 +228,6 @@ free_memory:
 static uint32_t sp_el0_server_wait(ffa_args_t args)
 {
     ffa_args_t payload;
-    uint64_t timeout = WD_TIME_OUT;
     uint32_t status = VAL_SUCCESS;
     ffa_endpoint_id_t sender = args.arg1 & 0xffff;
     ffa_endpoint_id_t receiver = (args.arg1 >> 16) & 0xffff;
@@ -335,7 +334,7 @@ static uint32_t sp_el0_server_wait(ffa_args_t args)
     }
 
     /* Wait for WD interrupt */
-    while (--timeout && (*(volatile uint32_t *)ptr != IRQ_TRIGGERED));
+    val_sp_sleep(WD_TIME_OUT);
 
     if (*(volatile uint32_t *)ptr == IRQ_TRIGGERED)
     {

@@ -7,7 +7,7 @@
 
 #include "test_database.h"
 
-#define WD_TIME_OUT 0x1000000
+#define WD_TIME_OUT 100U
 
 static volatile uint32_t managed_exit_received;
 static uint32_t mei_id;
@@ -25,7 +25,7 @@ static uint32_t mei_disabled_sp_setup(ffa_args_t args)
     uint32_t status = VAL_SUCCESS;
     ffa_endpoint_id_t sender = args.arg1 & 0xffff;
     ffa_endpoint_id_t receiver = (args.arg1 >> 16) & 0xffff;
-    ffa_endpoint_id_t receiver_1 = val_get_endpoint_id(SP3);
+    ffa_endpoint_id_t receiver_1 = val_get_endpoint_id(SP2);
     uint32_t test_run_data = (uint32_t)args.arg3;
 
     test_run_data = TEST_RUN_DATA(GET_TEST_NUM((uint32_t)test_run_data),
@@ -71,7 +71,6 @@ exit:
 static uint32_t mei_enabled_sp_setup(ffa_args_t args)
 {
     ffa_args_t payload;
-    uint64_t timeout = WD_TIME_OUT;
     uint32_t status = VAL_SUCCESS;
     ffa_endpoint_id_t sender = args.arg1 & 0xffff;
     ffa_endpoint_id_t receiver = (args.arg1 >> 16) & 0xffff;
@@ -107,9 +106,9 @@ static uint32_t mei_enabled_sp_setup(ffa_args_t args)
     }
 
     /* Wait for WD interrupt */
-    while (--timeout & !managed_exit_received);
+    val_sp_sleep(WD_TIME_OUT);
 
-    if (!managed_exit_received)
+    if (managed_exit_received != true)
     {
         LOG(ERROR, "\t MEI not triggered\n", 0, 0);
         status =  VAL_ERROR_POINT(4);
@@ -141,11 +140,11 @@ uint32_t vm_to_sp_managed_exit_3_server(ffa_args_t args)
 
     curr_ep_logical_id = val_get_curr_endpoint_logical_id();
 
-    if (curr_ep_logical_id == SP2)
+    if (curr_ep_logical_id == SP1)
     {
         status = mei_disabled_sp_setup(args);
     }
-    else if (curr_ep_logical_id == SP3)
+    else if (curr_ep_logical_id == SP2)
     {
         status = mei_enabled_sp_setup(args);
     }

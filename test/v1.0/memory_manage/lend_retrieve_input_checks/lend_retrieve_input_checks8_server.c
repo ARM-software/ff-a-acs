@@ -19,8 +19,6 @@ uint32_t lend_retrieve_input_checks8_server(ffa_args_t args)
     mem_region_init_t mem_region_init;
     ffa_memory_handle_t handle;
     uint32_t msg_size;
-    ffa_memory_region_flags_t flags;
-    struct ffa_memory_region *memory_region;
 
     mb.send = val_memory_alloc(size);
     mb.recv = val_memory_alloc(size);
@@ -57,12 +55,13 @@ uint32_t lend_retrieve_input_checks8_server(ffa_args_t args)
     mem_region_init.receiver = sender;
     mem_region_init.tag = 0;
     /* Zero memory before retrieval flag:
-     * If the Sender has Read-only access to the memory region and the Receiver sets
+     * If the Sender has Read-only access and did not set REGION_FLAG_CLEAR
+     * to the memory region and the Receiver sets
      * Bit[0], the Relayer must return DENIED.
      */
     mem_region_init.flags = FFA_MEMORY_REGION_FLAG_CLEAR;
-    mem_region_init.data_access = FFA_DATA_ACCESS_RW;
-    mem_region_init.instruction_access = FFA_INSTRUCTION_ACCESS_NOT_SPECIFIED;
+    mem_region_init.data_access = FFA_DATA_ACCESS_RO;
+    mem_region_init.instruction_access = FFA_INSTRUCTION_ACCESS_NX;
     mem_region_init.type = FFA_MEMORY_NORMAL_MEM;
     mem_region_init.cacheability = FFA_MEMORY_CACHE_WRITE_BACK;
 #if (PLATFORM_OUTER_SHAREABLE_SUPPORT_ONLY == 1)
@@ -72,6 +71,9 @@ uint32_t lend_retrieve_input_checks8_server(ffa_args_t args)
 #elif (PLATFORM_INNER_OUTER_SHAREABLE_SUPPORT == 1)
     mem_region_init.shareability = FFA_MEMORY_OUTER_SHAREABLE;
 #endif
+    mem_region_init.receiver_count = 1;
+    mem_region_init.multi_share = false;
+
     msg_size = val_ffa_memory_retrieve_request_init(&mem_region_init, handle);
 
     val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -90,7 +92,7 @@ uint32_t lend_retrieve_input_checks8_server(ffa_args_t args)
         goto rxtx_unmap;
     }
 
-    mem_region_init.flags = 0;
+    mem_region_init.memory_region->flags = 0;
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 = msg_size;
     payload.arg2 = msg_size;
@@ -104,19 +106,6 @@ uint32_t lend_retrieve_input_checks8_server(ffa_args_t args)
         LOG(ERROR, "\tMem retrieve request failed err %x\n", payload.arg2, 0);
         status =  VAL_ERROR_POINT(5);
         goto rxtx_unmap;
-    }
-
-    /* Zero memory before retrieval flag:
-     * MBZ if the Sender has Read-only access to the memory region.
-     */
-    memory_region = (struct ffa_memory_region *)mb.recv;
-    flags = memory_region->flags;
-    flags = VAL_EXTRACT_BITS(flags, 0, 0);
-    if (flags)
-    {
-        LOG(ERROR, "\tRelayer must set Zero memory before retrieval flag for zero content\n", 0, 0);
-        status =  VAL_ERROR_POINT(6);
-        goto rx_release;
     }
 
     /* relinquish the memory with valid inputs and notify the sender. */

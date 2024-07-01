@@ -7,8 +7,8 @@
 
 #include "test_database.h"
 
-#define S_WD_TIMEOUT 10
-#define WD_TIME_OUT 0x20000
+#define S_WD_TIMEOUT 50U
+#define WD_TIME_OUT 100U
 
 static volatile bool interrupt_triggered;
 static int wd_irq_handler(void)
@@ -23,7 +23,6 @@ uint32_t sp_el0_running_server(ffa_args_t args)
 {
     ffa_args_t payload;
     uint32_t status = VAL_SUCCESS;
-    uint64_t timeout = WD_TIME_OUT;
     ffa_endpoint_id_t sender = args.arg1 & 0xffff;
     ffa_endpoint_id_t receiver = (args.arg1 >> 16) & 0xffff;
     interrupt_triggered = false;
@@ -42,7 +41,7 @@ uint32_t sp_el0_running_server(ffa_args_t args)
     val_twdog_enable(S_WD_TIMEOUT);
 
     /* Wait for WD interrupt */
-    while (--timeout && (interrupt_triggered != true));
+    val_sp_sleep(WD_TIME_OUT);
 
     if (interrupt_triggered == true)
     {

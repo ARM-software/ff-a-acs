@@ -8,14 +8,13 @@
 #include "test_database.h"
 
 #define IRQ_TRIGGERED 0xABCDABCD
-#define NS_WD_TIMEOUT 50000000
+#define NS_WD_TIMEOUT 500000U
 static uint32_t *pages;
 
 static int wd_irq_handler(void)
 {
     *(volatile uint32_t *)pages = (uint32_t)IRQ_TRIGGERED;
     val_ns_wdog_disable();
-
     return 0;
 }
 
@@ -66,6 +65,7 @@ uint32_t vm_to_sp_preempt_client(uint32_t test_run_data)
         status = VAL_ERROR_POINT(3);
         goto rxtx_unmap;
     }
+    val_memset(pages, 0, size);
 
     val_select_server_fn_direct(test_run_data, 0, 0, 0, 0);
 

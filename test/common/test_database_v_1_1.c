@@ -19,7 +19,7 @@ const test_suite_info_t test_suite_list[] = {
 
 const test_db_t test_list[] = {
     /* {suite_num, "testname", client_fn_list, server_fn_list} */
-    {0, "", NULL, NULL, NULL, NULL},
+    {0, "", NULL, NULL, NULL, NULL, NULL},
 
 #if (PLATFORM_FFA_V_ALL == 1)
 #if (SUITE == all || SUITE == setup_discovery)
@@ -30,10 +30,6 @@ const test_db_t test_list[] = {
     CLIENT_TEST_FN_ONLY(TESTSUITE_SETUP_DISCOVERY, ffa_rx_release),
     CLIENT_TEST_FN_ONLY(TESTSUITE_SETUP_DISCOVERY, ffa_rxtx_map_and_unmap),
     CLIENT_SERVER_TEST_FN(TESTSUITE_SETUP_DISCOVERY, rxtx_exclusive_access),
-#ifdef ACS_FFA_UNVERIFIED
-    CLIENT_SEC_CPU_TEST_FN(TESTSUITE_SETUP_DISCOVERY, mp_execution_contexts),
-    CLIENT_SERVER_SEC_CPU_TEST_FN(TESTSUITE_SETUP_DISCOVERY, up_migrate_capable),
-#endif
 #endif
 
 #if (SUITE == all || SUITE == direct_messaging)
@@ -44,8 +40,6 @@ const test_db_t test_list[] = {
 #endif
 
 #if (SUITE == all || SUITE == indirect_messaging)
-    CLIENT_SERVER_TEST_FN(TESTSUITE_INDIRECT_MESSAGING, ffa_msg_send),
-    CLIENT_TEST_FN_ONLY(TESTSUITE_INDIRECT_MESSAGING, ffa_msg_send_error),
 #ifdef ACS_FFA_UNVERIFIED
     CLIENT_TEST_FN_ONLY(TESTSUITE_INDIRECT_MESSAGING, ffa_run),
 #endif
@@ -111,6 +105,10 @@ const test_db_t test_list[] = {
     CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, donate_retrieve_input_checks1),
     CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, lend_retrieve_input_checks),
     CLIENT_TEST_FN_ONLY(TESTSUITE_MEMORY_MANAGE, lend_input_error_checks1),
+    CLIENT_TEST_FN_ONLY(TESTSUITE_MEMORY_MANAGE, share_input_error_checks2),
+    CLIENT_TEST_FN_ONLY(TESTSUITE_MEMORY_MANAGE, donate_input_error_checks4),
+    CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, lend_retrieve_input_checks8),
+    CLIENT_TEST_FN_ONLY(TESTSUITE_MEMORY_MANAGE, lend_input_error_checks4),
 
 #if (PLATFORM_SP_EL == 1)
     CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, donate_lower_upper_boundary_32_spsp),
@@ -183,15 +181,21 @@ const test_db_t test_list[] = {
     CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, lend_sepid),
     CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, share_sepid),
     CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, donate_sepid),
-    CLIENT_TEST_FN_ONLY(TESTSUITE_MEMORY_MANAGE, share_input_error_checks2),
     CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, share_retrieve_input_checks),
     CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, donate_retrieve_input_checks5),
     CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, donate_retrieve_align_hint_check),
     CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, donate_retrieve_with_address_range),
     CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, donate_input_error_checks1),
-    CLIENT_TEST_FN_ONLY(TESTSUITE_MEMORY_MANAGE, donate_input_error_checks4),
-    CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, lend_retrieve_input_checks8),
-    CLIENT_TEST_FN_ONLY(TESTSUITE_MEMORY_MANAGE, lend_input_error_checks4),
+    CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, mem_lend_mmio),
+    CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, mem_share_mmio),
+    CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, mem_donate_mmio),
+#endif
+#endif
+
+#if (SUITE == all || SUITE == setup_discovery)
+#ifndef TARGET_LINUX
+    CLIENT_SEC_CPU_CLIENT_SERVER_TEST_FN(TESTSUITE_SETUP_DISCOVERY, mp_execution_contexts),
+    CLIENT_SERVER_SEC_CPU_CLIENT_TEST_FN(TESTSUITE_SETUP_DISCOVERY, up_migrate_capable),
 #endif
 #endif
 #endif
@@ -199,13 +203,20 @@ const test_db_t test_list[] = {
 #if (PLATFORM_FFA_V_1_1 == 1 || PLATFORM_FFA_V_ALL == 1)
 #if (SUITE == all || SUITE == setup_discovery)
     CLIENT_TEST_FN_ONLY(TESTSUITE_SETUP_DISCOVERY, ffa_features_intr),
+    CLIENT_TEST_FN_ONLY(TESTSUITE_SETUP_DISCOVERY, ffa_features_nsbit),
     CLIENT_TEST_FN_ONLY(TESTSUITE_SETUP_DISCOVERY, ffa_spm_id_get),
 #endif
 
 #if (SUITE == all || SUITE == direct_messaging)
+    CLIENT_SERVER_TEST_FN(TESTSUITE_DIRECT_MESSAGING, direct_msg_sp_to_vm),
 #ifdef ACS_FFA_UNVERIFIED
     CLIENT_SERVER_TEST_FN(TESTSUITE_DIRECT_MESSAGING, ffa_direct_message_error2),
 #endif
+#endif
+
+#if (SUITE == all || SUITE == indirect_messaging)
+    CLIENT_SERVER_TEST_FN(TESTSUITE_DIRECT_MESSAGING, ffa_msg_send2),
+    CLIENT_SERVER_TEST_FN(TESTSUITE_DIRECT_MESSAGING, ffa_msg_send2_sp),
 #endif
 
 #if (SUITE == all || SUITE == memory_manage)
@@ -224,9 +235,11 @@ const test_db_t test_list[] = {
     CLIENT_TEST_FN_ONLY(TESTSUITE_NOTIFICATIONS, notification_get),
     CLIENT_SERVER_TEST_FN(TESTSUITE_NOTIFICATIONS, notification_set),
     CLIENT_TEST_FN_ONLY(TESTSUITE_NOTIFICATIONS, notification_info_get),
+    CLIENT_TEST_FN_ONLY(TESTSUITE_NOTIFICATIONS, notification_comp),
 #if (PLATFORM_SP_EL == 1)
     CLIENT_SERVER_TEST_FN(TESTSUITE_NOTIFICATIONS, vm_to_sp_notification),
     CLIENT_SERVER_TEST_FN(TESTSUITE_NOTIFICATIONS, vm_to_sp_notification_pcpu),
+    CLIENT_SERVER_TEST_FN(TESTSUITE_NOTIFICATIONS, sp_signals_vm_sp),
 #endif
 #if (PLATFORM_SP_EL == 0)
     CLIENT_SERVER_TEST_FN(TESTSUITE_NOTIFICATIONS, vm_to_sp_notification_el0),
@@ -234,29 +247,43 @@ const test_db_t test_list[] = {
 #endif
 #endif
 
+#ifndef TARGET_LINUX
 #if (SUITE == all || SUITE == interrupts)
     CLIENT_SERVER_TEST_FN(TESTSUITE_INTERRUPTS, vm_to_sp_preempt),
+    CLIENT_SERVER_TEST_FN(TESTSUITE_INTERRUPTS, ns_intr_queued),
 #if (PLATFORM_SP_EL == 1)
+    CLIENT_SERVER_TEST_FN(TESTSUITE_INTERRUPTS, s_int_sp_preempt),
+    CLIENT_SERVER_TEST_FN(TESTSUITE_INTERRUPTS, other_secure_int1),
+    CLIENT_SERVER_TEST_FN(TESTSUITE_INTERRUPTS, other_secure_int6),
+    CLIENT_SERVER_TEST_FN(TESTSUITE_INTERRUPTS, ns_int_precedence),
+    CLIENT_SERVER_TEST_FN(TESTSUITE_INTERRUPTS, sp_el1_running),
+    CLIENT_SERVER_TEST_FN(TESTSUITE_INTERRUPTS, sp_waiting_el1),
     CLIENT_SERVER_TEST_FN(TESTSUITE_INTERRUPTS, vm_to_sp_managed_exit),
     CLIENT_SERVER_TEST_FN(TESTSUITE_INTERRUPTS, vm_to_sp_managed_exit_1),
+    CLIENT_SERVER_TEST_FN(TESTSUITE_INTERRUPTS, vm_to_sp_managed_exit_2),
+    CLIENT_SERVER_TEST_FN(TESTSUITE_INTERRUPTS, vm_to_sp_managed_exit_3),
     CLIENT_SERVER_TEST_FN(TESTSUITE_INTERRUPTS, sp_to_sp_blocked),
+    CLIENT_SERVER_TEST_FN(TESTSUITE_INTERRUPTS, sp_preempted_el1),
 #endif
 #if (PLATFORM_SP_EL == 0)
     CLIENT_SERVER_TEST_FN(TESTSUITE_INTERRUPTS, sp_el0_blocked),
     CLIENT_SERVER_TEST_FN(TESTSUITE_INTERRUPTS, sp_el0_running),
-#endif
-#ifdef ACS_FFA_UNVERIFIED
     CLIENT_SERVER_TEST_FN(TESTSUITE_INTERRUPTS, sp_waiting_el0),
     CLIENT_SERVER_TEST_FN(TESTSUITE_INTERRUPTS, sp_preempted_el0),
-    CLIENT_SERVER_TEST_FN(TESTSUITE_INTERRUPTS, sp_to_sp_waiting),
-    CLIENT_SERVER_TEST_FN(TESTSUITE_INTERRUPTS, vm_to_sp_waiting),
-    CLIENT_SERVER_TEST_FN(TESTSUITE_INTERRUPTS, vm_to_sp_managed_exit_2),
-    CLIENT_SERVER_TEST_FN(TESTSUITE_INTERRUPTS, vm_to_sp_managed_exit_3),
+#endif
+
+#ifdef ACS_FFA_UNVERIFIED
+    CLIENT_SERVER_SEC_CPU_CLIENT_TEST_FN(TESTSUITE_INTERRUPTS, vm_to_up_sp_preempt),
+    CLIENT_SERVER_TEST_FN(TESTSUITE_INTERRUPTS, vm_to_sp_managed_exit_4),
+    CLIENT_SERVER_TEST_FN(TESTSUITE_INTERRUPTS, other_secure_int2),
+    CLIENT_SERVER_TEST_FN(TESTSUITE_INTERRUPTS, other_secure_int7),
+    CLIENT_SERVER_TEST_FN(TESTSUITE_INTERRUPTS, s_int_ec_blocked),
+#endif
 #endif
 #endif
 #endif
 
-    {0, "", NULL, NULL, NULL, NULL},
+    {0, "", NULL, NULL, NULL, NULL, NULL},
 };
 
 const uint32_t total_tests = sizeof(test_list)/sizeof(test_list[0]);

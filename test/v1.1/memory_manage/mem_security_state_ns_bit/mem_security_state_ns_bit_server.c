@@ -21,6 +21,7 @@ uint32_t mem_security_state_ns_bit_server(ffa_args_t args)
     struct ffa_memory_region *memory_region;
     ffa_memory_handle_t handle;
     uint32_t msg_size;
+    uint32_t client_logical_id = 0;
 
     mb.send = val_memory_alloc(size);
     mb.recv = val_memory_alloc(size);
@@ -123,7 +124,7 @@ uint32_t mem_security_state_ns_bit_server(ffa_args_t args)
                    1        0          1
                    1        1          0  */
 
-    uint32_t client_logical_id = GET_CLIENT_LOGIC_ID(args.arg3);
+    client_logical_id = GET_CLIENT_LOGIC_ID(args.arg3);
 
     ns_bit = ffa_get_memory_security_attr(memory_region->attributes);
     if (!((VAL_IS_ENDPOINT_SECURE(client_logical_id)) ^ (ns_bit)))

@@ -18,9 +18,9 @@ uint32_t vm_to_sp_notification_el0_server(ffa_args_t args)
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 = FFA_FEATURE_NPI;
     val_ffa_features(&payload);
-    if (payload.fid == FFA_ERROR_32)
+    if (payload.fid != FFA_ERROR_32 || payload.arg2 != FFA_ERROR_NOT_SUPPORTED)
     {
-        LOG(ERROR, "\t  Failed to retrieve NPI err %x\n", payload.arg2, 0);
+        LOG(ERROR, "\t FFA_Features Must Fail to retrieve NPI err %x\n", payload.arg2, 0);
         status = VAL_ERROR_POINT(1);
         goto exit;
     }

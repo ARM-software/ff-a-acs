@@ -22,7 +22,7 @@
     entrypoint-offset = <0x00004000>;
     xlat-granule = <0>; /* 4KiB */
     boot-order = <0>;
-    messaging-method = <3>; /* Direct messaging only */
+    messaging-method = <7>; /* Direct and Indirect messaging */
     notification-support; /* Support receipt of notifications. */
     ns-interrupts-action = <2>; /* Non secure interrupts are signaled. */
 
@@ -59,4 +59,14 @@
         };
     };
 
+    memory-regions {
+        compatible = "arm,ffa-manifest-memory-regions";
+
+        ro_memory: ro_memory {
+                description = "ro_memory";
+                pages-count = <1>;
+                base-address = <0x00000000 0xfe300000>;
+                attributes = <0x1>; /* read-only */
+        };
+    };
 };

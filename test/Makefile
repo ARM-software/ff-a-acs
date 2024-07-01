@@ -36,8 +36,13 @@ TEST_SRC1 = $(ACS_DIR)/v1.1
 ACS_INCLUDE = -I$(PWD)/$(ACS_DIR)/../val/inc -I$(PWD)/$(ACS_DIR)/common/ -I$(PWD)/$(ACS_DIR)/../common/inc -I$(PWD)/$(ACS_DIR)/../pal_linux/inc
 obj-m += ffa_acs_test.o
 
-ffa_acs_test-objs += $(TEST_SRC)/../common/test_database.o \
-                $(TEST_SRC)/direct_messaging/ffa_direct_message_32/ffa_direct_message_32_client.o \
+ifeq ($(PLATFORM_FFA_V_1_0), 1)
+	ffa_acs_test-objs += $(TEST_SRC)/../common/test_database_v_1_0.o
+else
+	ffa_acs_test-objs += $(TEST_SRC)/../common/test_database_v_1_1.o
+endif
+
+ffa_acs_test-objs += $(TEST_SRC)/direct_messaging/ffa_direct_message_32/ffa_direct_message_32_client.o \
                 $(TEST_SRC)/direct_messaging/ffa_direct_message_32/ffa_direct_message_32_testentry.o \
                 $(TEST_SRC)/direct_messaging/ffa_direct_message_32/ffa_direct_message_32_server.o \
                 $(TEST_SRC)/direct_messaging/ffa_direct_message_64/ffa_direct_message_64_client.o \
@@ -378,8 +383,19 @@ ffa_acs_test-objs += $(TEST_SRC)/setup_discovery/ffa_features/ffa_features_clien
 
 ffa_acs_test-objs += $(TEST_SRC1)/setup_discovery/ffa_features/ffa_features_intr_testentry.o \
                 $(TEST_SRC1)/setup_discovery/ffa_features/ffa_features_intr_client.o \
+                $(TEST_SRC1)/setup_discovery/ffa_features/ffa_features_nsbit_client.o \
+                $(TEST_SRC1)/setup_discovery/ffa_features/ffa_features_nsbit_testentry.o \
                 $(TEST_SRC1)/setup_discovery/ffa_spm_id_get/ffa_spm_id_get_testentry.o \
                 $(TEST_SRC1)/setup_discovery/ffa_spm_id_get/ffa_spm_id_get_client.o \
+                $(TEST_SRC1)/direct_messaging/direct_msg_sp_to_vm/direct_msg_sp_to_vm_testentry.o \
+                $(TEST_SRC1)/direct_messaging/direct_msg_sp_to_vm/direct_msg_sp_to_vm_client.o \
+                $(TEST_SRC1)/direct_messaging/direct_msg_sp_to_vm/direct_msg_sp_to_vm_server.o \
+                $(TEST_SRC1)/indirect_messaging/ffa_msg_send2/ffa_msg_send2_sp_server.o \
+                $(TEST_SRC1)/indirect_messaging/ffa_msg_send2/ffa_msg_send2_sp_client.o \
+                $(TEST_SRC1)/indirect_messaging/ffa_msg_send2/ffa_msg_send2_sp_testentry.o \
+                $(TEST_SRC1)/indirect_messaging/ffa_msg_send2/ffa_msg_send2_server.o \
+                $(TEST_SRC1)/indirect_messaging/ffa_msg_send2/ffa_msg_send2_client.o \
+                $(TEST_SRC1)/indirect_messaging/ffa_msg_send2/ffa_msg_send2_testentry.o \
                 $(TEST_SRC1)/direct_messaging/ffa_direct_message_error2/ffa_direct_message_error2_client.o \
                 $(TEST_SRC1)/direct_messaging/ffa_direct_message_error2/ffa_direct_message_error2_server.o \
                 $(TEST_SRC1)/direct_messaging/ffa_direct_message_error2/ffa_direct_message_error2_testentry.o
@@ -392,6 +408,8 @@ ffa_acs_test-objs += $(TEST_SRC1)/notifications/notification_bind/notification_b
                 $(TEST_SRC1)/notifications/notification_bitmap_destroy/notification_bitmap_destroy_client.o \
                 $(TEST_SRC1)/notifications/notification_get/notification_get_testentry.o \
                 $(TEST_SRC1)/notifications/notification_get/notification_get_client.o \
+                $(TEST_SRC1)/notifications/notification_comp/notification_comp_testentry.o \
+                $(TEST_SRC1)/notifications/notification_comp/notification_comp_client.o \
                 $(TEST_SRC1)/notifications/notification_set/notification_set_testentry.o \
                 $(TEST_SRC1)/notifications/notification_set/notification_set_client.o \
                 $(TEST_SRC1)/notifications/notification_set/notification_set_server.o \
@@ -402,38 +420,16 @@ ffa_acs_test-objs += $(TEST_SRC1)/notifications/notification_bind/notification_b
                 $(TEST_SRC1)/notifications/vm_to_sp_notification/vm_to_sp_notification_testentry.o \
                 $(TEST_SRC1)/notifications/vm_to_sp_notification/vm_to_sp_notification_client.o \
                 $(TEST_SRC1)/notifications/vm_to_sp_notification/vm_to_sp_notification_server.o \
+                $(TEST_SRC1)/notifications/sp_signals_vm_sp/sp_signals_vm_sp_client.o \
+                $(TEST_SRC1)/notifications/sp_signals_vm_sp/sp_signals_vm_sp_server.o \
+                $(TEST_SRC1)/notifications/sp_signals_vm_sp/sp_signals_vm_sp_testentry.o \
                 $(TEST_SRC1)/notifications/vm_to_sp_notification_pcpu/vm_to_sp_notification_pcpu_testentry.o \
                 $(TEST_SRC1)/notifications/vm_to_sp_notification_pcpu/vm_to_sp_notification_pcpu_client.o \
                 $(TEST_SRC1)/notifications/vm_to_sp_notification_pcpu/vm_to_sp_notification_pcpu_server.o
 
-ffa_acs_test-objs += $(TEST_SRC1)/interrupts/sp_to_sp_blocked/sp_to_sp_blocked_client.o \
-                $(TEST_SRC1)/interrupts/sp_to_sp_blocked/sp_to_sp_blocked_server.o \
-                $(TEST_SRC1)/interrupts/sp_to_sp_blocked/sp_to_sp_blocked_testentry.o \
-                $(TEST_SRC1)/interrupts/sp_to_sp_waiting/sp_to_sp_waiting_testentry.o \
-                $(TEST_SRC1)/interrupts/sp_to_sp_waiting/sp_to_sp_waiting_client.o \
-                $(TEST_SRC1)/interrupts/sp_to_sp_waiting/sp_to_sp_waiting_server.o \
-                $(TEST_SRC1)/interrupts/vm_to_sp_waiting/vm_to_sp_waiting_testentry.o \
-                $(TEST_SRC1)/interrupts/vm_to_sp_waiting/vm_to_sp_waiting_client.o \
-                $(TEST_SRC1)/interrupts/vm_to_sp_waiting/vm_to_sp_waiting_server.o \
-                $(TEST_SRC1)/interrupts/vm_to_sp_managed_exit/vm_to_sp_managed_exit_testentry.o \
-                $(TEST_SRC1)/interrupts/vm_to_sp_managed_exit/vm_to_sp_managed_exit_client.o \
-                $(TEST_SRC1)/interrupts/vm_to_sp_managed_exit/vm_to_sp_managed_exit_server.o \
-                $(TEST_SRC1)/interrupts/vm_to_sp_managed_exit/vm_to_sp_managed_exit_1_client.o \
-                $(TEST_SRC1)/interrupts/vm_to_sp_managed_exit/vm_to_sp_managed_exit_1_server.o \
-                $(TEST_SRC1)/interrupts/vm_to_sp_managed_exit/vm_to_sp_managed_exit_1_testentry.o \
-                $(TEST_SRC1)/interrupts/vm_to_sp_managed_exit/vm_to_sp_managed_exit_2_client.o \
-                $(TEST_SRC1)/interrupts/vm_to_sp_managed_exit/vm_to_sp_managed_exit_2_server.o \
-                $(TEST_SRC1)/interrupts/vm_to_sp_managed_exit/vm_to_sp_managed_exit_2_testentry.o \
-                $(TEST_SRC1)/interrupts/vm_to_sp_managed_exit/vm_to_sp_managed_exit_3_client.o \
-                $(TEST_SRC1)/interrupts/vm_to_sp_managed_exit/vm_to_sp_managed_exit_3_server.o \
-                $(TEST_SRC1)/interrupts/vm_to_sp_managed_exit/vm_to_sp_managed_exit_3_testentry.o \
-                $(TEST_SRC1)/interrupts/vm_to_sp_preempt/vm_to_sp_preempt_testentry.o \
-                $(TEST_SRC1)/interrupts/vm_to_sp_preempt/vm_to_sp_preempt_client.o \
-                $(TEST_SRC1)/interrupts/vm_to_sp_preempt/vm_to_sp_preempt_server.o
-
 ffa_acs_test-objs += $(TEST_SRC1)/memory_manage/mem_security_state_ns_bit/mem_security_state_ns_bit_client.o \
                 $(TEST_SRC1)/memory_manage/mem_security_state_ns_bit/mem_security_state_ns_bit_server.o \
-                $(TEST_SRC1)/memory_manage/mem_security_state_ns_bit/mem_security_state_ns_bit_testentry.o \
+                $(TEST_SRC1)/memory_manage/mem_security_state_ns_bit/mem_security_state_ns_bit_testentry.o
 
 ccflags-y=$(ACS_MACROS) $(ACS_INCLUDE) -Wall -Werror
 

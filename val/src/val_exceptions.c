@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -30,9 +30,25 @@ bool val_irq_current(void)
 
 static bool default_sync_current_exception(void)
 {
-    uint64_t esr = val_esr_el1_read();
-    uint64_t elr = val_elr_el1_read();
-    uint64_t ec = esr >> 26;
+    uint64_t esr = 0;
+    uint64_t elr = 0;
+    uint64_t far = 0;
+    uint64_t ec = 0;
+    uint64_t current_el = (val_read_current_el() & 0xc) >> 2;
+
+    if (current_el == EL2)
+    {
+        esr = val_esr_el2_read();
+        elr = val_elr_el2_read();
+        far = val_far_el2_read();
+    } else if (current_el == EL1)
+    {
+        esr = val_esr_el1_read();
+        elr = val_elr_el1_read();
+        far = val_far_el1_read();
+    }
+
+    ec = esr >> 26;
 
     switch (ec)
     {
@@ -45,6 +61,20 @@ static bool default_sync_current_exception(void)
                 LOG(ERROR, ", far=%x\n", val_far_el1_read(), 0);
             }
             else
+            {
+                LOG(ERROR, ", far=invalid\n", 0, 0);
+            }
+
+            break;
+
+        case EC_INSTRUCTION_ABORT_SAME_EL:
+            LOG(ERROR, "Instruction abort: pc=%x, esr=%x", elr, esr);
+            LOG(ERROR, ", ec=%x", ec, 0);
+
+            if (!(esr & (1U << 10)))
+            { /* Check FnV bit. */
+                LOG(ERROR, ", far=%x\n", far, 0);
+            } else
             {
                 LOG(ERROR, ", far=invalid\n", 0, 0);
             }

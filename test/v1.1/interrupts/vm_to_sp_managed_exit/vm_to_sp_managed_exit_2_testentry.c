@@ -15,7 +15,7 @@ void vm_to_sp_managed_exit_2_testentry(uint32_t test_num)
     return;
 #endif
 
-    /* Execute test for EP combination: client=VM1, server=SP3 */
-    if (IS_TEST_FAIL(val_execute_test(test_num, VM1, SP3)))
+    /* Execute test for EP combination: client=VM1, server=SP4 */
+    if (IS_TEST_FAIL(val_execute_test(test_num, VM1, SP4)))
         return;
 }

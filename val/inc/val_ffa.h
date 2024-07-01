@@ -55,8 +55,9 @@
 #define FFA_MEM_RELINQUISH_32        0x84000076
 #define FFA_MEM_RECLAIM_32           0x84000077
 #define FFA_NORMAL_WORLD_RESUME_32   0x8400007C
-#define FFA_SECONDARY_EP_REGISTER_32 0x84000084
+#define FFA_SECONDARY_EP_REGISTER_32 0x84000087
 #define FFA_SPM_ID_GET_32            0x84000085
+#define FFA_MSG_SEND2_32             0x84000086
 #define FFA_MEM_PERM_GET_32          0x84000088
 #define FFA_MEM_PERM_SET_32          0x84000089
 
@@ -77,7 +78,7 @@
 #define FFA_MEM_LEND_64              0xC4000072
 #define FFA_MEM_SHARE_64             0xC4000073
 #define FFA_MEM_RETRIEVE_REQ_64      0xC4000074
-#define FFA_SECONDARY_EP_REGISTER_64 0xC4000084
+#define FFA_SECONDARY_EP_REGISTER_64 0xC4000087
 #define FFA_NOTIFICATION_INFO_GET_64 0xC4000083
 #define FFA_MEM_PERM_GET_64          0xC4000088
 #define FFA_MEM_PERM_SET_64          0xC4000089
@@ -141,6 +142,7 @@ void val_ffa_rxtx_unmap(ffa_args_t *args);
 void val_ffa_rxtx_map_32(ffa_args_t *args);
 void val_ffa_rxtx_map_64(ffa_args_t *args);
 void val_ffa_msg_send(ffa_args_t *args);
+void val_ffa_msg_send2(ffa_args_t *args);
 void val_ffa_partition_info_get(ffa_args_t *args);
 void val_ffa_features(ffa_args_t *args);
 void val_ffa_memory_reclaim(ffa_args_t *args);

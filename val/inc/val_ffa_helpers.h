@@ -195,6 +195,20 @@ struct ffa_memory_region_attributes {
     ffa_memory_receiver_flags_t flags;
 };
 
+  /**
+   * Partition message header as specified by table 6.2 from FF-A v1.1 EAC0
+   * specification.
+   */
+ typedef struct {
+    uint32_t flags; /* MBZ */
+    uint32_t reserved;
+    /* Offset from the beginning of the buffer to the message payload. */
+    uint32_t offset;
+    /* Sender(Bits[31:16]) and Receiver(Bits[15:0]) endpoint IDs. */
+    uint32_t sender_receiver;
+    /* Size of message in buffer. */
+    uint32_t size;
+  } ffa_partition_rxtx_header_t;
 /** Flags to control the behaviour of a memory sharing transaction. */
 typedef uint32_t ffa_memory_region_flags_t;
 

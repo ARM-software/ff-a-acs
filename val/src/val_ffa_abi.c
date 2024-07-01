@@ -350,6 +350,26 @@ void val_ffa_msg_send(ffa_args_t *args)
     ffa_msg_send(args);
 }
 
+static void ffa_msg_send2(ffa_args_t *args)
+{
+    *args = ffa_smccc(FFA_MSG_SEND2_32, (uint32_t)args->arg1,
+                          (uint32_t)args->arg2, (uint32_t)args->arg3,
+                          (uint32_t)args->arg4, (uint32_t)args->arg5,
+                          (uint32_t)args->arg6, (uint32_t)args->arg7);
+}
+
+/**
+ * @brief - Send a Partition message 2 to a VM through the RX/TX buffers
+ *          by using indirect messaging
+ * @param args - Input arguments to FFA_MSG_SEND2 abi.
+ * @return - Returns success/error status code in response to
+ *           FFA_MSG_SEND2 function.
+**/
+void val_ffa_msg_send2(ffa_args_t *args)
+{
+    ffa_msg_send2(args);
+}
+
 static void ffa_partition_info_get(ffa_args_t *args)
 {
     *args = ffa_smccc(FFA_PARTITION_INFO_GET_32, (uint32_t)args->arg1,

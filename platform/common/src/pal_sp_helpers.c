@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2022-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -19,17 +19,16 @@
 void expect(int expr, int expected)
 {
     if (expr != expected) {
-        pal_printf("Expected value %i, got %i\n", (uint64_t)expected, (uint64_t)expr);
+        pal_printf("\tExpected value %i, got %i\n", (uint64_t)expected, (uint64_t)expr);
         while (1)
             continue;
     }
 }
 
-uint64_t sp_sleep_elapsed_time(uint32_t ms)
+uint64_t sp_sleep_elapsed_time(uint64_t ms)
 {
     uint64_t timer_freq = read_cntfrq_el0();
-
-    pal_printf("Timer frequency = %llu Sleeping for %u milliseconds\n", timer_freq, (uint64_t)ms);
+    pal_printf("\tTimer frequency = 0x%x Sleeping for %d milliseconds\n", timer_freq, (uint64_t)ms);
 
     uint64_t time1 = virtualcounter_read();
     volatile uint64_t time2 = time1;
@@ -41,7 +40,29 @@ uint64_t sp_sleep_elapsed_time(uint32_t ms)
     return ((time2 - time1) * 1000) / timer_freq;
 }
 
-void sp_sleep(uint32_t ms)
+#if ((PLATFORM_SP_EL == 0) && !defined(VM1_COMPILE))
+/* Need to be adjusted based on platform */
+#define ITERATIONS_PER_MS 10000
+
+static inline void while_wait_loop(uint64_t ms)
 {
+    uint64_t timeout = ms * ITERATIONS_PER_MS;
+    uint64_t loop;
+    volatile uint64_t count = 0; /* to prevent optimization*/
+
+    pal_printf("\tExecuting software loop based wait for ms %d \n", ms, 0);
+    for (loop = 0; loop < timeout; loop++) {
+        /* Wait */
+        count++;
+    }
+}
+#endif
+
+void sp_sleep(uint64_t ms)
+{
+#if ((PLATFORM_SP_EL == 0) && !defined(VM1_COMPILE))
+    while_wait_loop(ms);
+#else
     (void)sp_sleep_elapsed_time(ms);
+#endif
 }

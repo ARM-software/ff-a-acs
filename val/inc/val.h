@@ -9,6 +9,9 @@
 #define _VAL_H_
 
 #include "pal_interfaces.h"
+#ifndef TARGET_LINUX
+#include "pal_spm_helpers.h"
+#endif
 #include "val_def.h"
 
 /* Various test status codes, Max value = 0xff */
@@ -19,6 +22,12 @@
 #define  VAL_STATUS_INVALID     102
 #define  VAL_SKIP_CHECK         103
 #define  VAL_SIM_ERROR          104
+
+/** Multi PE Test Synchronization Status Codes */
+#define  VAL_MP_STATE_INPROGRESS            105
+#define  VAL_MP_STATE_COMPLETE              106
+#define  VAL_MP_STATE_WAIT                  107
+
 #define  VAL_STATUS_ERROR_MAX   255
 
 /* NVM Indext size */

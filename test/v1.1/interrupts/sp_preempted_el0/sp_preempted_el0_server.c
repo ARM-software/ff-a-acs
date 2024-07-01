@@ -9,8 +9,8 @@
 
 #define NS_IRQ_TRIGGERED 0xABCDABCD
 #define S_IRQ_TRIGGERED 0xAABBCCDD
-#define WD_TIME_OUT 0x10000000
-#define S_WD_TIMEOUT 1
+#define WD_TIME_OUT  10U
+#define S_WD_TIMEOUT 10U
 
 static uint32_t *ptr;
 static int wd_irq_handler(void)
@@ -18,14 +18,12 @@ static int wd_irq_handler(void)
     val_interrupt_get();
     val_twdog_disable();
     *(volatile uint32_t *)ptr = (uint32_t)S_IRQ_TRIGGERED;
-
     return 0;
 }
 
 uint32_t sp_preempted_el0_server(ffa_args_t args)
 {
     ffa_args_t payload;
-    uint64_t timeout = WD_TIME_OUT;
     uint32_t status = VAL_SUCCESS;
     ffa_endpoint_id_t sender = args.arg1 & 0xffff;
     ffa_endpoint_id_t receiver = (args.arg1 >> 16) & 0xffff;
@@ -131,9 +129,9 @@ uint32_t sp_preempted_el0_server(ffa_args_t args)
     }
 
     /* Wait for WD interrupt */
-    while (--timeout && (*(volatile uint32_t *)ptr != NS_IRQ_TRIGGERED));
+    sp_sleep(WD_TIME_OUT);
 
-    if (!timeout)
+    if ((*(volatile uint32_t *)ptr != NS_IRQ_TRIGGERED))
     {
         LOG(ERROR, "\t  WD interrupt not triggered\n", 0, 0);
         status =  VAL_ERROR_POINT(7);

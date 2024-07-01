@@ -171,16 +171,17 @@ static uint32_t relinquish_mem_unmap_check_client(uint32_t test_run_data)
 
     status_64 = val_is_ffa_feature_supported(FFA_MEM_SHARE_64);
     status_32 = val_is_ffa_feature_supported(FFA_MEM_SHARE_32);
-    if (status_64 && status_32)
+
+    if (status_64 || status_32)
     {
         LOG(TEST, "\tFFA_MEM_SHARE not supported, skipping the check\n", 0, 0);
         return VAL_SKIP_CHECK;
     }
-    else if (status_64)
+    else if (!status_64)
     {
         status = ffa_mem_share_helper(test_run_data, FFA_MEM_SHARE_32);
     }
-    else if (status_32)
+    else if (!status_32)
     {
         status = ffa_mem_share_helper(test_run_data, FFA_MEM_SHARE_64);
     }

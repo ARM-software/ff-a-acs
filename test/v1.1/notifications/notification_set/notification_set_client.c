@@ -51,7 +51,6 @@ uint32_t notification_set_client(uint32_t test_run_data)
     /* Invalid receiver id */
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 =  ((uint32_t)sender << 16) | INVALID_ID;
-    payload.arg2 = FFA_NOTIFICATIONS_FLAG_DELAY_SRI;
     payload.arg3 = (uint32_t)(notifications_bm_global & 0xFFFFFFFFU);
     payload.arg4 = (uint32_t)(notifications_bm_global >> 32);
     val_ffa_notification_set(&payload);
@@ -65,7 +64,6 @@ uint32_t notification_set_client(uint32_t test_run_data)
     /* Invalid sender id */
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 =  ((uint32_t)INVALID_ID << 16) | recipient;
-    payload.arg2 = FFA_NOTIFICATIONS_FLAG_DELAY_SRI;
     payload.arg3 = (uint32_t)(notifications_bm_global & 0xFFFFFFFFU);
     payload.arg4 = (uint32_t)(notifications_bm_global >> 32);
     val_ffa_notification_set(&payload);
@@ -95,7 +93,6 @@ uint32_t notification_set_client(uint32_t test_run_data)
      */
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 =  ((uint32_t)sender << 16) | recipient;
-    payload.arg2 = FFA_NOTIFICATIONS_FLAG_DELAY_SRI;
     payload.arg3 = (uint32_t)(notifications_bm_pcpu & 0xFFFFFFFFU);
     payload.arg4 = (uint32_t)(notifications_bm_pcpu >> 32);
     val_ffa_notification_set(&payload);
@@ -111,7 +108,7 @@ uint32_t notification_set_client(uint32_t test_run_data)
      */
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 =  ((uint32_t)sender << 16) | recipient;
-    payload.arg2 = FFA_NOTIFICATIONS_FLAG_PER_VCPU | FFA_NOTIFICATIONS_FLAG_DELAY_SRI;
+    payload.arg2 = FFA_NOTIFICATIONS_FLAG_PER_VCPU;
     payload.arg3 = (uint32_t)(notifications_bm_global & 0xFFFFFFFFU);
     payload.arg4 = (uint32_t)(notifications_bm_global >> 32);
     val_ffa_notification_set(&payload);
@@ -125,7 +122,6 @@ uint32_t notification_set_client(uint32_t test_run_data)
     /* DENIED: Sender not permitted to signal the notification to the receiver */
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 =  ((uint32_t)sender << 16) | recipient;
-    payload.arg2 = FFA_NOTIFICATIONS_FLAG_DELAY_SRI;
     payload.arg3 = (uint32_t)(notifications_bm_invalid & 0xFFFFFFFFU);
     payload.arg4 = (uint32_t)(notifications_bm_invalid >> 32);
     val_ffa_notification_set(&payload);

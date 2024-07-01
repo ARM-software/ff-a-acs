@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -376,6 +376,9 @@ DEFINE_SYSREG_RW_FUNCS(cntp_tval_el0)
 DEFINE_SYSREG_RW_FUNCS(cntp_cval_el0)
 DEFINE_SYSREG_READ_FUNC(cntpct_el0)
 DEFINE_SYSREG_READ_FUNC(cntvct_el0)
+DEFINE_SYSREG_RW_FUNCS(cntv_ctl_el0)
+DEFINE_SYSREG_RW_FUNCS(cntv_tval_el0)
+DEFINE_SYSREG_RW_FUNCS(cntv_cval_el0)
 DEFINE_SYSREG_RW_FUNCS(cnthctl_el2)
 
 #define get_cntp_ctl_enable(x)  (((x) >> CNTP_CTL_ENABLE_SHIFT) & \

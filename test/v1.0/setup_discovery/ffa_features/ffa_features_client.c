@@ -21,7 +21,7 @@ static uint32_t ffa_feature_query(uint32_t fid, char *str)
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 = fid;
 #if (PLATFORM_FFA_V_1_1 == 1 || PLATFORM_FFA_V_ALL == 1)
-    if (fid == FFA_MEM_RETRIEVE_REQ_32)
+    if (fid == FFA_MEM_RETRIEVE_REQ_32 || fid == FFA_MEM_RETRIEVE_REQ_64)
     {
         payload.arg2 = 0x2;
     }

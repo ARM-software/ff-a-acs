@@ -16,7 +16,6 @@ static int wd_irq_handler(void)
     *(volatile uint32_t *)pages = (uint32_t)IRQ_TRIGGERED;
     val_twdog_intr_disable();
     val_twdog_disable();
-
     return 0;
 }
 
@@ -67,6 +66,8 @@ uint32_t sp_to_sp_blocked_client(uint32_t test_run_data)
         status = VAL_ERROR_POINT(3);
         goto rxtx_unmap;
     }
+
+    val_memset(pages, 0, size);
 
     val_select_server_fn_direct(test_run_data, 0, 0, 0, 0);
 

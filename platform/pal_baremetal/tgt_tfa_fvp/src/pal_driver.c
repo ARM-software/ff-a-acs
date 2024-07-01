@@ -10,12 +10,13 @@
 #include "pal_pl011_uart.h"
 #include "pal_nvm.h"
 #include "pal_sp805_watchdog.h"
+#include "pal_ap_refclk_timer.h"
 #include "pal_smmuv3_testengine.h"
 #include "pal_spm_helpers.h"
 
 #if (defined(SP1_COMPILE) || defined(SP2_COMPILE) || defined(VM2_COMPILE) ||\
-     defined(SP3_COMPILE) || defined(VM3_COMPILE))
-/* Use hyp log system call for sp2, sp3, vm2 and vm3 */
+     defined(SP3_COMPILE) || defined(SP4_COMPILE) || defined(VM3_COMPILE))
+/* Use hyp log system call for sp2, sp3, sp4, vm2 and vm3 */
 #define pal_uart_putc(x) pal_uart_putc_hypcall((char)x)
 #else
 /* Use platform uart for vm1 & sp1 */
@@ -102,6 +103,34 @@ uint32_t pal_watchdog_enable(void)
 uint32_t pal_watchdog_disable(void)
 {
     driver_sp805_wdog_stop(PLATFORM_WDOG_BASE);
+    return PAL_SUCCESS;
+}
+
+uint32_t pal_ap_phy_refclk_en(uint32_t us)
+{
+    spm_interrupt_enable(PALTFORM_AP_REFCLK_CNTPSIRQ1, true, INTERRUPT_TYPE_IRQ);
+    driver_ap_refclk_p_set(us, true);
+    return PAL_SUCCESS;
+}
+
+uint32_t pal_ap_phy_refclk_dis(bool int_mask)
+{
+    spm_interrupt_deactivate(PALTFORM_AP_REFCLK_CNTPSIRQ1);
+    driver_ap_refclk_p_disable(int_mask);
+    return PAL_SUCCESS;
+}
+
+uint32_t pal_ap_virt_refclk_en(uint32_t us)
+{
+    spm_interrupt_enable(PALTFORM_AP_REFCLK_CNTPSIRQ1, true, INTERRUPT_TYPE_IRQ);
+    driver_ap_refclk_p_set(us, true);
+    return PAL_SUCCESS;
+}
+
+uint32_t pal_ap_virt_refclk_dis(bool int_mask)
+{
+    spm_interrupt_deactivate(PALTFORM_AP_REFCLK_CNTPSIRQ1);
+    driver_ap_refclk_p_disable(int_mask);
     return PAL_SUCCESS;
 }
 

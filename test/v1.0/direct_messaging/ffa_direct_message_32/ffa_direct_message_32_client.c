@@ -14,6 +14,9 @@ uint32_t ffa_direct_message_32_client(uint32_t test_run_data)
     uint32_t status = VAL_SUCCESS;
     uint32_t client_logical_id = GET_CLIENT_LOGIC_ID(test_run_data);
     uint32_t server_logical_id = GET_SERVER_LOGIC_ID(test_run_data);
+#if (PLATFORM_FFA_V_1_0 != 1)
+    uint32_t recipient_1;
+#endif
 
     /* Run server test fn by calling through direct_req */
     payload = val_select_server_fn_direct(test_run_data, 0, 0, 0, 0);
@@ -105,6 +108,25 @@ uint32_t ffa_direct_message_32_client(uint32_t test_run_data)
         status = VAL_ERROR_POINT(7);
         goto exit;
     }
+
+#if (PLATFORM_FFA_V_1_0 != 1)
+    if (!VAL_IS_ENDPOINT_SECURE(client_logical_id))
+    {
+        recipient_1 = val_get_endpoint_id(SP1);
+        /* Direct response invalid combination check */
+        val_memset(&payload, 0, sizeof(ffa_args_t));
+        payload.arg1 = ((uint32_t)val_get_endpoint_id(client_logical_id) << 16) |
+                                        recipient_1;
+        val_ffa_msg_send_direct_resp_32(&payload);
+        if (payload.fid != FFA_ERROR_32)
+        {
+            LOG(ERROR, "\tDirect response invalid combination check failed, fid=0x%x\n, err=0x%x",
+                    payload.fid, payload.arg2);
+            status = VAL_ERROR_POINT(8);
+            goto exit;
+        }
+    }
+#endif
 
 exit:
     (void)resp_data_32;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -9,10 +9,11 @@
 
 static event_t cpu_booted;
 
-void up_migrate_capable_sec_cpu(void)
+uint32_t up_migrate_capable_sec_cpu_client(uint32_t test_num)
 {
     ffa_args_t payload;
     uint64_t mpid = val_read_mpidr() & MPID_MASK;
+    (void)(test_num);
 
     LOG(DBG, "\tSecondary cpu with mpid 0x%x booted\n", mpid, 0);
 
@@ -26,14 +27,15 @@ void up_migrate_capable_sec_cpu(void)
     {
         LOG(ERROR, "\tDirect request failed, fid=0x%x, err %x\n",
                   payload.fid, payload.arg2);
-        VAL_PANIC("Can't recover\n");
+        return VAL_ERROR_POINT(1);
     }
 
     LOG(DBG, "\tDirect msg to SP3 passed for mpid=%x\n", mpid, 0);
+
     /* Tell the boot CPU that the calling CPU has completed the test */
     val_send_event(&cpu_booted);
 
-    val_power_off_cpu();
+    return VAL_SUCCESS;
 }
 
 uint32_t up_migrate_capable_client(uint32_t test_run_data)
@@ -41,6 +43,8 @@ uint32_t up_migrate_capable_client(uint32_t test_run_data)
     ffa_args_t payload;
     uint32_t i, total_cpus = val_get_no_of_cpus(), ret;
     uint64_t boot_mpid, mpid = 0;
+    uint32_t status = VAL_ERROR;
+    uint32_t test_num = GET_TEST_NUM(test_run_data);
 
     /* Run server test on boot cpu */
     payload = val_select_server_fn_direct(test_run_data, 0, 0, 0, 0);
@@ -79,9 +83,14 @@ uint32_t up_migrate_capable_client(uint32_t test_run_data)
     LOG(DBG, "\tWaiting secondary CPU to turn off ...\n", 0, 0);
 
     val_wait_for_event(&cpu_booted);
+
     LOG(DBG, "\tCPU=%x power off ...\n", mpid, 0);
 
     /* Collect the server status in payload.arg3 */
     payload = val_select_server_fn_direct(test_run_data, 0, 0, 0, 0);
-    return (uint32_t)payload.arg3;
+
+    /* Get MP Test Status */
+    status = val_get_multi_pe_test_status(mpid, test_num);
+
+    return status ? status : (uint32_t)payload.arg3;
 }

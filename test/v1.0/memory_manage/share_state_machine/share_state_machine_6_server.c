@@ -20,6 +20,11 @@ uint32_t share_state_machine_6_server(ffa_args_t args)
     mem_region_init_t mem_region_init;
     ffa_memory_handle_t handle;
     uint32_t msg_size;
+#if ((PLATFORM_FFA_V_ALL == 1) || (PLATFORM_FFA_V_1_1 == 1))
+    uint32_t borrower_list = 0;
+    uint16_t borrower_1 = 0;
+    uint16_t borrower_2 = 0;
+#endif
 
     mb.send = val_memory_alloc(size);
     mb.recv = val_memory_alloc(size);
@@ -79,9 +84,9 @@ uint32_t share_state_machine_6_server(ffa_args_t args)
     mem_region_init.receiver_count = 2;
 
 #if (PLATFORM_FFA_V_1_1 == 1 || PLATFORM_FFA_V_ALL == 1)
-    uint32_t borrower_list = (uint32_t)args.arg5;
-    uint16_t borrower_1 = (uint16_t)(borrower_list & 0xFFFF);
-    uint16_t borrower_2 = (uint16_t)(borrower_list >> 16 & 0xFFFF);
+    borrower_list = (uint32_t)args.arg5;
+    borrower_1 = (uint16_t)(borrower_list & 0xFFFF);
+    borrower_2 = (uint16_t)(borrower_list >> 16 & 0xFFFF);
 
     mem_region_init.receivers[0].receiver_permissions.receiver = borrower_1;
     mem_region_init.receivers[0].receiver_permissions.permissions = FFA_DATA_ACCESS_RW;

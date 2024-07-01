@@ -193,6 +193,7 @@ free_memory:
     return status;
 }
 
+#if (PLATFORM_FFA_V_1_0 == 1)
 static uint32_t mem_lend_mmio_check(void *tx_buf, ffa_endpoint_id_t sender, uint32_t fid)
 {
     ffa_args_t payload;
@@ -248,6 +249,7 @@ static uint32_t mem_lend_mmio_check(void *tx_buf, ffa_endpoint_id_t sender, uint
 
     return status;
 }
+#endif
 
 static uint32_t ffa_mem_lend_helper(uint32_t test_run_data, uint32_t fid)
 {
@@ -274,9 +276,11 @@ static uint32_t ffa_mem_lend_helper(uint32_t test_run_data, uint32_t fid)
         goto free_memory;
     }
 
+#if (PLATFORM_FFA_V_1_0 == 1)
     status = mem_lend_mmio_check(mb.send, sender, fid);
     if (status)
         goto rxtx_unmap;
+#endif
 
     status = mem_lend_address_ranges_overlap_check(mb.send, sender, fid);
     if (status)

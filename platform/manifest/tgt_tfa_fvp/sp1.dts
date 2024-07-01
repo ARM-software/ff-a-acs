@@ -25,7 +25,7 @@
     entrypoint-offset = <0x00004000>;
     xlat-granule = <0>; /* 4KiB */
     boot-order = <0>;
-    messaging-method = <3>; /* Direct messaging only */
+    messaging-method = <7>; /* Direct and Indirect messaging only */
     ns-interrupts-action = <2>; /* Non secure interrupts are signaled. */
     notification-support; /* Support receipt of notifications. */
 
@@ -36,7 +36,7 @@
         compatible = "arm,ffa-manifest-device-regions";
 
         uart2 {
-            base-address = <0x1c0b0000>;
+            base-address = <0x00000000 0x1c0b0000>;
             pages-count = <16>;
             attributes = <0xb>; /* NS-read-write */
         };
@@ -60,6 +60,17 @@
             attributes = <0x3>; /* read-write */
             interrupts = <56 0x900>;
         };
+
     };
 
+    memory-regions {
+        compatible = "arm,ffa-manifest-memory-regions";
+
+        ro_memory: ro_memory {
+                description = "ro_memory";
+                pages-count = <1>;
+                base-address = <0x00000000 0xfe300000>;
+                attributes = <0x1>;  /* read-only */
+        };
+    };
 };

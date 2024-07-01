@@ -49,11 +49,12 @@ static uint32_t lend_retrieve_input_checks8_helper(uint32_t test_run_data, uint3
     mem_region_init.receiver = recipient;
     mem_region_init.tag = 0;
     mem_region_init.flags = 0;
-    mem_region_init.data_access = FFA_DATA_ACCESS_RW;
+    mem_region_init.data_access = FFA_DATA_ACCESS_RO;
     mem_region_init.instruction_access = FFA_INSTRUCTION_ACCESS_NOT_SPECIFIED;
     mem_region_init.type = FFA_MEMORY_NOT_SPECIFIED_MEM;
     mem_region_init.cacheability = 0;
     mem_region_init.shareability = 0;
+    mem_region_init.receiver_count = 1;
     mem_region_init.multi_share = false;
 
     val_ffa_memory_region_init(&mem_region_init, constituents, constituents_count);
@@ -112,7 +113,9 @@ free_memory:
         status = status ? status : VAL_ERROR_POINT(7);
     }
 
-    return status;
+    payload = val_select_server_fn_direct(test_run_data, 0, 0, 0, 0);
+
+    return status ? status : (uint32_t)payload.arg3;
 
 }
 

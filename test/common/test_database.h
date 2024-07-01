@@ -22,28 +22,52 @@
     extern void testname##_testentry(uint32_t test_num);\
     extern uint32_t testname##_client(uint32_t test_run_data);\
     extern uint32_t testname##_server(ffa_args_t args);\
-    extern void testname##_sec_cpu(void);
+    extern uint32_t testname##_sec_cpu_client(uint32_t test_num);\
+    extern uint32_t testname##_sec_cpu_server(ffa_args_t args);
 
 #define CLIENT_TEST_FN_ONLY(suite_num, testname) \
     {suite_num, " "#testname, testname##_testentry, \
-        testname##_client, NULL, NULL}
+        testname##_client, NULL, NULL, NULL}
 
 #define CLIENT_SERVER_TEST_FN(suite_num, testname) \
     {suite_num, " "#testname, testname##_testentry, \
-        testname##_client, testname##_server, NULL}
+        testname##_client, testname##_server, NULL, NULL}
 
-#define CLIENT_SEC_CPU_TEST_FN(suite_num, testname) \
+#define CLIENT_SEC_CPU_CLIENT_TEST_FN(suite_num, testname) \
     {suite_num, " "#testname, testname##_testentry, \
-        testname##_client, NULL, testname##_sec_cpu}
+        testname##_client, NULL, testname##_sec_cpu_client, \
+        NULL}
 
-#define CLIENT_SERVER_SEC_CPU_TEST_FN(suite_num, testname) \
+#define CLIENT_SEC_CPU_SERVER_TEST_FN(suite_num, testname) \
     {suite_num, " "#testname, testname##_testentry, \
-        testname##_client, testname##_server, testname##_sec_cpu}
+        testname##_client, NULL, NULL, \
+        testname##_sec_cpu_server}
+
+#define CLIENT_SEC_CPU_CLIENT_SERVER_TEST_FN(suite_num, testname) \
+    {suite_num, " "#testname, testname##_testentry, \
+        testname##_client, NULL, testname##_sec_cpu_client, \
+        testname##_sec_cpu_server}
+
+#define CLIENT_SERVER_SEC_CPU_CLIENT_TEST_FN(suite_num, testname) \
+    {suite_num, " "#testname, testname##_testentry, \
+        testname##_client, testname##_server, testname##_sec_cpu_client, \
+        NULL}
+
+#define CLIENT_SERVER_SEC_CPU_SERVER_TEST_FN(suite_num, testname) \
+    {suite_num, " "#testname, testname##_testentry, \
+        testname##_client, testname##_server, NULL, \
+        testname##_sec_cpu_server}
+
+#define CLIENT_SERVER_SEC_CPU_CLIENT_SERVER_TEST_FN(suite_num, testname) \
+    {suite_num, " "#testname, testname##_testentry, \
+        testname##_client, testname##_server, testname##_sec_cpu_client, \
+        testname##_sec_cpu_server}
 
 #if (SUITE == all || SUITE == setup_discovery)
 DECLARE_TEST_FN(ffa_version);
 DECLARE_TEST_FN(ffa_features);
 DECLARE_TEST_FN(ffa_features_intr);
+DECLARE_TEST_FN(ffa_features_nsbit);
 DECLARE_TEST_FN(ffa_id_get);
 DECLARE_TEST_FN(ffa_spm_id_get);
 DECLARE_TEST_FN(ffa_partition_info_get);
@@ -60,12 +84,15 @@ DECLARE_TEST_FN(ffa_direct_message_64);
 DECLARE_TEST_FN(ffa_direct_message_error);
 DECLARE_TEST_FN(ffa_direct_message_error1);
 DECLARE_TEST_FN(ffa_direct_message_error2);
+DECLARE_TEST_FN(direct_msg_sp_to_vm);
 #endif
 
 #if (SUITE == all || SUITE == indirect_messaging)
 DECLARE_TEST_FN(ffa_msg_send);
 DECLARE_TEST_FN(ffa_msg_send_error);
 DECLARE_TEST_FN(ffa_run);
+DECLARE_TEST_FN(ffa_msg_send2);
+DECLARE_TEST_FN(ffa_msg_send2_sp);
 #endif
 
 #if (SUITE == all || SUITE == memory_manage)
@@ -201,6 +228,9 @@ DECLARE_TEST_FN(mem_security_state_ns_bit);
 DECLARE_TEST_FN(ffa_mem_perm_set);
 DECLARE_TEST_FN(ffa_mem_perm_get);
 DECLARE_TEST_FN(static_mapping_dma);
+DECLARE_TEST_FN(mem_share_mmio);
+DECLARE_TEST_FN(mem_lend_mmio);
+DECLARE_TEST_FN(mem_donate_mmio);
 #endif
 
 #if (SUITE == all || SUITE == notifications)
@@ -215,6 +245,8 @@ DECLARE_TEST_FN(notification_unbind);
 DECLARE_TEST_FN(notification_get);
 DECLARE_TEST_FN(notification_set);
 DECLARE_TEST_FN(notification_info_get);
+DECLARE_TEST_FN(sp_signals_vm_sp);
+DECLARE_TEST_FN(notification_comp);
 #endif
 
 #if (SUITE == all || SUITE == interrupts)
@@ -223,13 +255,23 @@ DECLARE_TEST_FN(vm_to_sp_managed_exit);
 DECLARE_TEST_FN(vm_to_sp_managed_exit_1);
 DECLARE_TEST_FN(vm_to_sp_managed_exit_2);
 DECLARE_TEST_FN(vm_to_sp_managed_exit_3);
+DECLARE_TEST_FN(vm_to_sp_managed_exit_4);
 DECLARE_TEST_FN(sp_to_sp_blocked);
-DECLARE_TEST_FN(sp_to_sp_waiting);
-DECLARE_TEST_FN(vm_to_sp_waiting);
+DECLARE_TEST_FN(sp_waiting_el1);
+DECLARE_TEST_FN(s_int_ec_blocked);
 DECLARE_TEST_FN(sp_waiting_el0);
-DECLARE_TEST_FN(ns_intr_queued_el0);
+DECLARE_TEST_FN(ns_intr_queued);
 DECLARE_TEST_FN(sp_el0_blocked);
 DECLARE_TEST_FN(sp_el0_running);
 DECLARE_TEST_FN(sp_preempted_el0);
+DECLARE_TEST_FN(sp_preempted_el1);
+DECLARE_TEST_FN(sp_el1_running);
+DECLARE_TEST_FN(ns_int_precedence);
+DECLARE_TEST_FN(other_secure_int1);
+DECLARE_TEST_FN(s_int_sp_preempt);
+DECLARE_TEST_FN(vm_to_up_sp_preempt);
+DECLARE_TEST_FN(other_secure_int2);
+DECLARE_TEST_FN(other_secure_int6);
+DECLARE_TEST_FN(other_secure_int7);
 #endif
 #endif /* _TEST_DATABASE_H_ */

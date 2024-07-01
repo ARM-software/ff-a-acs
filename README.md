@@ -24,7 +24,7 @@ For more information, download the [Arm FF-A Specification](https://developer.ar
 
 ### Architecture Compliance Suite
 
-The Architecture Compliance Suite (ACS) contains a set of functional tests, demonstrating the invariant behaviors that are specified in the architecture specification. It is used to ensure architecture compliance of the implementations to Arm FF-A specification. The example implementations are SPMD(SPM Dispatcher) and SPMC(SPM Core) components in Secure world and hyperviosr in Normal World.
+The Architecture Compliance Suite (ACS) contains a set of functional tests, demonstrating the invariant behaviors that are specified in the architecture specification. It is used to ensure architecture compliance of the implementations to Arm FF-A specification. The example implementations are SPMD(SPM Dispatcher) and SPMC(SPM Core) components in Secure world and hypervisor in Normal World.
 
 This suite contains self-checking, and portable C and assembly based tests with directed stimulus. These tests are available as open source. The tests and the corresponding abstraction layers are available with a BSD-3-Clause License allowing for external contribution.
 
@@ -33,9 +33,9 @@ This suite is not a substitute for design verification. To review the test logs,
 For more information on Architecture Compliance Suite see [Validation Methodology](./docs/Arm_FF_A_ACS_Validation_Methodology.pdf) document.
 
 ## This release
-- Release Version - v0.8
+- Release Version - v0.9
 - Code Quality: Beta - ACS is being developed, please use this opportunity to ameliorate.
-- The tests are written for Arm FF-A 1.1 specification version.
+- The tests are written for Arm FF-A v1.1 specification version.
 - For information about the test coverage scenarios that are implemented in the current release of ACS and the scenarios that are planned for the future releases, see [Docs](./docs/).
 
 ## GitHub branch
@@ -75,7 +75,7 @@ make
 ```
 <br />Options information:<br />
 -   -G"<generator_name>" : "Unix Makefiles" to generate Makefiles for Linux and Cygwin. "MinGW Makefiles" to generate Makefiles for cmd.exe on Windows <br />
--   -DTARGET=<platform_name> is the same as the name of the target-specific directory created in the **platform/pal_baremetal/** directory. The default vaule is -DTARGET=tgt_tfa_fvp.<br />
+-   -DTARGET=<platform_name> is the same as the name of the target-specific directory created in the **platform/pal_baremetal/** directory. The default value is -DTARGET=tgt_tfa_fvp.<br />
 -   -DCROSS_COMPILE=<path_to_aarch64_gcc> Set the cross-compiler toolchain supporting AArch64 target. For example, -DCROSS_COMPILE=<path-to-aarch64-gcc>/bin/aarch64-none-elf- <br />
 -   -DCC=<path_to_armclang_or_clang_binary> To compile ACS using clang or armclang cross compiler toolchain. The default compilation is with aarch64-gcc.<br />
 -   -DSUITE=<suite_name> is the sub test suite name specified in **test/** directory. The default value is -DSUITE=all
@@ -86,16 +86,17 @@ make
 -	-DSUITE_TEST_RANGE="<test_start_name>;<test_end_name>" is to select range of tests for build. All tests under -DSUITE are considered by default if not specified.
 -	-DPLATFORM_SPMC_EL=<el_num>: EL number where the target SPMC component runs. Supported values are 1 and 2. The default value is 2.
 -	-DPLATFORM_SP_EL=<el_num>: EL number where the test secure endpoints are expected to run. Supported values are 0(EL0), 1(EL1), and -1(Platform doesn't support deploying FFA based SPs). The default value is 1.
--	-DPLATFORM_NS_HYPERVISOR_PRESENT=<0|1>: Does the system support the non-secure hypervisor implementing FF-A features? 1 for yes, 0 for no. The default vaule is 1. System is expected to intergrate and load all the three of nonsecure test endpoints(vm1, vm2 and vm3) if the value is set to 1. Otherwise needs to use single non-secure test endpoint(vm1) which would act as NS OS kernel.
+-	-DPLATFORM_NS_HYPERVISOR_PRESENT=<0|1>: Does the system support the non-secure hypervisor implementing FF-A features? 1 for yes, 0 for no. The default value is 1. System is expected to intergrate and load all the three of nonsecure test endpoints(vm1, vm2 and vm3) if the value is set to 1. Otherwise needs to use single non-secure test endpoint(vm1) which would act as NS OS kernel.
 -   -DPLATFORM_FFA_V_1_0=<0|1>: It runs only tests that are supported by the Arm FF-A v1.0 specification. The default value is 0.
 -   -DPLATFORM_FFA_V_1_1=<0|1>: It only tests the Arm FF-A v1.1 specifications as updates to Arm FF-A v1.0. The default value is 0.
 -   -DPLATFORM_FFA_V_ALL=<0|1>: It runs all tests that are supported by the Arm FF-A v1.1 specification. The default value is 1.
+-   -DENABLE_BTI=<ON|OFF>: It enables BTIs. The default value is OFF.
 
 *To compile tests for tgt_tfa_fvp platform*:<br />
 ```
 cd ff-a-acs ;
 mkdir build ; cd build
-cmake ../ -G"Unix Makefiles" -DCROSS_COMPILE=<path-to-aarch64-gcc>/bin/aarch64-none-elf- -DTARGET=tgt_tfa_fvp -DPLATFORM_NS_HYPERVISOR_PRESENT=0 -DSUITE=all -DPLATFORM_FFA_V_1_1=1 -DPLATFORM_SP_EL=<0|1>
+cmake ../ -G"Unix Makefiles" -DCROSS_COMPILE=<path-to-aarch64-gcc>/bin/aarch64-none-elf- -DTARGET=tgt_tfa_fvp -DPLATFORM_NS_HYPERVISOR_PRESENT=0 -DSUITE=all -DPLATFORM_FFA_V_1_1=1 -DPLATFORM_SP_EL=<0|1> -DENABLE_BTI=<ON|OFF>
 make
 ```
 **NOTE**
@@ -106,6 +107,7 @@ The ACS build generates the binaries for the following test endpoints:<br />
 - build/output/sp1.bin
 - build/output/sp2.bin
 - build/output/sp3.bin
+- build/output/sp4.bin
 - build/output/vm1.bin
 - build/output/vm2.bin (Generated when PLATFORM_NS_HYPERVISOR_PRESENT set to 1)
 - build/output/vm3.bin (Generated when PLATFORM_NS_HYPERVISOR_PRESENT set to 1)

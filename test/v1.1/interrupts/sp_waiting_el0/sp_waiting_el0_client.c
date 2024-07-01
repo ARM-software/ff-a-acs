@@ -8,12 +8,11 @@
 #include "test_database.h"
 
 #define IRQ_TRIGGERED 0xABCDABCD
-#define WD_TIME_OUT 0x10000000
+#define WD_TIME_OUT 100U
 
 uint32_t sp_waiting_el0_client(uint32_t test_run_data)
 {
     ffa_args_t payload;
-    uint64_t timeout = WD_TIME_OUT;
     uint32_t status = VAL_SUCCESS;
     uint32_t client_logical_id = GET_CLIENT_LOGIC_ID(test_run_data);
     uint32_t server_logical_id = GET_SERVER_LOGIC_ID(test_run_data);
@@ -60,6 +59,8 @@ uint32_t sp_waiting_el0_client(uint32_t test_run_data)
         goto rxtx_unmap;
     }
 
+    val_memset(pages, 0, size);
+
     val_select_server_fn_direct(test_run_data, 0, 0, 0, 0);
 
     constituents[0].address = val_mem_virt_to_phys((void *)pages);
@@ -82,6 +83,7 @@ uint32_t sp_waiting_el0_client(uint32_t test_run_data)
     mem_region_init.shareability = FFA_MEMORY_OUTER_SHAREABLE;
 #endif
     mem_region_init.multi_share = false;
+    mem_region_init.receiver_count = 1;
 
     val_ffa_memory_region_init(&mem_region_init, constituents, constituents_count);
     val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -110,9 +112,9 @@ uint32_t sp_waiting_el0_client(uint32_t test_run_data)
     }
 
     /* Wait for WD interrupt */
-    while (--timeout && (*(volatile uint32_t *)pages != IRQ_TRIGGERED));
+    val_sp_sleep(WD_TIME_OUT);
 
-    if (!timeout)
+    if ((*(volatile uint32_t *)pages != IRQ_TRIGGERED))
     {
         LOG(ERROR, "\t  WD interrupt not triggered\n", 0, 0);
         status =  VAL_ERROR_POINT(6);

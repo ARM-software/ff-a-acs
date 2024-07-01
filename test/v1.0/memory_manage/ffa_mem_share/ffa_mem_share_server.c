@@ -147,6 +147,9 @@ uint32_t ffa_mem_share_server(ffa_args_t args)
     ffa_memory_access_permissions_t permissions;
     ffa_memory_region_flags_t flags;
     struct ffa_memory_region *memory_region;
+#if (PLATFORM_FFA_V_1_1 == 1 || PLATFORM_FFA_V_ALL == 1)
+    uint32_t mem_attributes = 0;
+#endif
     struct ffa_composite_memory_region *composite;
     ffa_memory_handle_t handle;
     uint32_t msg_size;
@@ -228,6 +231,33 @@ uint32_t ffa_mem_share_server(ffa_args_t args)
     val_memset(pages, 0xab, size);
     memory_region = (struct ffa_memory_region *)mb.recv;
     composite = ffa_memory_region_get_composite(memory_region, 0);
+
+#if (PLATFORM_FFA_V_1_1 == 1 || PLATFORM_FFA_V_ALL == 1)
+    /* Memory security state check: NS_BIT[6] */
+    mem_attributes = memory_region->attributes;
+    if (!VAL_IS_ENDPOINT_SECURE(val_get_endpoint_logical_id(receiver)))
+    {
+        if (VAL_EXTRACT_BITS(mem_attributes, 6, 6) != FFA_MEMORY_SECURITY_NON_SECURE)
+        {
+            LOG(ERROR, "\tNS bit must set 1 for non-secure memory, attributes %x\n",
+                        mem_attributes, 0);
+            status = VAL_ERROR_POINT(8);
+            goto rx_release;
+        }
+    }
+
+    if (VAL_IS_ENDPOINT_SECURE(val_get_endpoint_logical_id(receiver)))
+    {
+        if (VAL_EXTRACT_BITS(mem_attributes, 6, 6) != FFA_MEMORY_SECURITY_SECURE)
+        {
+            LOG(ERROR, "\tNS bit must set 0 for secure memory, attributes %x\n",
+                        mem_attributes, 0);
+            status = VAL_ERROR_POINT(9);
+            goto rx_release;
+        }
+    }
+#endif
+
     /* FFA_MEM_RETRIEVE_RESP: Zero memory before retrieval flag
      * MBZ in a transaction to share a memory region.
      */
@@ -236,7 +266,7 @@ uint32_t ffa_mem_share_server(ffa_args_t args)
     if (flags)
     {
         LOG(ERROR, "\tZero memory before retrieval flag must be MBZ for MEM_SHARE\n", 0, 0);
-        status = VAL_ERROR_POINT(8);
+        status = VAL_ERROR_POINT(10);
         goto rx_release;
     }
 
@@ -246,7 +276,7 @@ uint32_t ffa_mem_share_server(ffa_args_t args)
     if (flags != FFA_MEMORY_REGION_TRANSACTION_TYPE_SHARE)
     {
         LOG(ERROR, "\tInvalid memory management transaction type flag %x\n", flags, 0);
-        status = VAL_ERROR_POINT(9);
+        status = VAL_ERROR_POINT(11);
         goto rx_release;
     }
 
@@ -255,7 +285,7 @@ uint32_t ffa_mem_share_server(ffa_args_t args)
     if (permissions != FFA_INSTRUCTION_ACCESS_NX)
     {
         LOG(ERROR, "\tRelayer must set instruction access bit[3:2] to b'01 for MEM_SHARE\n", 0, 0);
-        status = VAL_ERROR_POINT(10);
+        status = VAL_ERROR_POINT(12);
         goto rx_release;
     }
 
@@ -273,14 +303,14 @@ uint32_t ffa_mem_share_server(ffa_args_t args)
     if (val_mem_map_pgt(&mem_desc))
     {
         LOG(ERROR, "\tVa to pa mapping failed\n", 0, 0);
-        status =  VAL_ERROR_POINT(11);
+        status =  VAL_ERROR_POINT(13);
         goto rx_release;
     }
 
     if (val_memcmp(pages, ptr, size))
     {
         LOG(ERROR, "\tData mismatch\n", 0, 0);
-        status =  VAL_ERROR_POINT(12);
+        status =  VAL_ERROR_POINT(14);
         goto rx_release;
     }
 
@@ -298,7 +328,7 @@ uint32_t ffa_mem_share_server(ffa_args_t args)
     if (payload.fid == FFA_ERROR_32)
     {
         LOG(ERROR, "\tDirect response failed err %x\n", payload.arg2, 0);
-        status = VAL_ERROR_POINT(13);
+        status = VAL_ERROR_POINT(15);
         goto relinquish_mem;
     }
 
@@ -323,14 +353,14 @@ uint32_t ffa_mem_share_server(ffa_args_t args)
     status = borrower_to_lend_memory(recipient_1, mb, ptr);
     if (status)
     {
-        status = VAL_ERROR_POINT(14);
+        status = VAL_ERROR_POINT(16);
         goto relinquish_mem;
     }
 
     /* Check that borrower can't donate memory to others */
     status = borrower_to_donate_memory(recipient_1, mb, ptr);
     if (status)
-        status = VAL_ERROR_POINT(15);
+        status = VAL_ERROR_POINT(17);
 
 relinquish_mem:
     /* relinquish the memory and notify the sender. */
@@ -340,7 +370,7 @@ relinquish_mem:
     if (payload.fid == FFA_ERROR_32)
     {
         LOG(ERROR, "\tMem relinquish failed err %x\n", payload.arg2, 0);
-        status = status ? status : VAL_ERROR_POINT(16);
+        status = status ? status : VAL_ERROR_POINT(18);
         goto rx_release;
     }
 
@@ -348,27 +378,27 @@ rx_release:
     if (val_rx_release())
     {
         LOG(ERROR, "\tval_rx_release failed\n", 0, 0);
-        status = status ? status : VAL_ERROR_POINT(17);
+        status = status ? status : VAL_ERROR_POINT(19);
     }
 
 rxtx_unmap:
     if (val_rxtx_unmap(sender))
     {
         LOG(ERROR, "\tRXTX_UNMAP failed\n", 0, 0);
-        status = status ? status : VAL_ERROR_POINT(18);
+        status = status ? status : VAL_ERROR_POINT(20);
     }
 
 free_memory:
     if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
     {
         LOG(ERROR, "\tfree_rxtx_buffers failed\n", 0, 0);
-        status = status ? status : VAL_ERROR_POINT(19);
+        status = status ? status : VAL_ERROR_POINT(21);
     }
 
     if (val_memory_free(pages, size))
     {
         LOG(ERROR, "\tval_mem_free failed\n", 0, 0);
-        status = status ? status : VAL_ERROR_POINT(20);
+        status = status ? status : VAL_ERROR_POINT(22);
     }
 
     val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -377,7 +407,7 @@ free_memory:
     if (payload.fid == FFA_ERROR_32)
     {
         LOG(ERROR, "\tDirect response failed err %x\n", payload.arg2, 0);
-        status = status ? status : VAL_ERROR_POINT(21);
+        status = status ? status : VAL_ERROR_POINT(23);
     }
 
     return status;

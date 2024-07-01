@@ -72,10 +72,10 @@ int64_t spm_interrupt_enable(uint32_t int_id, bool enable, enum interrupt_pin pi
 int64_t spm_interrupt_deactivate(uint32_t vint_id);
 
 /* Sleep for at least 'ms' milliseconds and return the elapsed time(ms). */
-uint64_t sp_sleep_elapsed_time(uint32_t ms);
+uint64_t sp_sleep_elapsed_time(uint64_t ms);
 
 /* Sleep for at least 'ms' milliseconds. */
-void sp_sleep(uint32_t ms);
+void sp_sleep(uint64_t ms);
 
 /*
  * Check that expr == expected.

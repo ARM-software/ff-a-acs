@@ -26,6 +26,7 @@ list(APPEND VAL_SRC
     ${ROOT_DIR}/val/src/aarch64/val_syscalls.S
     ${ROOT_DIR}/val/src/val_irq.c
     ${ROOT_DIR}/val/src/val_wd.c
+    ${ROOT_DIR}/val/src/val_timer.c
 )
 else()
 list(APPEND VAL_SRC
@@ -45,6 +46,7 @@ list(APPEND VAL_SRC
     ${ROOT_DIR}/val/src/aarch64/val_syscalls.S
     ${ROOT_DIR}/val/src/val_irq.c
     ${ROOT_DIR}/val/src/val_wd.c
+    ${ROOT_DIR}/val/src/val_timer.c
 )
 endif()
 

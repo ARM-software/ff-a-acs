@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -11,16 +11,23 @@
 
 static event_t cpu_booted[32];
 
-void mp_execution_contexts_sec_cpu(void)
+uint32_t mp_execution_contexts_sec_cpu_client(uint32_t test_num)
 {
     ffa_args_t payload;
     uint64_t mpid = val_read_mpidr() & MPID_MASK;
     val_endpoint_info_t *ep_info = val_get_endpoint_info();
+    uint32_t test_run_data = TEST_RUN_DATA(test_num,
+                                  VM1,
+                                  SP1,
+                                  CLIENT_TEST);
 
     LOG(DBG, "\tSecondary cpu with mpid 0x%x booted\n", mpid, 0);
+
     /* Skip the mp direct messaging if SP1 is EL0 SP (UP SP) */
     if (ep_info[SP1].ec_count != 1)
     {
+        val_select_server_fn_direct(test_run_data, 0, 0, 0, 0);
+
         /* Rule - The Receiver could be implemented as a MP endpoint. In this case,
          * the number of execution contexts that the endpoint implements must
          * be equal to the number of PEs in the system.
@@ -30,35 +37,44 @@ void mp_execution_contexts_sec_cpu(void)
         payload.arg1 = ((uint32_t)val_get_endpoint_id(VM1) << 16) |
                                 val_get_endpoint_id(SP1);
         payload.arg3 = DATA_PATTERN;
-        val_ffa_msg_send_direct_req_32(&payload);
+        val_ffa_msg_send_direct_req_64(&payload);
 
-        if (payload.fid != FFA_MSG_SEND_DIRECT_RESP_32)
+        if (payload.fid != FFA_MSG_SEND_DIRECT_RESP_64)
         {
             LOG(ERROR, "\tDirect request failed, fid=0x%x, err %x\n",
                       payload.fid, payload.arg2);
-            VAL_PANIC("Can't recover\n");
+            return VAL_ERROR_POINT(1);
         }
 
         if (payload.arg3 != DATA_PATTERN)
         {
             LOG(ERROR, "\tdata mismatch expected=0x%x, actual=0x%x\n",
                       DATA_PATTERN, payload.arg3);
-            VAL_PANIC("Can't recover\n");
+            return VAL_ERROR_POINT(2);
         }
-    }
 
-    LOG(DBG, "\tDirect msg passed for mpid=%x\n", mpid, 0);
+        payload = val_select_server_fn_direct(test_run_data, 0, 0, 0, 0);
+
+        LOG(DBG, "\tDirect msg passed for mpid=%x\n", mpid, 0);
+
+        /* Tell the boot CPU that the calling CPU has completed the test */
+        val_send_event(&cpu_booted[val_get_cpuid(mpid)]);
+
+        return (uint32_t)payload.arg3;
+    }
 
     /* Tell the boot CPU that the calling CPU has completed the test */
     val_send_event(&cpu_booted[val_get_cpuid(mpid)]);
 
-    val_power_off_cpu();
+    return VAL_SUCCESS;
 }
 
 uint32_t mp_execution_contexts_client(uint32_t test_run_data)
 {
     uint32_t i, total_cpus = val_get_no_of_cpus(), ret;
     uint64_t boot_mpid, mpid;
+    uint32_t test_num = GET_TEST_NUM(test_run_data);
+    uint32_t status = VAL_ERROR;
 
     /* Setup VM1 mp execution contexts */
     boot_mpid = val_read_mpidr() & MPID_MASK;
@@ -69,6 +85,7 @@ uint32_t mp_execution_contexts_client(uint32_t test_run_data)
     }
 
     LOG(DBG, "\tboot cpu mpid %x\n", boot_mpid, 0);
+
     for (i = 0; i < total_cpus; i++)
     {
         mpid = val_get_mpid(i);
@@ -83,13 +100,31 @@ uint32_t mp_execution_contexts_client(uint32_t test_run_data)
         if (ret != 0)
         {
             LOG(ERROR, "\tval_power_on_cpu mpid 0x%x returns %x\n", mpid, ret);
-            return VAL_ERROR_POINT(1);
+            return VAL_ERROR_POINT(3);
         }
 
         val_wait_for_event(&cpu_booted[i]);
         LOG(DBG, "\tPowered off secondary CPU mpid=%x\n", mpid, 0);
     }
 
+
+
+    for (i = 0; i < total_cpus; i++)
+    {
+        mpid = val_get_mpid(i);
+
+        if (mpid == boot_mpid)
+        {
+            continue;
+        }
+
+        /* Get MP Test Status */
+        status = val_get_multi_pe_test_status(mpid, test_num);
+        if (status != VAL_SUCCESS)
+        {
+            return status;
+        }
+    }
 
     /* Unused argument */
     (void)test_run_data;

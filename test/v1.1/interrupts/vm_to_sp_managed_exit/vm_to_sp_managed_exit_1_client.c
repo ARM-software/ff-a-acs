@@ -7,7 +7,7 @@
 
 #include "test_database.h"
 
-#define NS_WD_TIMEOUT 50000000
+#define NS_WD_TIMEOUT 500000U
 
 static volatile uint32_t irq_received;
 static int wd_irq_handler(void)
