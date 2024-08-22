@@ -18,7 +18,7 @@ uint32_t ffa_mem_perm_get_client(uint32_t test_run_data)
     pages = (uint8_t *)val_memory_alloc(size);
     if (!pages)
     {
-        LOG(ERROR, "\tMemory allocation failed\n", 0, 0);
+        LOG(ERROR, "Memory allocation failed");
         status = VAL_ERROR_POINT(1);
         goto free_memory;
     }
@@ -32,8 +32,8 @@ uint32_t ffa_mem_perm_get_client(uint32_t test_run_data)
     {
         if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_NOT_SUPPORTED))
         {
-            LOG(ERROR, "\tffa_mem_perm_set must return error for invalid instance %x\n",
-                            payload.arg2, 0);
+            LOG(ERROR, "ffa_mem_perm_set must return error for invalid instance %x",
+                            payload.arg2);
             status = VAL_ERROR_POINT(2);
             goto free_memory;
         }
@@ -42,8 +42,8 @@ uint32_t ffa_mem_perm_get_client(uint32_t test_run_data)
     {
         if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_DENIED))
         {
-            LOG(ERROR, "\tffa_mem_perm_set must return error for post-initialization %x\n",
-                            payload.arg2, 0);
+            LOG(ERROR, "ffa_mem_perm_set must return error for post-initialization %x",
+                            payload.arg2);
             status = VAL_ERROR_POINT(3);
             goto free_memory;
         }
@@ -52,7 +52,7 @@ uint32_t ffa_mem_perm_get_client(uint32_t test_run_data)
 free_memory:
    if (val_memory_free(pages, size))
     {
-        LOG(ERROR, "\tval_mem_free failed\n", 0, 0);
+        LOG(ERROR, "val_mem_free failed");
         status = status ? status : VAL_ERROR_POINT(4);
     }
 

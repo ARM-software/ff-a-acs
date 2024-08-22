@@ -23,7 +23,7 @@ static uint32_t borrower_to_lend_memory(ffa_endpoint_id_t recipient, mb_buf_t mb
     status_32 = val_is_ffa_feature_supported(FFA_MEM_LEND_32);
     if (status_64 && status_32)
     {
-        LOG(TEST, "\tFFA_MEM_LEND not supported, skipping the check\n", 0, 0);
+        LOG(TEST, "FFA_MEM_LEND not supported, skipping the check");
         return VAL_SKIP_CHECK;
     }
 
@@ -55,9 +55,12 @@ static uint32_t borrower_to_lend_memory(ffa_endpoint_id_t recipient, mb_buf_t mb
         val_ffa_mem_lend_32(&payload);
 
     if (payload.fid == FFA_ERROR_32 && payload.arg2 == FFA_ERROR_DENIED)
+    {
+        LOG(DBG, "FFA_MEM_LEND error check complete");
         return VAL_SUCCESS;
+    }
 
-    LOG(ERROR, "\tMEM_LEND request must fail with DENIED err %x\n", payload.arg2, 0);
+    LOG(ERROR, "FFA_MEM_LEND request must fail with DENIED err %x", payload.arg2);
 
     if (payload.fid == FFA_SUCCESS_32 || payload.fid == FFA_SUCCESS_64)
     {
@@ -69,9 +72,11 @@ static uint32_t borrower_to_lend_memory(ffa_endpoint_id_t recipient, mb_buf_t mb
         val_ffa_mem_reclaim(&payload);
         if (payload.fid == FFA_ERROR_32)
         {
-            LOG(ERROR, "\tMem Reclaim failed err %x\n", payload.arg2, 0);
+            LOG(ERROR, "Mem Reclaim failed err %x", payload.arg2);
         }
     }
+
+    LOG(DBG, "FFA_MEM_RECLAIM complete after lend error check fail");
 
     return status;
 }
@@ -91,7 +96,7 @@ static uint32_t borrower_to_donate_memory(ffa_endpoint_id_t recipient, mb_buf_t 
     status_32 = val_is_ffa_feature_supported(FFA_MEM_DONATE_32);
     if (status_64 && status_32)
     {
-        LOG(TEST, "\tFFA_MEM_DONATE not supported, skipping the check\n", 0, 0);
+        LOG(TEST, "FFA_MEM_DONATE not supported, skipping the check");
         return VAL_SKIP_CHECK;
     }
 
@@ -123,10 +128,12 @@ static uint32_t borrower_to_donate_memory(ffa_endpoint_id_t recipient, mb_buf_t 
         val_ffa_mem_donate_32(&payload);
 
     if (payload.fid == FFA_ERROR_32 && payload.arg2 == FFA_ERROR_DENIED)
+    {
+        LOG(DBG, "FFA_MEM_DONATE error check complete");
         return VAL_SUCCESS;
+    }
 
-    LOG(ERROR, "\tMEM_DONATE request must fail with DENIED%x\n", payload.arg2, 0);
-
+    LOG(ERROR, "MEM_DONATE request must fail with DENIED%x", payload.arg2);
     return status;
 }
 
@@ -159,7 +166,7 @@ uint32_t ffa_mem_share_server(ffa_args_t args)
     mb.recv = val_memory_alloc(size);
     if (mb.send == NULL || mb.recv == NULL)
     {
-        LOG(ERROR, "\tFailed to allocate RxTx buffer\n", 0, 0);
+        LOG(ERROR, "Failed to allocate RxTx buffer");
         status = VAL_ERROR_POINT(3);
         goto free_memory;
     }
@@ -167,7 +174,7 @@ uint32_t ffa_mem_share_server(ffa_args_t args)
     /* Map TX and RX buffers */
     if (val_rxtx_map_64((uint64_t)mb.send, (uint64_t)mb.recv, (uint32_t)(size/PAGE_SIZE_4K)))
     {
-        LOG(ERROR, "\tRxTx Map failed\n", 0, 0);
+        LOG(ERROR, "RxTx Map failed");
         status = VAL_ERROR_POINT(4);
         goto free_memory;
     }
@@ -175,7 +182,7 @@ uint32_t ffa_mem_share_server(ffa_args_t args)
     pages = (uint8_t *)val_memory_alloc(size);
     if (!pages)
     {
-        LOG(ERROR, "\tMemory allocation failed\n", 0, 0);
+        LOG(ERROR, "Memory allocation failed");
         status = VAL_ERROR_POINT(5);
         goto rxtx_unmap;
     }
@@ -185,7 +192,7 @@ uint32_t ffa_mem_share_server(ffa_args_t args)
     payload = val_resp_client_fn_direct((uint32_t)args.arg3, 0, 0, 0, 0, 0);
     if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_64)
     {
-        LOG(ERROR, "\tDirect request failed, fid=0x%x, err 0x%x\n",
+        LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x",
                   payload.fid, payload.arg2);
         status =  VAL_ERROR_POINT(6);
         goto rxtx_unmap;
@@ -223,10 +230,12 @@ uint32_t ffa_mem_share_server(ffa_args_t args)
 
     if (payload.fid != FFA_MEM_RETRIEVE_RESP_32)
     {
-        LOG(ERROR, "\tMem retrieve request failed err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Mem retrieve request failed err %x", payload.arg2);
         status = VAL_ERROR_POINT(7);
         goto rxtx_unmap;
     }
+
+    LOG(DBG, "FFA_MEM_RETRIEVE complete");
 
     val_memset(pages, 0xab, size);
     memory_region = (struct ffa_memory_region *)mb.recv;
@@ -239,8 +248,8 @@ uint32_t ffa_mem_share_server(ffa_args_t args)
     {
         if (VAL_EXTRACT_BITS(mem_attributes, 6, 6) != FFA_MEMORY_SECURITY_NON_SECURE)
         {
-            LOG(ERROR, "\tNS bit must set 1 for non-secure memory, attributes %x\n",
-                        mem_attributes, 0);
+            LOG(ERROR, "NS bit must set 1 for non-secure memory, attributes %x",
+                        mem_attributes);
             status = VAL_ERROR_POINT(8);
             goto rx_release;
         }
@@ -250,8 +259,8 @@ uint32_t ffa_mem_share_server(ffa_args_t args)
     {
         if (VAL_EXTRACT_BITS(mem_attributes, 6, 6) != FFA_MEMORY_SECURITY_SECURE)
         {
-            LOG(ERROR, "\tNS bit must set 0 for secure memory, attributes %x\n",
-                        mem_attributes, 0);
+            LOG(ERROR, "NS bit must set 0 for secure memory, attributes %x",
+                        mem_attributes);
             status = VAL_ERROR_POINT(9);
             goto rx_release;
         }
@@ -265,7 +274,7 @@ uint32_t ffa_mem_share_server(ffa_args_t args)
     flags = VAL_EXTRACT_BITS(flags, 0, 0);
     if (flags)
     {
-        LOG(ERROR, "\tZero memory before retrieval flag must be MBZ for MEM_SHARE\n", 0, 0);
+        LOG(ERROR, "Zero memory before retrieval flag must be MBZ for MEM_SHARE");
         status = VAL_ERROR_POINT(10);
         goto rx_release;
     }
@@ -275,7 +284,7 @@ uint32_t ffa_mem_share_server(ffa_args_t args)
     flags = VAL_EXTRACT_BITS(flags, 3, 4);
     if (flags != FFA_MEMORY_REGION_TRANSACTION_TYPE_SHARE)
     {
-        LOG(ERROR, "\tInvalid memory management transaction type flag %x\n", flags, 0);
+        LOG(ERROR, "Invalid memory management transaction type flag %x", flags);
         status = VAL_ERROR_POINT(11);
         goto rx_release;
     }
@@ -284,7 +293,7 @@ uint32_t ffa_mem_share_server(ffa_args_t args)
     permissions = VAL_EXTRACT_BITS(permissions, 2, 3);
     if (permissions != FFA_INSTRUCTION_ACCESS_NX)
     {
-        LOG(ERROR, "\tRelayer must set instruction access bit[3:2] to b'01 for MEM_SHARE\n", 0, 0);
+        LOG(ERROR, "Relayer must set instruction access bit[3:2] to b'01 for MEM_SHARE");
         status = VAL_ERROR_POINT(12);
         goto rx_release;
     }
@@ -302,14 +311,14 @@ uint32_t ffa_mem_share_server(ffa_args_t args)
 
     if (val_mem_map_pgt(&mem_desc))
     {
-        LOG(ERROR, "\tVa to pa mapping failed\n", 0, 0);
+        LOG(ERROR, "Va to pa mapping failed");
         status =  VAL_ERROR_POINT(13);
         goto rx_release;
     }
 
     if (val_memcmp(pages, ptr, size))
     {
-        LOG(ERROR, "\tData mismatch\n", 0, 0);
+        LOG(ERROR, "Data mismatch");
         status =  VAL_ERROR_POINT(14);
         goto rx_release;
     }
@@ -320,6 +329,8 @@ uint32_t ffa_mem_share_server(ffa_args_t args)
         ptr[i] = 1;
     }
 
+    LOG(DBG, "Data region access and data check complete");
+
     /* Go back to sender to check sender can still access the
      * memory after retrieve operation */
     val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -327,7 +338,7 @@ uint32_t ffa_mem_share_server(ffa_args_t args)
     val_ffa_msg_send_direct_resp_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\tDirect response failed err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Direct response failed err %x", payload.arg2);
         status = VAL_ERROR_POINT(15);
         goto relinquish_mem;
     }
@@ -362,6 +373,8 @@ uint32_t ffa_mem_share_server(ffa_args_t args)
     if (status)
         status = VAL_ERROR_POINT(17);
 
+    LOG(DBG, "Data region modified and error check complete, relinquish memory");
+
 relinquish_mem:
     /* relinquish the memory and notify the sender. */
     ffa_mem_relinquish_init((struct ffa_mem_relinquish *)mb.send, handle, 0, sender, 0x1);
@@ -369,7 +382,7 @@ relinquish_mem:
     val_ffa_mem_relinquish(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\tMem relinquish failed err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Mem relinquish failed err %x", payload.arg2);
         status = status ? status : VAL_ERROR_POINT(18);
         goto rx_release;
     }
@@ -377,27 +390,27 @@ relinquish_mem:
 rx_release:
     if (val_rx_release())
     {
-        LOG(ERROR, "\tval_rx_release failed\n", 0, 0);
+        LOG(ERROR, "val_rx_release failed");
         status = status ? status : VAL_ERROR_POINT(19);
     }
 
 rxtx_unmap:
     if (val_rxtx_unmap(sender))
     {
-        LOG(ERROR, "\tRXTX_UNMAP failed\n", 0, 0);
+        LOG(ERROR, "RXTX_UNMAP failed");
         status = status ? status : VAL_ERROR_POINT(20);
     }
 
 free_memory:
     if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
     {
-        LOG(ERROR, "\tfree_rxtx_buffers failed\n", 0, 0);
+        LOG(ERROR, "free_rxtx_buffers failed");
         status = status ? status : VAL_ERROR_POINT(21);
     }
 
     if (val_memory_free(pages, size))
     {
-        LOG(ERROR, "\tval_mem_free failed\n", 0, 0);
+        LOG(ERROR, "val_mem_free failed");
         status = status ? status : VAL_ERROR_POINT(22);
     }
 
@@ -406,7 +419,7 @@ free_memory:
     val_ffa_msg_send_direct_resp_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\tDirect response failed err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Direct response failed err %x", payload.arg2);
         status = status ? status : VAL_ERROR_POINT(23);
     }
 

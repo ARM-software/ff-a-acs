@@ -21,6 +21,7 @@ static int wd_irq_handler(void)
     *(volatile uint32_t *)(pages + 1) = (uint32_t)NS_IRQ_TRIGGERED;
     /* Wait for WD interrupt */
     val_sp_sleep(WD_TIME_OUT);
+    LOG(DBG, "NS-WD IRQ Handler Processed");
     return 0;
 }
 
@@ -42,7 +43,7 @@ uint32_t sp_preempted_el1_client(uint32_t test_run_data)
 
     if (val_is_ffa_feature_supported(FFA_MEM_SHARE_32))
     {
-        LOG(TEST, "\t   FFA_MEM_SHARE_32 not supported, skipping the test\n", 0, 0);
+        LOG(TEST, "FFA_MEM_SHARE_32 not supported, skipping the test");
         return VAL_SKIP_CHECK;
     }
 
@@ -50,7 +51,7 @@ uint32_t sp_preempted_el1_client(uint32_t test_run_data)
     mb.recv = val_memory_alloc(size);
     if (mb.send == NULL || mb.recv == NULL)
     {
-        LOG(ERROR, "\tFailed to allocate RxTx buffer\n", 0, 0);
+        LOG(ERROR, "Failed to allocate RxTx buffer");
         status = VAL_ERROR_POINT(2);
         goto free_memory;
     }
@@ -58,7 +59,7 @@ uint32_t sp_preempted_el1_client(uint32_t test_run_data)
     /* Map TX and RX buffers */
     if (val_rxtx_map_64((uint64_t)mb.send, (uint64_t)mb.recv, (uint32_t)(size/PAGE_SIZE_4K)))
     {
-        LOG(ERROR, "\tRxTx Map failed\n", 0, 0);
+        LOG(ERROR, "RxTx Map failed");
         status = VAL_ERROR_POINT(3);
         goto free_memory;
     }
@@ -66,7 +67,7 @@ uint32_t sp_preempted_el1_client(uint32_t test_run_data)
     pages = (uint32_t *)val_memory_alloc(size);
     if (!pages)
     {
-        LOG(ERROR, "\tMemory allocation failed\n", 0, 0);
+        LOG(ERROR, "Memory allocation failed");
         status = VAL_ERROR_POINT(4);
         goto rxtx_unmap;
     }
@@ -104,7 +105,7 @@ uint32_t sp_preempted_el1_client(uint32_t test_run_data)
     val_ffa_mem_share_32(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\t  Mem_share request failed err %d\n", payload.arg2, 0);
+        LOG(ERROR, "Mem_share request failed err %d", payload.arg2);
         status = VAL_ERROR_POINT(5);
         goto rxtx_unmap;
     }
@@ -118,20 +119,21 @@ uint32_t sp_preempted_el1_client(uint32_t test_run_data)
     val_ffa_msg_send_direct_req_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\t  Direct request failed err %d\n", payload.arg2, 0);
+        LOG(ERROR, "Direct request failed err %d", payload.arg2);
         status = VAL_ERROR_POINT(6);
         goto rxtx_unmap;
     }
 
     if (val_irq_register_handler(PLATFORM_NS_WD_INTR, wd_irq_handler))
     {
-        LOG(ERROR, "\t  WD interrupt register failed\n", 0, 0);
+        LOG(ERROR, "WD interrupt register failed");
         status = VAL_ERROR_POINT(7);
         goto rxtx_unmap;
     }
 
     val_irq_enable(PLATFORM_NS_WD_INTR, 0);
     val_ns_wdog_enable(NS_WD_TIMEOUT);
+    LOG(DBG, "NS-WD IRQ Enabled");
 
     /* Check for FFA_INTERRUPT */
     val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -139,29 +141,32 @@ uint32_t sp_preempted_el1_client(uint32_t test_run_data)
     val_ffa_msg_send_direct_req_64(&payload);
     if (payload.fid != FFA_INTERRUPT_32)
     {
-        LOG(ERROR, "\t  FFA_INTERRUPT_32 not received fid %x err %x\n", payload.fid, payload.arg2);
+        LOG(ERROR, "FFA_INTERRUPT_32 not received fid %x err %x", payload.fid, payload.arg2);
         status = VAL_ERROR_POINT(8);
         goto free_interrupt;
     }
 
     val_irq_disable(PLATFORM_NS_WD_INTR);
+    LOG(DBG, "NS-WD IRQ Disabled, Call FFA Run");
+
     /* Schedule the preempted SP using FFA_RUN */
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 = (uint32_t)recipient << 16;
     val_ffa_run(&payload);
     if (payload.fid != FFA_MSG_SEND_DIRECT_RESP_64)
     {
-        LOG(ERROR, "\t  DIRECT_RESP_64 not received\n", 0, 0);
+        LOG(ERROR, "DIRECT_RESP_64 not received");
         status = status ? status : VAL_ERROR_POINT(9);
         goto free_interrupt;
     }
 
     if ((*(volatile uint32_t *)pages != S_IRQ_TRIGGERED))
     {
-        LOG(ERROR, "\t  TWD interrupt not triggered\n", 0, 0);
+        LOG(ERROR, "TWD interrupt not triggered");
         status = status ? status : VAL_ERROR_POINT(10);
         goto free_interrupt;
     }
+    LOG(DBG, "S-WD IRQ Status %x", *(volatile uint32_t *)pages);
 
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 = (uint32_t)handle;
@@ -170,34 +175,34 @@ uint32_t sp_preempted_el1_client(uint32_t test_run_data)
     val_ffa_mem_reclaim(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\t  Mem Reclaim failed err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Mem Reclaim failed err %x", payload.arg2, 0);
         status = status ? status : VAL_ERROR_POINT(11);
     }
 
 free_interrupt:
     if (val_irq_unregister_handler(PLATFORM_NS_WD_INTR))
     {
-        LOG(ERROR, "\t  IRQ handler unregister failed\n", 0, 0);
+        LOG(ERROR, "IRQ handler unregister failed");
         status = VAL_ERROR_POINT(12);
     }
 
 rxtx_unmap:
     if (val_rxtx_unmap(sender))
     {
-        LOG(ERROR, "RXTX_UNMAP failed\n", 0, 0);
+        LOG(ERROR, "RXTX_UNMAP failed");
         status = VAL_ERROR_POINT(13);
     }
 
 free_memory:
    if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
     {
-        LOG(ERROR, "\tfree_rxtx_buffers failed\n", 0, 0);
+        LOG(ERROR, "free_rxtx_buffers failed");
         status = status ? status : VAL_ERROR_POINT(14);
     }
 
     if (val_memory_free(pages, size))
     {
-        LOG(ERROR, "\tval_mem_free failed\n", 0, 0);
+        LOG(ERROR, "val_mem_free failed");
         status = status ? status : VAL_ERROR_POINT(15);
     }
 

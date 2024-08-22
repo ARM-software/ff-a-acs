@@ -19,7 +19,7 @@ uint32_t mp_execution_contexts_sec_cpu_server(ffa_args_t args)
     payload = val_resp_client_fn_direct((uint32_t)args.arg3, 0, 0, 0, 0, 0);
     if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_64)
     {
-        LOG(ERROR, "\tDirect request failed, fid=0x%x, err 0x%x\n",
+        LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x",
                   payload.fid, payload.arg2);
         return VAL_ERROR_POINT(1);
     }
@@ -34,7 +34,7 @@ uint32_t mp_execution_contexts_sec_cpu_server(ffa_args_t args)
     val_ffa_msg_send_direct_resp_64(&payload);
     if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_32)
     {
-        LOG(ERROR, "\tDirect request failed, fid=0x%x, err %x\n",
+        LOG(ERROR, "Direct request failed, fid=0x%x, err %x",
                  payload.fid, payload.arg2);
         return VAL_ERROR_POINT(2);
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -22,7 +22,7 @@ uint32_t ffa_msg_send_server(ffa_args_t args)
     mb.recv = val_memory_alloc(size);
     if (mb.send == NULL || mb.recv == NULL)
     {
-        LOG(ERROR, "\tFailed to allocate RxTx buffer\n", 0, 0);
+        LOG(ERROR, "Failed to allocate RxTx buffer");
         status = VAL_ERROR_POINT(1);
         goto free_memory;
     }
@@ -30,7 +30,7 @@ uint32_t ffa_msg_send_server(ffa_args_t args)
     /* Map TX and RX buffers */
     if (val_rxtx_map_64((uint64_t)mb.send, (uint64_t)mb.recv, (size/PAGE_SIZE_4K)))
     {
-        LOG(ERROR, "\tRxTx Map failed\n", 0, 0);
+        LOG(ERROR, "RxTx Map failed");
         status = VAL_ERROR_POINT(2);
         goto free_memory;
     }
@@ -43,46 +43,49 @@ uint32_t ffa_msg_send_server(ffa_args_t args)
 
     if (payload.fid != FFA_MSG_SEND_32)
     {
-        LOG(ERROR, "\tWrong fid recieved %x\n", payload.fid, 0);
+        LOG(ERROR, "Wrong fid recieved %x", payload.fid);
         status = VAL_ERROR_POINT(3);
     }
 
     /* Check the sender and reciever id */
     if (payload.arg1 != args.arg1)
     {
-        LOG(ERROR, "\tSender-reciever epid check failed, actual=%x but expected\n",
+        LOG(ERROR, "Sender-reciever epid check failed, actual=%x but expected",
             payload.arg1, args.arg1);
         status = VAL_ERROR_POINT(4);
     }
 
+    LOG(DBG, "Sender Receiver ID payload.arg1 %x args.arg1 %x", payload.arg1, args.arg1);
+
     /* Check the message size */
     if (payload.arg3 != msg_size)
     {
-        LOG(ERROR, "\tmsg size mismatch actual=%x but expected=%x\n",
+        LOG(ERROR, "msg size mismatch actual=%x but expected=%x",
             payload.arg3, msg_size);
         status = VAL_ERROR_POINT(5);
     }
+
+    LOG(DBG, "Message Size %x", msg_size);
 
     /* Check that only the amount of data as specified
      * by the length is sent */
     if (val_memcmp(mb.recv, message, msg_size) ||
         !val_memcmp(mb.recv, message1, sizeof(message1)))
     {
-        LOG(ERROR, "\tmsg content mismatched\n", 0, 0);
+        LOG(ERROR, "msg content mismatched");
         status = VAL_ERROR_POINT(6);
     }
 
     /* Return value for reserved registers - MBZ. w6 and w7 for ffa_msg_send */
     if (val_reserve_param_check(payload, output_reserve_count))
     {
-        LOG(ERROR, "\tReceived non-zero value for reserved registers\n",
-            0, 0);
+        LOG(ERROR, "Received non-zero value for reserved registers");
         status = VAL_ERROR_POINT(7);
     }
 
     if (val_rx_release())
     {
-        LOG(ERROR, "\tval_rx_release failed\n", 0, 0);
+        LOG(ERROR, "val_rx_release failed");
         status = VAL_ERROR_POINT(8);
     }
 
@@ -94,7 +97,7 @@ uint32_t ffa_msg_send_server(ffa_args_t args)
 
     if (payload.fid != FFA_MSG_SEND_32)
     {
-        LOG(ERROR, "\tFFA_MSG_SEND failed, fid=0x%x, err %x\n",
+        LOG(ERROR, "FFA_MSG_SEND failed, fid=0x%x, err %x",
                   payload.fid, payload.arg2);
         status = VAL_ERROR_POINT(9);
     }
@@ -106,8 +109,8 @@ uint32_t ffa_msg_send_server(ffa_args_t args)
     val_ffa_yield(&payload);
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
     {
-        LOG(ERROR, "\tOnly valid with the ERET conduit at the Non-secure virtual FF-A instance\
-                  else MBZ, fid=0x%x, err=0x%x\n", payload.fid, payload.arg2);
+        LOG(ERROR, "Only valid with the ERET conduit at the Non-secure virtual FF-A instance\
+                  else MBZ, fid=0x%x, err=0x%x", payload.fid, payload.arg2);
         status = VAL_ERROR_POINT(10);
     }
 
@@ -117,7 +120,7 @@ uint32_t ffa_msg_send_server(ffa_args_t args)
     val_ffa_yield(&payload);
     if (payload.fid != FFA_ERROR_32)
     {
-        LOG(ERROR, "\tReserved register mbz check failed, err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Reserved register mbz check failed, err %x", payload.arg2);
         status = VAL_ERROR_POINT(11);
     }
 
@@ -127,7 +130,7 @@ uint32_t ffa_msg_send_server(ffa_args_t args)
     val_ffa_yield(&payload);
     if (payload.fid != FFA_SUCCESS_32)
     {
-        LOG(ERROR, "\tFFA_YIELD failed, fid=0x%x, err %x\n",
+        LOG(ERROR, "FFA_YIELD failed, fid=0x%x, err %x",
                   payload.fid, payload.arg2);
         status = VAL_ERROR_POINT(12);
     }
@@ -135,37 +138,41 @@ uint32_t ffa_msg_send_server(ffa_args_t args)
     /* Check the sender and reciever id */
     if (payload.arg1 != args.arg1)
     {
-        LOG(ERROR, "\tSender-reciever epid check failed, actual=%x but expected\n",
+        LOG(ERROR, "Sender-reciever epid check failed, actual=%x but expected",
             payload.arg1, args.arg1);
         status = VAL_ERROR_POINT(13);
     }
 
+    LOG(DBG, "Sender Receiver ID payload.arg1 %x args.arg1 %x", payload.arg1, args.arg1);
+
     /* Check the message size */
     if (payload.arg3 != msg_size)
     {
-        LOG(ERROR, "\tmsg size mismatch actual=%x but expected=%x\n",
+        LOG(ERROR, "msg size mismatch actual=%x but expected=%x",
             payload.arg3, msg_size);
         status = VAL_ERROR_POINT(14);
     }
 
+    LOG(DBG, "Message Size %x", msg_size);
+
     /* Check the message content */
     if (val_memcmp(mb.recv, message, msg_size))
     {
-        LOG(ERROR, "\tmsg content mismatched\n", 0, 0);
+        LOG(ERROR, "msg content mismatched");
         status = VAL_ERROR_POINT(15);
     }
 
     /* Return value for reserved registers - MBZ. w6 and w7 for ffa_msg_send */
     if (val_reserve_param_check(payload, output_reserve_count))
     {
-        LOG(ERROR, "\tReceived non-zero value for reserved registers\n",
+        LOG(ERROR, "Received non-zero value for reserved registers",
             0, 0);
         status = VAL_ERROR_POINT(16);
     }
 
     if (val_rx_release())
     {
-        LOG(ERROR, "\tval_rx_release failed\n", 0, 0);
+        LOG(ERROR, "val_rx_release failed");
         status = VAL_ERROR_POINT(17);
     }
 
@@ -180,7 +187,7 @@ uint32_t ffa_msg_send_server(ffa_args_t args)
     val_ffa_msg_wait(&payload);
     if ((payload.fid != FFA_ERROR_32) && (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
     {
-        LOG(ERROR, "\t  ffa_msg_wait didn't fail\n", 0, 0);
+        LOG(ERROR, "ffa_msg_wait didn't fail");
         status = VAL_ERROR_POINT(18);
     }
 
@@ -192,7 +199,7 @@ uint32_t ffa_msg_send_server(ffa_args_t args)
     val_ffa_msg_wait(&payload);
     if ((payload.fid != FFA_ERROR_32) && (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
     {
-        LOG(ERROR, "\tffa_msg_wait didn't fail\n", 0, 0);
+        LOG(ERROR, "ffa_msg_wait didn't fail");
         status = VAL_ERROR_POINT(19);
     }
 
@@ -203,14 +210,14 @@ uint32_t ffa_msg_send_server(ffa_args_t args)
 
     if (val_rxtx_unmap(sender))
     {
-        LOG(ERROR, "\tRXTX_UNMAP failed\n", 0, 0);
+        LOG(ERROR, "RXTX_UNMAP failed");
         status = VAL_ERROR_POINT(20);
     }
 
 free_memory:
     if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
     {
-        LOG(ERROR, "\tfree_rxtx_buffers failed\n", 0, 0);
+        LOG(ERROR, "free_rxtx_buffers failed");
         status = VAL_ERROR_POINT(21);
     }
 

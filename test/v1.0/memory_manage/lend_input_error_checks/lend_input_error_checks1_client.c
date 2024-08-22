@@ -27,7 +27,7 @@ static uint32_t mem_lend_invalid_sender_id_check(void *tx_buf, ffa_endpoint_id_t
     pages = (uint8_t *)val_memory_alloc(size);
     if (!pages)
     {
-        LOG(ERROR, "\tMemory allocation failed\n", 0, 0);
+        LOG(ERROR, "Memory allocation failed");
         return VAL_ERROR_POINT(1);
     }
 
@@ -63,14 +63,15 @@ static uint32_t mem_lend_invalid_sender_id_check(void *tx_buf, ffa_endpoint_id_t
 
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_DENIED))
     {
-        LOG(ERROR, "\tMem_lend request must return error for invalid sender id %x\n",
-                                                                    payload.arg2, 0);
+        LOG(ERROR, "Mem_lend request must return error for invalid sender id %x",
+                                                                    payload.arg2);
         status = VAL_ERROR_POINT(2);
     }
+    LOG(DBG, "Mem Lend Check for Invalid Sender Complete");
 
     if (val_memory_free(pages, size))
     {
-        LOG(ERROR, "\tval_mem_free failed\n", 0, 0);
+        LOG(ERROR, "val_mem_free failed");
         status = status ? status : VAL_ERROR_POINT(3);
     }
 
@@ -92,7 +93,7 @@ static uint32_t mem_lend_sp_to_ns_check(void *tx_buf, ffa_endpoint_id_t sender, 
     pages = (uint8_t *)val_memory_alloc(size);
     if (!pages)
     {
-        LOG(ERROR, "\tMemory allocation failed\n", 0, 0);
+        LOG(ERROR, "Memory allocation failed");
         return VAL_ERROR_POINT(4);
     }
 
@@ -124,14 +125,15 @@ static uint32_t mem_lend_sp_to_ns_check(void *tx_buf, ffa_endpoint_id_t sender, 
 
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_DENIED))
     {
-        LOG(ERROR, "\tLend secure memory to non-secure endpoint must return error %x\n",
-                        payload.arg2, 0);
+        LOG(ERROR, "Lend secure memory to non-secure endpoint must return error %x",
+                        payload.arg2);
         status = VAL_ERROR_POINT(5);
     }
+    LOG(DBG, "Mem Lend Check for Secure Memory Complete");
 
     if (val_memory_free(pages, size))
     {
-        LOG(ERROR, "\tval_mem_free failed\n", 0, 0);
+        LOG(ERROR, "val_mem_free failed");
         status = status ? status : VAL_ERROR_POINT(6);
     }
 
@@ -158,7 +160,7 @@ static uint32_t mem_lend_invalid_total_length_check(void *tx_buf, ffa_endpoint_i
     pages = (uint8_t *)val_memory_alloc(size);
     if (!pages)
     {
-        LOG(ERROR, "\tMemory allocation failed\n", 0, 0);
+        LOG(ERROR, "Memory allocation failed");
         return VAL_ERROR_POINT(7);
     }
 
@@ -191,14 +193,15 @@ static uint32_t mem_lend_invalid_total_length_check(void *tx_buf, ffa_endpoint_i
 
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
     {
-        LOG(ERROR, "\tMem_lend request must return error for invalid total length err %x\n",
-                        payload.arg2, 0);
+        LOG(ERROR, "Mem_lend request must return error for invalid total length err %x",
+                        payload.arg2);
         status = VAL_ERROR_POINT(7);
     }
+    LOG(DBG, "Mem Lend Check Invalid Memory Length Complete");
 
     if (val_memory_free(pages, size))
     {
-        LOG(ERROR, "\tval_mem_free failed\n", 0, 0);
+        LOG(ERROR, "val_mem_free failed");
         status = status ? status : VAL_ERROR_POINT(8);
     }
 
@@ -225,7 +228,7 @@ static uint32_t mem_lend_mem_attribute_check(void *tx_buf, ffa_endpoint_id_t sen
     pages = (uint8_t *)val_memory_alloc(size);
     if (!pages)
     {
-        LOG(ERROR, "\tMemory allocation failed\n", 0, 0);
+        LOG(ERROR, "Memory allocation failed");
         return VAL_ERROR_POINT(9);
     }
 
@@ -263,13 +266,14 @@ static uint32_t mem_lend_mem_attribute_check(void *tx_buf, ffa_endpoint_id_t sen
 
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
     {
-        LOG(ERROR, "\tFor MEM_LEND, memory type[5:4] must be b'00 err %x\n", payload.arg2, 0);
+        LOG(ERROR, "For MEM_LEND, memory type[5:4] must be b'00 err %x", payload.arg2);
         status = VAL_ERROR_POINT(10);
     }
+    LOG(DBG, "Mem Lend Check for MBZ complete");
 
     if (val_memory_free(pages, size))
     {
-        LOG(ERROR, "\tval_mem_free failed\n", 0, 0);
+        LOG(ERROR, "val_mem_free failed");
         status = status ? status : VAL_ERROR_POINT(11);
     }
 
@@ -296,7 +300,7 @@ static uint32_t mem_lend_instruction_access_check(void *tx_buf, ffa_endpoint_id_
     pages = (uint8_t *)val_memory_alloc(size);
     if (!pages)
     {
-        LOG(ERROR, "\tMemory allocation failed\n", 0, 0);
+        LOG(ERROR, "Memory allocation failed");
         return VAL_ERROR_POINT(12);
     }
 
@@ -328,13 +332,14 @@ static uint32_t mem_lend_instruction_access_check(void *tx_buf, ffa_endpoint_id_
 
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
     {
-        LOG(ERROR, "\tFor MEM_LEND, instruction acess[3:2] must be b'00 err %x\n", payload.arg2, 0);
+        LOG(ERROR, "For MEM_LEND, instruction acess[3:2] must be b'00 err %x", payload.arg2);
         status = VAL_ERROR_POINT(13);
     }
+    LOG(DBG, "Mem Lend Check for Instruction access field complete");
 
     if (val_memory_free(pages, size))
     {
-        LOG(ERROR, "\tval_mem_free failed\n", 0, 0);
+        LOG(ERROR, "val_mem_free failed");
         status = status ? status : VAL_ERROR_POINT(14);
     }
 
@@ -362,7 +367,7 @@ static uint32_t mem_lend_invalid_ep_count_check(void *tx_buf, ffa_endpoint_id_t 
     pages = (uint8_t *)val_memory_alloc(size);
     if (!pages)
     {
-        LOG(ERROR, "\tMemory allocation failed\n", 0, 0);
+        LOG(ERROR, "Memory allocation failed");
         return VAL_ERROR_POINT(15);
     }
 
@@ -399,14 +404,15 @@ static uint32_t mem_lend_invalid_ep_count_check(void *tx_buf, ffa_endpoint_id_t 
 
     if (payload.fid != FFA_ERROR_32)
     {
-        LOG(ERROR, "\tMem_lend request must return error for invalid endpoint count err %x\n",
-                        payload.arg2, 0);
+        LOG(ERROR, "Mem_lend request must return error for invalid endpoint count err %x",
+                        payload.arg2);
         status = VAL_ERROR_POINT(16);
     }
+    LOG(DBG, "Mem Lend complete");
 
     if (val_memory_free(pages, size))
     {
-        LOG(ERROR, "\tval_mem_free failed\n", 0, 0);
+        LOG(ERROR, "val_mem_free failed");
         status = status ? status : VAL_ERROR_POINT(17);
     }
 
@@ -434,7 +440,7 @@ static uint32_t mem_lend_invalid_ep_desc_offset_check(void *tx_buf, ffa_endpoint
     pages = (uint8_t *)val_memory_alloc(size);
     if (!pages)
     {
-        LOG(ERROR, "\tMemory allocation failed\n", 0, 0);
+        LOG(ERROR, "Memory allocation failed");
         return VAL_ERROR_POINT(18);
     }
 
@@ -471,14 +477,15 @@ static uint32_t mem_lend_invalid_ep_desc_offset_check(void *tx_buf, ffa_endpoint
 
     if (payload.fid != FFA_ERROR_32)
     {
-        LOG(ERROR, "\tMem_lend must return error for invalid endpoint descriptor offset err %x\n",
-                        payload.arg2, 0);
+        LOG(ERROR, "Mem_lend must return error for invalid endpoint descriptor offset err %x",
+                        payload.arg2);
         status = VAL_ERROR_POINT(19);
     }
+    LOG(DBG, "Mem Lend Check for Invalid EP Desc Offset complete");
 
     if (val_memory_free(pages, size))
     {
-        LOG(ERROR, "\tval_mem_free failed\n", 0, 0);
+        LOG(ERROR, "val_mem_free failed");
         status = status ? status : VAL_ERROR_POINT(20);
     }
 
@@ -497,7 +504,7 @@ static uint32_t ffa_mem_lend_helper(uint32_t test_run_data, uint32_t fid)
     mb.recv = val_memory_alloc(size);
     if (mb.send == NULL || mb.recv == NULL)
     {
-        LOG(ERROR, "\tFailed to allocate RxTx buffer\n", 0, 0);
+        LOG(ERROR, "Failed to allocate RxTx buffer");
         status = VAL_ERROR_POINT(21);
         goto free_memory;
     }
@@ -505,7 +512,7 @@ static uint32_t ffa_mem_lend_helper(uint32_t test_run_data, uint32_t fid)
     /* Map TX and RX buffers */
     if (val_rxtx_map_64((uint64_t)mb.send, (uint64_t)mb.recv, (uint32_t)(size/PAGE_SIZE_4K)))
     {
-        LOG(ERROR, "\tRxTx Map failed\n", 0, 0);
+        LOG(ERROR, "RxTx Map failed");
         status = VAL_ERROR_POINT(22);
         goto free_memory;
     }
@@ -551,14 +558,14 @@ static uint32_t ffa_mem_lend_helper(uint32_t test_run_data, uint32_t fid)
 rxtx_unmap:
     if (val_rxtx_unmap(sender))
     {
-        LOG(ERROR, "\tRXTX_UNMAP failed\n", 0, 0);
+        LOG(ERROR, "RXTX_UNMAP failed");
         status = status ? status : VAL_ERROR_POINT(23);
     }
 
 free_memory:
     if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
     {
-        LOG(ERROR, "\tval_mem_free failed\n", 0, 0);
+        LOG(ERROR, "val_mem_free failed");
         status = status ? status : VAL_ERROR_POINT(24);
     }
 
@@ -573,7 +580,7 @@ uint32_t lend_input_error_checks1_client(uint32_t test_run_data)
     status_32 = val_is_ffa_feature_supported(FFA_MEM_LEND_32);
     if (status_64 && status_32)
     {
-        LOG(TEST, "\tFFA_MEM_LEND not supported, skipping the check\n", 0, 0);
+        LOG(TEST, "FFA_MEM_LEND not supported, skipping the check");
         return VAL_SKIP_CHECK;
     }
     else if (status_64 && !status_32)

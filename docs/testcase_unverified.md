@@ -24,7 +24,7 @@ cd ../../
 git clone "https://review.trustedfirmware.org/hafnium/hafnium"
 cd hafnium
 setenv PATH $PWD/prebuilts/linux-x64/clang/bin:$PWD/prebuilts/linux-x64/dtc:<path-to-clang>:$PATH
-git reset --hard 8fc1b5054cb271a2cf7205bc6a1f2fda22bfffcf
+git reset --hard fd374b8c9227b34eed1e8c1f8b4488c9596ca0e5
 git submodule update --init
 git fetch https://review.trustedfirmware.org/hafnium/hafnium refs/changes/25/29025/5 && git cherry-pick FETCH_HEAD
 make PROJECT=reference PLATFORM=secure_aem_v8a_fvp_vhe
@@ -33,7 +33,7 @@ cd -
 # Download trusted-firmware-a repository
 git clone "https://review.trustedfirmware.org/TF-A/trusted-firmware-a"
 cd trusted-firmware-a
-git reset --hard d1c75f1f6bed3fa18edc4719078fba1bc876a40e
+git reset --hard 9babc7c2d69c2b75395273e34b250aed03254e1e
 
 # Build trusted-firmware-a and integrate S-EL1 patitions software stack to run ff-a-acs
 make SPD=spmd ARM_ARCH_MINOR=5 GIC_EXT_INTID=1 BRANCH_PROTECTION=1 ENABLE_FEAT_MTE2=1 CTX_INCLUDE_EL2_REGS=1 CTX_INCLUDE_PAUTH_REGS=1 PLAT=fvp BL33=<path to ff-a-acs>/build/output/vm1.bin DEBUG=1 BL32=<path to hafnium>/out/reference/secure_aem_v8a_fvp_vhe_clang/hafnium.bin all ARM_SPMC_MANIFEST_DTS=<path to ff-a-acs>/platform/manifest/tgt_tfa_fvp/fvp_spmc_manifest.dts ARM_BL2_SP_LIST_DTS=<path to trusted-firmware-a>/build/fvp/debug/sp_list_fragment.dts fip SP_LAYOUT_FILE=<path to ff-a-acs>/platform/manifest/tgt_tfa_fvp/sp_layout.json CROSS_COMPILE=/path-to-aarch64-gcc>/bin/aarch64-none-elf-
@@ -69,6 +69,9 @@ FVP_Base_RevC-2xAEMv8A -C pctl.startup=0.0.0.0 -C cluster0.NUM_CORES=4 -C cluste
 - share_ro_retrieve_rw_64_vmvm
 - share_ro_retrieve_rw_32_vmvm
 
+## List of failed tests
+- ffa_version
+- ffa_features
 
 ## List of unverified tests
 
@@ -106,9 +109,9 @@ FVP_Base_RevC-2xAEMv8A -C pctl.startup=0.0.0.0 -C cluster0.NUM_CORES=4 -C cluste
 - donate_retrieve_align_hint_check
 - donate_retrieve_with_address_range
 - donate_input_error_checks1
-- mem_lend_mmio
 - mem_share_mmio
 - mem_donate_mmio
+- static_mapping_dma
 - vm_to_up_sp_preempt
 - vm_to_sp_managed_exit_4
 - other_secure_int2

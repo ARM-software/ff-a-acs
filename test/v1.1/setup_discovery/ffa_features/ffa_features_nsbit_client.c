@@ -25,7 +25,7 @@ static uint32_t ffa_features_nsbit_helper(uint32_t test_run_data, uint32_t fid)
         /* w2[1] A v1.1 SP must set Bit[1] in the Input properties parameter */
         if (payload.fid != FFA_ERROR_32)
         {
-            LOG(ERROR, "\t  Must Fail for SP - invalid NS-Bit usage err %x\n", payload.arg2, 0);
+            LOG(ERROR, "Must Fail for SP - invalid NS-Bit usage err %x", payload.arg2);
             return VAL_ERROR_POINT(1);
         }
 
@@ -39,7 +39,7 @@ static uint32_t ffa_features_nsbit_helper(uint32_t test_run_data, uint32_t fid)
 
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\t FFA Feature query failed err %x feature fid %x \n", payload.arg2, fid);
+        LOG(ERROR, "FFA Feature query failed err %x feature fid %x ", payload.arg2, fid);
         return (payload.arg2 == FFA_ERROR_NOT_SUPPORTED) ? VAL_SKIP_CHECK : VAL_ERROR_POINT(2);
     }
 
@@ -48,9 +48,10 @@ static uint32_t ffa_features_nsbit_helper(uint32_t test_run_data, uint32_t fid)
     data = VAL_EXTRACT_BITS(payload.arg2, 1, 1);
     if (data != 1)
     {
-        LOG(ERROR, "\t v1.1 SPMC must set ns-bit for  FFA_MEM_RETRIEVE_REQ val \n", 0, 0);
+        LOG(ERROR, "v1.1 SPMC must set ns-bit for  FFA_MEM_RETRIEVE_REQ val");
         return VAL_ERROR_POINT(3);
     }
+    LOG(DBG, "ns-bit val %x", data);
 
     return VAL_SUCCESS;
 }
@@ -66,7 +67,7 @@ uint32_t ffa_features_nsbit_client(uint32_t test_run_data)
     /* Either of the messaging method must be supported */
     if ((status_1 == VAL_SKIP_CHECK) && (status_2 == VAL_SKIP_CHECK))
     {
-        LOG(ERROR, "\tEither of the messaging method must be supported\n", 0, 0)
+        LOG(ERROR, "Either of the messaging method must be supported");
         return VAL_ERROR_POINT(4);
     } else
         return status;

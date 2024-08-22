@@ -7,6 +7,7 @@
 
 #include "pal_smmuv3_testengine.h"
 #include "pal_interfaces.h"
+#include "pal_spm_helpers.h"
 
 #define PAGE_SIZE_4K        0x1000
 #define F_IDX(n)            (n * FRAME_SIZE)
@@ -65,7 +66,7 @@ uint32_t smmuv3_configure_testengine(uint32_t stream_id, uint64_t source, uint64
 
             if (data != ENGINE_HALTED)
             {
-                pal_printf("ERROR: SMMU data transfer failed\n", 0, 0);
+                PAL_LOG(ERROR, "SMMU data transfer failed");
                 return PAL_ERROR;
             }
             else
@@ -74,17 +75,17 @@ uint32_t smmuv3_configure_testengine(uint32_t stream_id, uint64_t source, uint64
 
         if (!time_out)
         {
-            pal_printf("ERROR: SMMU test engine timeout\n", 0, 0);
+            PAL_LOG(ERROR, "SMMU test engine timeout");
             return PAL_ERROR;
         }
 
         time_out = TIME_OUT;
+        dsbsy();
     }
-
 
     if (pal_memcmp((void *)begin, (void *)dest, size))
     {
-        pal_printf("ERROR: SMMU: Data mismatched\n", 0, 0);
+        PAL_LOG(ERROR, "SMMU: Data mismatched");
         return PAL_ERROR;
     }
 

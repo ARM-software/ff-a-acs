@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -19,23 +19,24 @@ uint32_t ffa_id_get_client(uint32_t test_run_data)
     val_ffa_id_get(&payload);
     if (payload.fid != FFA_SUCCESS_32)
     {
-        LOG(ERROR, "\tCheck failed for ffa_id_get success case\n", 0, 0);
+        LOG(ERROR, "Check failed for ffa_id_get success case");
         return VAL_ERROR_POINT(1);
     }
+
+    LOG(DBG, "ffa id %x", payload.arg2 & 0xffff);
 
     /* W2: ID of the caller. Bit[31:16]: Reserved (MBZ). Bit[15:0]: ID */
     if (((payload.arg2 & 0xffff) != expected_id) ||
             (((payload.arg2 >> 16) & 0xffff) != 0x0))
     {
-        LOG(ERROR, "\tID mismatch, expected=0x%x but actual=0x%x\n", expected_id, payload.arg2);
+        LOG(ERROR, "ID mismatch, expected=0x%x but actual=0x%x", expected_id, payload.arg2);
         return VAL_ERROR_POINT(2);
     }
 
     /* Return value for reserved registers - MBZ */
     if (val_reserve_param_check(payload, output_reserve_count))
     {
-        LOG(ERROR, "\tReceived non-zero value for reserved registers\n",
-            0, 0);
+        LOG(ERROR, "Received non-zero value for reserved registers");
         return VAL_ERROR_POINT(3);
     }
 

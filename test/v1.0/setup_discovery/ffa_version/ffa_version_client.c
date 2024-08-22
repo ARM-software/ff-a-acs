@@ -17,6 +17,7 @@ uint32_t ffa_version_client(uint32_t test_run_data)
 
     for (i = 0; i < num_checks; i++)
     {
+        LOG(DBG, "FFA_VERSION Check idx %d", i);
         input_version_number = (uint32_t)((check[i].major << 16)
                                           | check[i].minor);
         val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -30,8 +31,8 @@ uint32_t ffa_version_client(uint32_t test_run_data)
                          &&  (check[i].minor <= (payload.fid & 0xFFFF)))))
             #endif
             {
-            LOG(ERROR, "\tCheck failed for iteration = %d\n", i, 0);
-            LOG(ERROR, "\tExpected=0x%x but Actual=0x%x\n",
+            LOG(ERROR, "Check failed for iteration = %d", i);
+            LOG(ERROR, "Expected=0x%x but Actual=0x%x",
                         check[i].expected_status,
                         payload.fid);
             return VAL_ERROR_POINT(1);
@@ -41,11 +42,9 @@ uint32_t ffa_version_client(uint32_t test_run_data)
         /* Reserved registers (MBZ) */
         if (val_reserve_param_check(payload, output_reserve_count))
         {
-            LOG(ERROR, "\tReceived non-zero value for reserved registers\n",
-                0, 0);
+            LOG(ERROR, "Received non-zero value for reserved registers");
             return VAL_ERROR_POINT(2);
         }
-
     }
 
     /* Unused argument */

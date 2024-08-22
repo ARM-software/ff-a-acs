@@ -46,7 +46,7 @@ static uint32_t ffa_mem_lend_helper(uint32_t test_run_data, uint32_t fid)
     mb.recv = val_memory_alloc(size);
     if (mb.send == NULL || mb.recv == NULL)
     {
-        LOG(ERROR, "\tFailed to allocate RxTx buffer\n", 0, 0);
+        LOG(ERROR, "Failed to allocate RxTx buffer");
         status = VAL_ERROR_POINT(1);
         goto free_memory;
     }
@@ -54,7 +54,7 @@ static uint32_t ffa_mem_lend_helper(uint32_t test_run_data, uint32_t fid)
     /* Map TX and RX buffers */
     if (val_rxtx_map_64((uint64_t)mb.send, (uint64_t)mb.recv, (uint32_t)(size/PAGE_SIZE_4K)))
     {
-        LOG(ERROR, "\tRxTx Map failed\n", 0, 0);
+        LOG(ERROR, "RxTx Map failed");
         status = VAL_ERROR_POINT(2);
         goto free_memory;
     }
@@ -62,7 +62,7 @@ static uint32_t ffa_mem_lend_helper(uint32_t test_run_data, uint32_t fid)
     pages = (uint8_t *)val_memory_alloc(size);
     if (!pages)
     {
-        LOG(ERROR, "\tMemory allocation failed\n", 0, 0);
+        LOG(ERROR, "Memory allocation failed");
         status = VAL_ERROR_POINT(3);
         goto rxtx_unmap;
     }
@@ -112,10 +112,11 @@ static uint32_t ffa_mem_lend_helper(uint32_t test_run_data, uint32_t fid)
 
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\tMulti-endpoint mem_lend request failed err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Multi-endpoint mem_lend request failed err %x", payload.arg2);
         status = VAL_ERROR_POINT(4);
         goto rxtx_unmap;
     }
+    LOG(DBG, "Mem Lend Complete");
 
 
 #if (PLATFORM_FFA_V_1_0 == 1)
@@ -161,8 +162,8 @@ static uint32_t ffa_mem_lend_helper(uint32_t test_run_data, uint32_t fid)
     val_ffa_mem_reclaim(&payload);
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_DENIED))
     {
-        LOG(ERROR, "\tMem Reclaim must return DENIED if receiver is not !Owner-NA err %x\n",
-                                        payload.arg2, 0);
+        LOG(ERROR, "Mem Reclaim must return DENIED if receiver is not !Owner-NA err %x",
+                                        payload.arg2);
         status = VAL_ERROR_POINT(7);
         goto exit;
     }
@@ -175,7 +176,7 @@ static uint32_t ffa_mem_lend_helper(uint32_t test_run_data, uint32_t fid)
     val_ffa_mem_reclaim(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\tMem Reclaim failed err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Mem Reclaim failed err %x", payload.arg2);
         status = VAL_ERROR_POINT(8);
         goto exit;
     }
@@ -187,7 +188,7 @@ static uint32_t ffa_mem_lend_helper(uint32_t test_run_data, uint32_t fid)
     {
         if (pages[i] != 0)
         {
-            LOG(ERROR, "\tRegion data mismatch after relinquish\n", 0, 0);
+            LOG(ERROR, "Region data mismatch after relinquish");
             status = VAL_ERROR_POINT(9);
             goto exit;
         }
@@ -202,20 +203,20 @@ exit:
 rxtx_unmap:
     if (val_rxtx_unmap(sender))
     {
-        LOG(ERROR, "\tRXTX_UNMAP failed\n", 0, 0);
+        LOG(ERROR, "RXTX_UNMAP failed");
         status = status ? status : VAL_ERROR_POINT(10);
     }
 
 free_memory:
     if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
     {
-        LOG(ERROR, "\tfree_rxtx_buffers failed\n", 0, 0);
+        LOG(ERROR, "free_rxtx_buffers failed");
         status = status ? status : VAL_ERROR_POINT(11);
     }
 
     if (val_memory_free(pages, size))
     {
-        LOG(ERROR, "\tval_mem_free failed\n", 0, 0);
+        LOG(ERROR, "val_mem_free failed");
         status = status ? status : VAL_ERROR_POINT(12);
     }
 
@@ -230,7 +231,7 @@ uint32_t relinquish_state_machine_4_client(uint32_t test_run_data)
     status_32 = val_is_ffa_feature_supported(FFA_MEM_LEND_32);
     if (status_64 && status_32)
     {
-        LOG(TEST, "\tFFA_MEM_LEND not supported, skipping the check\n", 0, 0);
+        LOG(TEST, "FFA_MEM_LEND not supported, skipping the check");
         return VAL_SKIP_CHECK;
     }
     else if (status_64 && !status_32)

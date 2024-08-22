@@ -16,6 +16,7 @@ static int wd_irq_handler(void)
     val_interrupt_get();
     interrupt_triggered = true;
     val_twdog_disable();
+    LOG(DBG, "T-WD IRQ Handler Processed");
     return 0;
 }
 
@@ -32,23 +33,25 @@ uint32_t sp_el0_running_server(ffa_args_t args)
     payload = val_resp_client_fn_direct((uint32_t)args.arg3, 0, 0, 0, 0, 0);
     if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_64)
     {
-        LOG(ERROR, "\tDirect request failed, fid=0x%x, err 0x%x\n",
+        LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x",
                   payload.fid, payload.arg2);
         status =  VAL_ERROR_POINT(1);
         goto exit;
     }
 
     val_twdog_enable(S_WD_TIMEOUT);
+    LOG(DBG, "S-WD IRQ Enabled");
 
     /* Wait for WD interrupt */
     val_sp_sleep(WD_TIME_OUT);
 
     if (interrupt_triggered == true)
     {
-        LOG(ERROR, "\t WD interrupt should not be triggered\n", 0, 0);
+        LOG(ERROR, "WD interrupt should not be triggered");
         status =  VAL_ERROR_POINT(2);
         goto free_interrupt;
     }
+    LOG(DBG, "SP Sleep Complete, IRQ Status %x", interrupt_triggered);
 
     /* Enter Wait state by responding to client to Get Interrupt */
     val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -56,7 +59,7 @@ uint32_t sp_el0_running_server(ffa_args_t args)
     val_ffa_msg_send_direct_resp_64(&payload);
     if (payload.fid != FFA_INTERRUPT_32)
     {
-        LOG(ERROR, "\t FFA_INTERRUPT_32 not received fid %x\n", payload.fid, 0);
+        LOG(ERROR, "FFA_INTERRUPT_32 not received fid %x", payload.fid);
         status = VAL_ERROR_POINT(3);
         goto free_interrupt;
     }
@@ -68,9 +71,10 @@ uint32_t sp_el0_running_server(ffa_args_t args)
 
     if (interrupt_triggered != true)
     {
-        LOG(ERROR, "\t WD interrupt should be triggered\n", 0, 0);
+        LOG(ERROR, "WD interrupt should be triggered");
         status =  VAL_ERROR_POINT(4);
     }
+    LOG(DBG, "IRQ Status %x", interrupt_triggered);
 
 free_interrupt:
     val_twdog_intr_disable();
@@ -79,7 +83,7 @@ exit:
     val_ffa_msg_wait(&payload);
     if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_32)
     {
-        LOG(ERROR, "\t DIRECT_REQ_32 not received fid %x\n", payload.fid, 0);
+        LOG(ERROR, "DIRECT_REQ_32 not received fid %x", payload.fid);
         status = status ? status : VAL_ERROR_POINT(5);
     }
     return status;

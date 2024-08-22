@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <stdarg.h>
 #include <limits.h>
 #else
 #include <linux/types.h>

@@ -11,6 +11,7 @@ static volatile bool interrupt_triggered;
 static int wd_irq_handler(void)
 {
     interrupt_triggered = true;
+    LOG(DBG, "T-WD IRQ Handler Processed");
     return 0;
 }
 uint32_t sp_el1_running_server(ffa_args_t args)
@@ -25,31 +26,34 @@ uint32_t sp_el1_running_server(ffa_args_t args)
     payload = val_resp_client_fn_direct((uint32_t)args.arg3, 0, 0, 0, 0, 0);
     if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_64)
     {
-        LOG(ERROR, "\tDirect request failed, fid=0x%x, err 0x%x\n",
+        LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x",
                   payload.fid, payload.arg2);
         status =  VAL_ERROR_POINT(1);
         goto exit;
     }
    if (val_irq_register_handler(PALTFORM_AP_REFCLK_CNTPSIRQ1, wd_irq_handler))
     {
-        LOG(ERROR, "\t  WD interrupt register failed\n", 0, 0);
+        LOG(ERROR, "WD interrupt register failed");
         status = VAL_ERROR_POINT(2);
         goto exit;
     }
     val_sys_phy_timer_en(S_WD_TIMEOUT);
+    LOG(DBG, "System Timer IRQ Enabled");
+
     /* Wait for WD interrupt */
     val_sp_sleep(WD_TIME_OUT);
 
     val_sys_phy_timer_dis(true);
+    LOG(DBG, "SP Sleep Complete, IRQ Status %x", interrupt_triggered);
 
     if (interrupt_triggered != true)
     {
-        LOG(ERROR, "\t WD interrupt should be triggered\n", 0, 0);
+        LOG(ERROR, "WD interrupt should be triggered");
         status =  VAL_ERROR_POINT(3);
     }
     if (val_irq_unregister_handler(PALTFORM_AP_REFCLK_CNTPSIRQ1))
     {
-        LOG(ERROR, "\t  IRQ handler unregister failed\n", 0, 0);
+        LOG(ERROR, "IRQ handler unregister failed");
         status = VAL_ERROR_POINT(4);
     }
 exit:
@@ -58,7 +62,7 @@ exit:
     val_ffa_msg_send_direct_resp_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\tDirect response failed err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Direct response failed err %x", payload.arg2);
         status = status ? status : VAL_ERROR_POINT(5);
     }
     return status;

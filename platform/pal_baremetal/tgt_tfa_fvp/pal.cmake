@@ -18,6 +18,7 @@ set(PAL_SRC
     ${ROOT_DIR}/platform/pal_baremetal/${TARGET}/src/pal_vcpu_setup.c
     ${ROOT_DIR}/platform/pal_baremetal/${TARGET}/src/pal_irq.c
     ${ROOT_DIR}/platform/driver/src/pal_pl011_uart.c
+    ${ROOT_DIR}/platform/driver/src/pal_log.c
     ${ROOT_DIR}/platform/driver/src/pal_sp805_watchdog.c
     ${ROOT_DIR}/platform/driver/src/pal_ap_refclk_timer.c
     ${ROOT_DIR}/platform/driver/src/pal_nvm.c

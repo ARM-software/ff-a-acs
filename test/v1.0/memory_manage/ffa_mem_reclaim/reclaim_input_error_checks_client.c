@@ -29,7 +29,7 @@ static uint32_t ffa_mem_share_helper(uint32_t test_run_data, uint32_t fid)
     mb.recv = val_memory_alloc(size);
     if (mb.send == NULL || mb.recv == NULL)
     {
-        LOG(ERROR, "\tFailed to allocate RxTx buffer\n", 0, 0);
+        LOG(ERROR, "Failed to allocate RxTx buffer");
         status = VAL_ERROR_POINT(1);
         goto free_memory;
     }
@@ -37,7 +37,7 @@ static uint32_t ffa_mem_share_helper(uint32_t test_run_data, uint32_t fid)
     /* Map TX and RX buffers */
     if (val_rxtx_map_64((uint64_t)mb.send, (uint64_t)mb.recv, (uint32_t)(size/PAGE_SIZE_4K)))
     {
-        LOG(ERROR, "\tRxTx Map failed\n", 0, 0);
+        LOG(ERROR, "RxTx Map failed");
         status = VAL_ERROR_POINT(2);
         goto free_memory;
     }
@@ -45,7 +45,7 @@ static uint32_t ffa_mem_share_helper(uint32_t test_run_data, uint32_t fid)
     pages = (uint8_t *)val_memory_alloc(size);
     if (!pages)
     {
-        LOG(ERROR, "\tMemory allocation failed\n", 0, 0);
+        LOG(ERROR, "Memory allocation failed");
         status = VAL_ERROR_POINT(3);
         goto rxtx_unmap;
     }
@@ -86,10 +86,11 @@ static uint32_t ffa_mem_share_helper(uint32_t test_run_data, uint32_t fid)
 
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\tMem_share request failed err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Mem_share request failed err %x", payload.arg2);
         status = VAL_ERROR_POINT(4);
         goto rxtx_unmap;
     }
+    LOG(DBG, "Mem Share Complete");
 
     handle = ffa_mem_success_handle(payload);
 
@@ -104,10 +105,11 @@ static uint32_t ffa_mem_share_helper(uint32_t test_run_data, uint32_t fid)
     val_ffa_mem_reclaim(&payload);
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
     {
-        LOG(ERROR, "\tMem Reclaim must return error for invalid handle err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Mem Reclaim must return error for invalid handle err %x", payload.arg2);
         status = VAL_ERROR_POINT(5);
         goto mem_reclaim;
     }
+    LOG(DBG, "Mem Reclaim Check for Invalid Handle Complete");
 
     /* Pass memory handle to the server using direct message */
     val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -116,7 +118,7 @@ static uint32_t ffa_mem_share_helper(uint32_t test_run_data, uint32_t fid)
     val_ffa_msg_send_direct_req_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\tDirect request failed err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Direct request failed err %x", payload.arg2);
         status = VAL_ERROR_POINT(6);
         goto mem_reclaim;
     }
@@ -132,11 +134,12 @@ static uint32_t ffa_mem_share_helper(uint32_t test_run_data, uint32_t fid)
     val_ffa_mem_reclaim(&payload);
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_DENIED))
     {
-        LOG(ERROR, "\tMem Reclaim must return DENIED if receiver is not !Owner-NA err %x\n",
-                                        payload.arg2, 0);
+        LOG(ERROR, "Mem Reclaim must return DENIED if receiver is not !Owner-NA err %x",
+                                        payload.arg2);
         status = VAL_ERROR_POINT(7);
         goto mem_reclaim;
     }
+    LOG(DBG, "Mem Reclaim Check for receiver is not !Owner-NA Complete");
 
     /* Let reciever relinquish the memory */
     val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -144,7 +147,7 @@ static uint32_t ffa_mem_share_helper(uint32_t test_run_data, uint32_t fid)
     val_ffa_msg_send_direct_req_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\tDirect request failed err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Direct request failed err %x", payload.arg2);
         status = VAL_ERROR_POINT(8);
         goto mem_reclaim;
     }
@@ -157,7 +160,7 @@ static uint32_t ffa_mem_share_helper(uint32_t test_run_data, uint32_t fid)
     val_ffa_mem_reclaim(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\tMem Reclaim failed err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Mem Reclaim failed err %x", payload.arg2);
         status = VAL_ERROR_POINT(9);
         goto mem_reclaim;
     }
@@ -168,7 +171,7 @@ static uint32_t ffa_mem_share_helper(uint32_t test_run_data, uint32_t fid)
         {
             if (pages[i] != 0x0)
             {
-                LOG(ERROR, "\tRegion data mismatch after reclaim, page[%d]=%x\n", i, pages[i]);
+                LOG(ERROR, "Region data mismatch after reclaim, page[%d]=%x", i, pages[i]);
                 status = VAL_ERROR_POINT(10);
                 goto rxtx_unmap;
             }
@@ -184,27 +187,27 @@ mem_reclaim:
     val_ffa_mem_reclaim(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\tMem Reclaim failed err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Mem Reclaim failed err %x", payload.arg2);
         status = status ? status : VAL_ERROR_POINT(11);
     }
 
 rxtx_unmap:
     if (val_rxtx_unmap(sender))
     {
-        LOG(ERROR, "\tRXTX_UNMAP failed\n", 0, 0);
+        LOG(ERROR, "RXTX_UNMAP failed");
         status = status ? status : VAL_ERROR_POINT(12);
     }
 
 free_memory:
     if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
     {
-        LOG(ERROR, "\tfree_rxtx_buffers failed\n", 0, 0);
+        LOG(ERROR, "free_rxtx_buffers failed");
         status = status ? status : VAL_ERROR_POINT(13);
     }
 
     if (val_memory_free(pages, size))
     {
-        LOG(ERROR, "\tval_mem_free failed\n", 0, 0);
+        LOG(ERROR, "val_mem_free failed");
         status = status ? status : VAL_ERROR_POINT(14);
     }
 
@@ -221,7 +224,7 @@ uint32_t reclaim_input_error_checks_client(uint32_t test_run_data)
     status_32 = val_is_ffa_feature_supported(FFA_MEM_SHARE_32);
     if (status_64 && status_32)
     {
-        LOG(TEST, "\tFFA_MEM_SHARE not supported, skipping the check\n", 0, 0);
+        LOG(TEST, "FFA_MEM_SHARE not supported, skipping the check");
         return VAL_SKIP_CHECK;
     }
     else if (status_64 && !status_32)

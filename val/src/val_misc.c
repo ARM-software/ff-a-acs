@@ -74,32 +74,33 @@ void *val_memset(void *dst, int val, size_t count)
   @param  output_buff_size - Size of str1 string
   @return Pointer of destination string
 **/
-
-char *val_strcat(char *str1, char *str2, size_t output_buff_size)
+char *val_strcat(char *str1, const char *str2, size_t output_buff_size)
 {
-  size_t length = 0, i;
+    // Find the end of the first string
+    size_t str1_len = 0;
+    while (str1[str1_len] != '\0' && str1_len < output_buff_size - 1)
+    {
+        str1_len++;
+    }
 
-  while (str1[length] != '\0')
-  {
-    ++length;
-  }
+    // If str1 is already at the maximum buffer size, return str1
+    if (str1_len >= output_buff_size - 1) {
+        return str1;
+    }
 
-  /* Concatenate str1 to str2 */
-  for (i = 0; str2[i] != '\0'; ++i, ++length)
-  {
-     if (length < output_buff_size)
-     {
-         str1[length] = str2[i];
-     }
-     else
-     {
-         VAL_PANIC("\tError: Buffer overflow detected\n");
-     }
-  }
+    // Append characters from str2 to str1, ensuring we don't exceed the buffer size
+    size_t i = 0;
+    while (str2[i] != '\0' && str1_len < output_buff_size - 1)
+    {
+        str1[str1_len] = str2[i];
+        str1_len++;
+        i++;
+    }
 
-  str1[length] = '\0';
+    // Null-terminate the resulting string
+    str1[str1_len] = '\0';
 
-  return str1;
+    return str1;
 }
 
 /**

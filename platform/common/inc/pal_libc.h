@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -14,11 +14,11 @@
 #include "pal_endpoint_info.h"
 
 #define __assert(e) ({ \
-                  pal_printf("ASSERT: ", 0, 0); \
-                  pal_printf(__FILE__, 0, 0); \
-                  pal_printf(" ,line:%d) ", __LINE__, 0); \
-                  pal_printf(#e, 0, 0); \
-                  pal_printf("\n", 0, 0); \
+                  PAL_LOG(ALWAYS, "ASSERT: ", 0, 0); \
+                  PAL_LOG(ALWAYS, __FILE__, 0, 0); \
+                  PAL_LOG(ALWAYS, " ,line:%d) ", __LINE__, 0); \
+                  PAL_LOG(ALWAYS, #e, 0, 0); \
+                  PAL_LOG(ALWAYS, "\n", 0, 0); \
                   pal_terminate_simulation(); \
                 })
 

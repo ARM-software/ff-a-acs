@@ -26,7 +26,7 @@ static uint32_t mem_donate_invalid_epid_check(void *tx_buf,
     pages = (uint8_t *)val_memory_alloc(size);
     if (!pages)
     {
-        LOG(ERROR, "\tMemory allocation failed\n", 0, 0);
+        LOG(ERROR, "Memory allocation failed");
         return VAL_ERROR_POINT(1);
     }
 
@@ -61,13 +61,13 @@ static uint32_t mem_donate_invalid_epid_check(void *tx_buf,
 
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
     {
-        LOG(ERROR, "\tMem_donate request must return error for invalid id %x\n", payload.arg2, 0);
+        LOG(ERROR, "Mem_donate request must return error for invalid id %x", payload.arg2);
         status = VAL_ERROR_POINT(2);
     }
 
     if (val_memory_free(pages, size))
     {
-        LOG(ERROR, "\tval_mem_free failed\n", 0, 0);
+        LOG(ERROR, "val_mem_free failed");
         status = status ? status : VAL_ERROR_POINT(3);
     }
 
@@ -94,7 +94,7 @@ static uint32_t mem_donate_data_access_perm_check(void *tx_buf, ffa_endpoint_id_
     pages = (uint8_t *)val_memory_alloc(size);
     if (!pages)
     {
-        LOG(ERROR, "\tMemory allocation failed\n", 0, 0);
+        LOG(ERROR, "Memory allocation failed");
         return VAL_ERROR_POINT(4);
     }
 
@@ -130,13 +130,15 @@ static uint32_t mem_donate_data_access_perm_check(void *tx_buf, ffa_endpoint_id_
 
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
     {
-        LOG(ERROR, "\tFor MEM_DONATE, data access[1:0] perm must be b'00\n", 0, 0);
+        LOG(ERROR, "For MEM_DONATE, data access[1:0] perm must be b'00");
         status = VAL_ERROR_POINT(5);
     }
 
+    LOG(DBG, "Mem Donate Access Perm Check Complete");
+
     if (val_memory_free(pages, size))
     {
-        LOG(ERROR, "\tval_mem_free failed\n", 0, 0);
+        LOG(ERROR, "val_mem_free failed");
         status = status ? status : VAL_ERROR_POINT(6);
     }
     return status;
@@ -161,7 +163,7 @@ static uint32_t mem_donate_mem_attribute_check(void *tx_buf, ffa_endpoint_id_t s
     pages = (uint8_t *)val_memory_alloc(size);
     if (!pages)
     {
-        LOG(ERROR, "\tMemory allocation failed\n", 0, 0);
+        LOG(ERROR, "Memory allocation failed");
         return VAL_ERROR_POINT(7);
     }
 
@@ -197,13 +199,15 @@ static uint32_t mem_donate_mem_attribute_check(void *tx_buf, ffa_endpoint_id_t s
 
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
     {
-        LOG(ERROR, "\tFor MEM_DONATE, memory type[5:4] must be b'00\n", 0, 0);
+        LOG(ERROR, "For MEM_DONATE, memory type[5:4] must be b'00");
         status = VAL_ERROR_POINT(8);
     }
 
+    LOG(DBG, "Mem Donate Attribute Error Check Complete");
+
     if (val_memory_free(pages, size))
     {
-        LOG(ERROR, "\tval_mem_free failed\n", 0, 0);
+        LOG(ERROR, "val_mem_free failed");
         status = status ? status : VAL_ERROR_POINT(9);
     }
     return status;
@@ -256,9 +260,11 @@ static uint32_t mem_donate_mmio_check(void *tx_buf, ffa_endpoint_id_t sender, ui
     else
         val_ffa_mem_donate_32(&payload);
 
+    LOG(DBG, "Mem Donate MMIO Check Complete");
+
     if (payload.fid != FFA_ERROR_32)
     {
-        LOG(ERROR, "\tFramework must not allow to donate mmio region during runtime\n", 0, 0);
+        LOG(ERROR, "Framework must not allow to donate mmio region during runtime");
         status = VAL_ERROR_POINT(10);
     }
 
@@ -285,7 +291,7 @@ static uint32_t mem_donate_instruction_access_perm_check(void *tx_buf, ffa_endpo
     pages = (uint8_t *)val_memory_alloc(size);
     if (!pages)
     {
-        LOG(ERROR, "\tMemory allocation failed\n", 0, 0);
+        LOG(ERROR, "Memory allocation failed");
         return VAL_ERROR_POINT(11);
     }
 
@@ -321,13 +327,15 @@ static uint32_t mem_donate_instruction_access_perm_check(void *tx_buf, ffa_endpo
 
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
     {
-        LOG(ERROR, "\tFor MEM_DONATE, instruction access[3:2] perm must be b'00\n", 0, 0);
+        LOG(ERROR, "For MEM_DONATE, instruction access[3:2] perm must be b'00");
         status = VAL_ERROR_POINT(12);
     }
 
+    LOG(DBG, "Mem Donate Instruction Access Check Complete");
+
     if (val_memory_free(pages, size))
     {
-        LOG(ERROR, "\tval_mem_free failed\n", 0, 0);
+        LOG(ERROR, "val_mem_free failed");
         status = status ? status : VAL_ERROR_POINT(13);
     }
 
@@ -355,7 +363,7 @@ static uint32_t mem_donate_invalid_ep_count_check(void *tx_buf, ffa_endpoint_id_
     pages = (uint8_t *)val_memory_alloc(size);
     if (!pages)
     {
-        LOG(ERROR, "\tMemory allocation failed\n", 0, 0);
+        LOG(ERROR, "Memory allocation failed");
         return VAL_ERROR_POINT(14);
     }
 
@@ -392,14 +400,16 @@ static uint32_t mem_donate_invalid_ep_count_check(void *tx_buf, ffa_endpoint_id_
 
     if (payload.fid != FFA_ERROR_32)
     {
-        LOG(ERROR, "\tMem_donate request must return error for invalid endpoint count err %x\n",
-                            payload.arg2, 0);
+        LOG(ERROR, "Mem_donate request must return error for invalid endpoint count err %x",
+                            payload.arg2);
         status = VAL_ERROR_POINT(15);
     }
 
+    LOG(DBG, "Mem Donate Invalid EP Check Complete");
+
     if (val_memory_free(pages, size))
     {
-        LOG(ERROR, "\tval_mem_free failed\n", 0, 0);
+        LOG(ERROR, "val_mem_free failed");
         status = status ? status : VAL_ERROR_POINT(16);
     }
 
@@ -427,7 +437,7 @@ static uint32_t mem_donate_invalid_ep_desc_offset_check(void *tx_buf, ffa_endpoi
     pages = (uint8_t *)val_memory_alloc(size);
     if (!pages)
     {
-        LOG(ERROR, "\tMemory allocation failed\n", 0, 0);
+        LOG(ERROR, "Memory allocation failed");
         return VAL_ERROR_POINT(17);
     }
 
@@ -464,14 +474,16 @@ static uint32_t mem_donate_invalid_ep_desc_offset_check(void *tx_buf, ffa_endpoi
 
     if (payload.fid != FFA_ERROR_32)
     {
-        LOG(ERROR, "\tMEM_DONATE must return error for invalid endpoint descriptor offset err %x\n",
-                                    payload.arg2, 0);
+        LOG(ERROR, "MEM_DONATE must return error for invalid endpoint descriptor offset err %x",
+                                    payload.arg2);
         status = VAL_ERROR_POINT(18);
     }
 
+    LOG(DBG, "Mem Donate EP Desc Offset Check Complete");
+
     if (val_memory_free(pages, size))
     {
-        LOG(ERROR, "\tval_mem_free failed\n", 0, 0);
+        LOG(ERROR, "val_mem_free failed");
         status = status ? status : VAL_ERROR_POINT(19);
     }
 
@@ -490,7 +502,7 @@ static uint32_t ffa_mem_donate_helper(uint32_t test_run_data, uint32_t fid)
     mb.recv = val_memory_alloc(size);
     if (mb.send == NULL || mb.recv == NULL)
     {
-        LOG(ERROR, "\tFailed to allocate RxTx buffer\n", 0, 0);
+        LOG(ERROR, "Failed to allocate RxTx buffer");
         status = VAL_ERROR_POINT(20);
         goto free_memory;
     }
@@ -498,7 +510,7 @@ static uint32_t ffa_mem_donate_helper(uint32_t test_run_data, uint32_t fid)
     /* Map TX and RX buffers */
     if (val_rxtx_map_64((uint64_t)mb.send, (uint64_t)mb.recv, (uint32_t)(size/PAGE_SIZE_4K)))
     {
-        LOG(ERROR, "\tRxTx Map failed\n", 0, 0);
+        LOG(ERROR, "RxTx Map failed");
         status = VAL_ERROR_POINT(21);
         goto free_memory;
     }
@@ -546,14 +558,14 @@ static uint32_t ffa_mem_donate_helper(uint32_t test_run_data, uint32_t fid)
 rxtx_unmap:
     if (val_rxtx_unmap(sender))
     {
-        LOG(ERROR, "\tRXTX_UNMAP failed\n", 0, 0);
+        LOG(ERROR, "RXTX_UNMAP failed");
         status = status ? status : VAL_ERROR_POINT(22);
     }
 
 free_memory:
     if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
     {
-        LOG(ERROR, "\tval_mem_free failed\n", 0, 0);
+        LOG(ERROR, "val_mem_free failed");
         status = status ? status : VAL_ERROR_POINT(23);
     }
 
@@ -568,7 +580,7 @@ uint32_t donate_input_error_checks_client(uint32_t test_run_data)
     status_32 = val_is_ffa_feature_supported(FFA_MEM_DONATE_32);
     if (status_64 && status_32)
     {
-        LOG(TEST, "\tFFA_MEM_DONATE not supported, skipping the check\n", 0, 0);
+        LOG(TEST, "FFA_MEM_DONATE not supported, skipping the check");
         return VAL_SKIP_CHECK;
     }
     else if (status_64 && !status_32)

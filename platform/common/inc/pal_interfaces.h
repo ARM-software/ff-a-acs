@@ -9,6 +9,7 @@
 #define _PAL_INTERFACES_H_
 
 #include "pal.h"
+#include "pal_log.h"
 #include "pal_config_def.h"
 #include "pal_memory.h"
 #include "pal_endpoint_info.h"
@@ -25,11 +26,10 @@
 /**
  *   @brief    - This function prints the given string and data onto the uart
  *   @param    - str      : Input String
- *   @param    - data1    : Value for first format specifier
- *   @param    - data2    : Value for second format specifier
- *   @return   - SUCCESS(0)/FAILURE(Any positive number)
+ *   @param    - ...      : ellipses for variadic args 
+ *   @return   - SUCCESS((Any positive number for character written)/FAILURE(0)
 **/
-uint32_t pal_printf(const char *msg, uint64_t data1, uint64_t data2);
+uint32_t pal_printf(print_verbosity_t verbosity, const char *msg, ...);
 
 /**
  *   @brief    - Writes into given non-volatile address.

@@ -11,7 +11,8 @@
 static volatile uint32_t sri_flag;
 static int sri_irq_handler(void)
 {
-    sri_flag = 1;
+    sri_flag = 1;\
+    LOG(DBG, "SRI IRQ Handler Processed");
     return 0;
 }
 #endif
@@ -24,7 +25,7 @@ uint32_t vm_to_sp_notification_client(uint32_t test_run_data)
     uint32_t server_logical_id = GET_SERVER_LOGIC_ID(test_run_data);
     ffa_endpoint_id_t sender = val_get_endpoint_id(client_logical_id);
     ffa_endpoint_id_t recipient = val_get_endpoint_id(server_logical_id);
-    uint32_t id_list_count;
+    uint32_t id_list_count = 0;
     uint32_t expected_id_list_count = 0x1;
 #ifndef TARGET_LINUX
     uint32_t sri_id;
@@ -36,7 +37,7 @@ uint32_t vm_to_sp_notification_client(uint32_t test_run_data)
     val_ffa_features(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\t  Failed to retrieve SRI err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Failed to retrieve SRI err %x", payload.arg2);
         status = VAL_ERROR_POINT(1);
         goto exit;
     }
@@ -45,10 +46,11 @@ uint32_t vm_to_sp_notification_client(uint32_t test_run_data)
     sri_id = ffa_feature_intid(payload);
     if (val_irq_register_handler(sri_id, sri_irq_handler))
     {
-        LOG(ERROR, "\t  SRI interrupt register failed\n", 0, 0);
+        LOG(ERROR, "SRI interrupt register failed");
         status = VAL_ERROR_POINT(2);
         goto exit;
     }
+    LOG(DBG, "Interrupt Registeration Done SRI ID %x", sri_id);
 #endif
 
 #if (PLATFORM_NS_HYPERVISOR_PRESENT == 0)
@@ -58,7 +60,7 @@ uint32_t vm_to_sp_notification_client(uint32_t test_run_data)
     val_ffa_notification_bitmap_create(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\t  Notification bitmap create failed %x\n", payload.arg2, 0);
+        LOG(ERROR, "Notification bitmap create failed %x", payload.arg2);
         status = VAL_ERROR_POINT(3);
         goto bitmap_destroy;
     }
@@ -73,7 +75,7 @@ uint32_t vm_to_sp_notification_client(uint32_t test_run_data)
     val_ffa_msg_send_direct_req_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\t  Direct request failed err %d\n", payload.arg2, 0);
+        LOG(ERROR, "Direct request failed err %d", payload.arg2);
         status = VAL_ERROR_POINT(4);
         goto bitmap_destroy;
     }
@@ -88,16 +90,16 @@ uint32_t vm_to_sp_notification_client(uint32_t test_run_data)
     val_ffa_notification_set(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\t  Failed notification set err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Failed notification set err %x", payload.arg2);
         status = VAL_ERROR_POINT(5);
         goto bitmap_destroy;
     }
 
 #ifndef TARGET_LINUX
     if (sri_flag == 1) {
-        LOG(DBG, "\t  SRI inerrupt handled\n", 0, 0);
+        LOG(DBG, "SRI interrupt handled");
     } else {
-        LOG(DBG, "\t  SRI inerrupt not received\n", 0, 0);
+        LOG(ERROR, "SRI interrupt not received");
         status = VAL_ERROR_POINT(6);
         goto bitmap_destroy;
     }
@@ -108,16 +110,19 @@ uint32_t vm_to_sp_notification_client(uint32_t test_run_data)
     val_ffa_notification_info_get_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\t  Failed notification info get err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Failed notification info get err %x", payload.arg2);
         status = VAL_ERROR_POINT(7);
         goto bitmap_destroy;
     }
 
+    LOG(DBG, "id_list_count %x expected_id_list_count %x recipient %x",
+        id_list_count, expected_id_list_count, recipient);
+
     id_list_count = ffa_notifications_info_get_lists_count(payload);
     if ((id_list_count != expected_id_list_count) || (payload.arg3 != recipient))
     {
-        LOG(ERROR, "\t  Notification info get not as expected."
-                        "list_count %x id %x\n", id_list_count, payload.arg3);
+        LOG(ERROR, "Notification info get not as expected."
+                        "list_count %x id %x", id_list_count, payload.arg3);
         status = VAL_ERROR_POINT(8);
         goto bitmap_destroy;
     }
@@ -128,7 +133,7 @@ uint32_t vm_to_sp_notification_client(uint32_t test_run_data)
     val_ffa_msg_send_direct_req_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\t  Direct request failed err %d\n", payload.arg2, 0);
+        LOG(ERROR, "Direct request failed err %d", payload.arg2);
         status = VAL_ERROR_POINT(9);
     }
 
@@ -139,7 +144,7 @@ bitmap_destroy:
     val_ffa_notification_bitmap_destroy(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\t  Bitmap destroy failed err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Bitmap destroy failed err %x", payload.arg2);
         status = status ? status : VAL_ERROR_POINT(10);
     }
 #endif
@@ -147,7 +152,7 @@ bitmap_destroy:
 #ifndef TARGET_LINUX
     if (val_irq_unregister_handler(sri_id))
     {
-        LOG(ERROR, "\t  IRQ handler unregister failed\n", 0, 0);
+        LOG(ERROR, "IRQ handler unregister failed");
         status = status ? status : VAL_ERROR_POINT(11);
     }
 #endif

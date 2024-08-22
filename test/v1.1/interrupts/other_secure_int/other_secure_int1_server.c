@@ -32,7 +32,7 @@ static uint32_t sp2_func(ffa_args_t args)
     payload = val_resp_client_fn_direct((uint32_t)args.arg3, 0, 0, 0, 0, 0);
     if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_64)
     {
-        LOG(ERROR, "\tDirect request failed, fid=0x%x, err 0x%x\n",
+        LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x",
                   payload.fid, payload.arg2);
         status =  VAL_ERROR_POINT(1);
         goto exit;
@@ -47,7 +47,7 @@ static uint32_t sp2_func(ffa_args_t args)
     val_ffa_msg_send_direct_req_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\tDirect request failed err %d\n", payload.arg2, 0);
+        LOG(ERROR, "Direct request failed err %d", payload.arg2);
         status = VAL_ERROR_POINT(2);
         goto exit;
     }
@@ -57,7 +57,7 @@ static uint32_t sp2_func(ffa_args_t args)
     val_ffa_msg_send_direct_resp_64(&payload);
     if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_64)
     {
-        LOG(ERROR, "\tDIRECT_REQ_64 not received fid %x\n", payload.fid, 0);
+        LOG(ERROR, "DIRECT_REQ_64 not received fid %x", payload.fid);
         status = VAL_ERROR_POINT(3);
         goto exit;
     }
@@ -67,7 +67,7 @@ static uint32_t sp2_func(ffa_args_t args)
     val_ffa_msg_send_direct_req_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\tDirect request failed err %d\n", payload.arg2, 0);
+        LOG(ERROR, "Direct request failed err %d", payload.arg2);
         status = VAL_ERROR_POINT(4);
     }
 
@@ -77,7 +77,7 @@ exit:
     val_ffa_msg_send_direct_resp_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\tDirect response failed err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Direct response failed err %x", payload.arg2);
         status = status ? status : VAL_ERROR_POINT(5);
     }
 
@@ -85,6 +85,7 @@ exit:
     payload = val_select_server_fn_direct(test_run_data, 0, 0, 0, 0);
     return status ? status : (uint32_t)payload.arg3;
 }
+
 static uint32_t sp4_func(ffa_args_t args)
 {
     ffa_args_t payload;
@@ -105,7 +106,7 @@ static uint32_t sp4_func(ffa_args_t args)
     mb.recv = val_memory_alloc(size);
     if (mb.send == NULL || mb.recv == NULL)
     {
-        LOG(ERROR, "\tFailed to allocate RxTx buffer\n", 0, 0);
+        LOG(ERROR, "Failed to allocate RxTx buffer");
         status = VAL_ERROR_POINT(6);
         goto free_memory;
     }
@@ -113,7 +114,7 @@ static uint32_t sp4_func(ffa_args_t args)
     /* Map TX and RX buffers */
     if (val_rxtx_map_64((uint64_t)mb.send, (uint64_t)mb.recv, (uint32_t)(size/PAGE_SIZE_4K)))
     {
-        LOG(ERROR, "\tRxTx Map failed\n", 0, 0);
+        LOG(ERROR, "RxTx Map failed");
         status = VAL_ERROR_POINT(7);
         goto free_memory;
     }
@@ -123,7 +124,7 @@ static uint32_t sp4_func(ffa_args_t args)
     payload = val_resp_client_fn_direct((uint32_t)args.arg3, 0, 0, 0, 0, 0);
     if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_64)
     {
-        LOG(ERROR, "\tDirect request failed, fid=0x%x, err 0x%x\n",
+        LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x",
                   payload.fid, payload.arg2);
         status =  VAL_ERROR_POINT(8);
         goto rxtx_unmap;
@@ -158,10 +159,11 @@ static uint32_t sp4_func(ffa_args_t args)
     val_ffa_mem_retrieve_32(&payload);
     if (payload.fid != FFA_MEM_RETRIEVE_RESP_32)
     {
-        LOG(ERROR, "\tMem retrieve request failed err %d\n", payload.arg2, 0);
+        LOG(ERROR, "Mem retrieve request failed err %d", payload.arg2);
         status =  VAL_ERROR_POINT(9);
         goto rxtx_unmap;
     }
+    LOG(DBG, "FFA Mem Retrieve Complete");
 
     memory_region = (struct ffa_memory_region *)mb.recv;
     composite = ffa_memory_region_get_composite(memory_region, 0);
@@ -178,7 +180,7 @@ static uint32_t sp4_func(ffa_args_t args)
 
     if (val_mem_map_pgt(&mem_desc))
     {
-        LOG(ERROR, "\tVa to pa mapping failed\n", 0, 0);
+        LOG(ERROR, "Va to pa mapping failed");
         status =  VAL_ERROR_POINT(10);
         goto rx_release;
     }
@@ -188,20 +190,22 @@ static uint32_t sp4_func(ffa_args_t args)
     val_ffa_msg_send_direct_resp_64(&payload);
     if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_64)
     {
-        LOG(ERROR, "\tDIRECT_REQ_64 not received fid %x\n", payload.fid, 0);
+        LOG(ERROR, "DIRECT_REQ_64 not received fid %x", payload.fid);
         status = VAL_ERROR_POINT(11);
         goto rx_release;
     }
 
     /* Wait for WD interrupt */
     sp_sleep(WD_TIME_OUT);
+    LOG(DBG, "SP Sleep Complete");
 
     if (*(volatile uint32_t *)ptr != IRQ_TRIGGERED)
     {
-        LOG(ERROR, "\tWD interrupt not triggered\n", 0, 0);
+        LOG(ERROR, "WD interrupt not triggered");
         status =  VAL_ERROR_POINT(12);
         goto rx_release;
     }
+    LOG(DBG, "IRQ Status ptr %x", *(volatile uint32_t *)ptr);
 
     /* relinquish the memory and notify the sender. */
     ffa_mem_relinquish_init((struct ffa_mem_relinquish *)mb.send, handle, 0, sender, 0x1);
@@ -209,7 +213,7 @@ static uint32_t sp4_func(ffa_args_t args)
     val_ffa_mem_relinquish(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\tMem relinquish failed err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Mem relinquish failed err %x", payload.arg2);
         status = status ? status : VAL_ERROR_POINT(13);
     }
 
@@ -217,21 +221,21 @@ static uint32_t sp4_func(ffa_args_t args)
 rx_release:
     if (val_rx_release())
     {
-        LOG(ERROR, "\tval_rx_release failed\n", 0, 0);
+        LOG(ERROR, "val_rx_release failed");
         status = status ? status : VAL_ERROR_POINT(14);
     }
 
 rxtx_unmap:
     if (val_rxtx_unmap(sender))
     {
-        LOG(ERROR, "\tRXTX_UNMAP failed\n", 0, 0);
+        LOG(ERROR, "RXTX_UNMAP failed");
         status = status ? status : VAL_ERROR_POINT(15);
     }
 
 free_memory:
     if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
     {
-        LOG(ERROR, "\tfree_rxtx_buffers failed\n", 0, 0);
+        LOG(ERROR, "free_rxtx_buffers failed");
         status = status ? status : VAL_ERROR_POINT(16);
     }
 
@@ -240,7 +244,7 @@ free_memory:
     val_ffa_msg_send_direct_resp_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\tDirect response failed err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Direct response failed err %x", payload.arg2);
         status = status ? status : VAL_ERROR_POINT(17);
     }
 

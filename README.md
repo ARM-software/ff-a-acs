@@ -33,8 +33,8 @@ This suite is not a substitute for design verification. To review the test logs,
 For more information on Architecture Compliance Suite see [Validation Methodology](./docs/Arm_FF_A_ACS_Validation_Methodology.pdf) document.
 
 ## This release
-- Release Version - v0.9
-- Code Quality: Beta - ACS is being developed, please use this opportunity to ameliorate.
+- Release Version - v1.0
+- Code Quality: EAC - ACS is being developed, please use this opportunity to ameliorate.
 - The tests are written for Arm FF-A v1.1 specification version.
 - For information about the test coverage scenarios that are implemented in the current release of ACS and the scenarios that are planned for the future releases, see [Docs](./docs/).
 

@@ -16,6 +16,7 @@ static int wd_irq_handler(void)
 {
     *(volatile uint32_t *)ptr = (uint32_t)IRQ_TRIGGERED;
     val_twdog_disable();
+    LOG(DBG, "T-WD IRQ Handler Processed");
     return 0;
 }
 
@@ -24,6 +25,7 @@ static volatile bool interrupt_triggered;
 static int refclk_irq_handler(void)
 {
     interrupt_triggered = true;
+    LOG(DBG, "REF-CLK IRQ Handler Processed");
     return 0;
 }
 
@@ -61,7 +63,7 @@ static uint32_t sp1_entry(ffa_args_t args)
     mb.recv = val_memory_alloc(size);
     if (mb.send == NULL || mb.recv == NULL)
     {
-        LOG(ERROR, "\tFailed to allocate RxTx buffer\n", 0, 0);
+        LOG(ERROR, "Failed to allocate RxTx buffer");
         status = VAL_ERROR_POINT(1);
         goto free_memory;
     }
@@ -69,7 +71,7 @@ static uint32_t sp1_entry(ffa_args_t args)
     /* Map TX and RX buffers */
     if (val_rxtx_map_64((uint64_t)mb.send, (uint64_t)mb.recv, (uint32_t)(size/PAGE_SIZE_4K)))
     {
-        LOG(ERROR, "\tRxTx Map failed\n", 0, 0);
+        LOG(ERROR, "RxTx Map failed");
         status = VAL_ERROR_POINT(2);
         goto free_memory;
     }
@@ -79,7 +81,7 @@ static uint32_t sp1_entry(ffa_args_t args)
     payload = val_resp_client_fn_direct((uint32_t)args.arg3, 0, 0, 0, 0, 0);
     if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_64)
     {
-        LOG(ERROR, "\tDirect request failed, fid=0x%x, err 0x%x\n",
+        LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x",
                   payload.fid, payload.arg2);
         status =  VAL_ERROR_POINT(3);
         goto rxtx_unmap;
@@ -114,10 +116,11 @@ static uint32_t sp1_entry(ffa_args_t args)
     val_ffa_mem_retrieve_32(&payload);
     if (payload.fid != FFA_MEM_RETRIEVE_RESP_32)
     {
-        LOG(ERROR, "\tMem retrieve request failed err %d\n", payload.arg2, 0);
+        LOG(ERROR, "Mem retrieve request failed err %d", payload.arg2);
         status =  VAL_ERROR_POINT(4);
         goto rxtx_unmap;
     }
+    LOG(DBG, "FFA Mem Retrieve Complete");
 
     memory_region = (struct ffa_memory_region *)mb.recv;
     composite = ffa_memory_region_get_composite(memory_region, 0);
@@ -134,38 +137,39 @@ static uint32_t sp1_entry(ffa_args_t args)
 
     if (val_mem_map_pgt(&mem_desc))
     {
-        LOG(ERROR, "\tVa to pa mapping failed\n", 0, 0);
+        LOG(ERROR, "Va to pa mapping failed");
         status =  VAL_ERROR_POINT(5);
         goto rx_release;
     }
 
    if (val_irq_register_handler(PLATFORM_TWDOG_INTID, wd_irq_handler))
     {
-        LOG(ERROR, "\tWD interrupt register failed\n", 0, 0);
+        LOG(ERROR, "WD interrupt register failed");
         status = VAL_ERROR_POINT(6);
         goto rxtx_unmap;
     }
-
     val_twdog_enable(S_WD_TIMEOUT);
+    LOG(DBG, "Page Table Mapped and T-WD IRQ Registered");
 
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 =  ((uint32_t)sender << 16) | receiver;
     val_ffa_msg_send_direct_resp_64(&payload);
     if (payload.fid != FFA_INTERRUPT_32)
     {
-        LOG(ERROR, "\tFFA_INTERRUPT_32 not received fid %x\n", payload.fid, 0);
+        LOG(ERROR, "FFA_INTERRUPT_32 not received fid %x", payload.fid);
         status = VAL_ERROR_POINT(7);
         goto free_interrupt;
     }
 
     val_twdog_intr_disable();
+    LOG(DBG, "T-WD Interrupt Disabled");
 
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 =  ((uint32_t)sender << 16) | receiver_1;
     val_ffa_msg_send_direct_req_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\tDirect response failed err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Direct response failed err %x", payload.arg2);
         status =  VAL_ERROR_POINT(8);
         goto free_interrupt;
     }
@@ -174,7 +178,7 @@ static uint32_t sp1_entry(ffa_args_t args)
     val_ffa_msg_wait(&payload);
     if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_64)
     {
-        LOG(ERROR, "\tDIRECT_REQ_64 not received fid %x\n", payload.fid, 0);
+        LOG(ERROR, "DIRECT_REQ_64 not received fid %x", payload.fid);
         status = VAL_ERROR_POINT(9);
         goto free_interrupt;
     }
@@ -185,35 +189,36 @@ static uint32_t sp1_entry(ffa_args_t args)
     val_ffa_mem_relinquish(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\tMem relinquish failed err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Mem relinquish failed err %x", payload.arg2);
         status = status ? status : VAL_ERROR_POINT(10);
     }
+    LOG(DBG, "FFA Mem Relinquish Complete");
 
 free_interrupt:
     if (val_irq_unregister_handler(PLATFORM_TWDOG_INTID))
     {
-        LOG(ERROR, "\tIRQ handler unregister failed\n", 0, 0);
+        LOG(ERROR, "IRQ handler unregister failed");
         status = status ? status : VAL_ERROR_POINT(11);
     }
 
 rx_release:
     if (val_rx_release())
     {
-        LOG(ERROR, "\tval_rx_release failed\n", 0, 0);
+        LOG(ERROR, "val_rx_release failed");
         status = status ? status : VAL_ERROR_POINT(12);
     }
 
 rxtx_unmap:
     if (val_rxtx_unmap(sender))
     {
-        LOG(ERROR, "\tRXTX_UNMAP failed\n", 0, 0);
+        LOG(ERROR, "RXTX_UNMAP failed");
         status = status ? status : VAL_ERROR_POINT(13);
     }
 
 free_memory:
     if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
     {
-        LOG(ERROR, "\tfree_rxtx_buffers failed\n", 0, 0);
+        LOG(ERROR, "free_rxtx_buffers failed");
         status = status ? status : VAL_ERROR_POINT(14);
     }
 
@@ -222,7 +227,7 @@ free_memory:
     val_ffa_msg_send_direct_resp_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\tDirect response failed err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Direct response failed err %x", payload.arg2);
         status = status ? status : VAL_ERROR_POINT(15);
     }
 
@@ -247,17 +252,18 @@ static uint32_t sp2_entry(ffa_args_t args)
 
     if (val_irq_register_handler(PALTFORM_AP_REFCLK_CNTPSIRQ1, refclk_irq_handler))
     {
-        LOG(ERROR, "\tWD interrupt register failed\n", 0, 0);
+        LOG(ERROR, "WD interrupt register failed");
         status = VAL_ERROR_POINT(16);
         goto exit;
     }
+    LOG(DBG, "System Timer Handler Registered");
 
     /* Wait for the message. */
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload = val_resp_client_fn_direct((uint32_t)args.arg3, 0, 0, 0, 0, 0);
     if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_64)
     {
-        LOG(ERROR, "\tDirect request failed, fid=0x%x, err 0x%x\n",
+        LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x",
                   payload.fid, payload.arg2);
         status =  VAL_ERROR_POINT(17);
         goto exit;
@@ -265,38 +271,41 @@ static uint32_t sp2_entry(ffa_args_t args)
 
     /* Enable system timer */
     val_sys_phy_timer_en(REFCLK_TIMEOUT);
+    LOG(DBG, "System Timer Interrupt Enabled");
 
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 =  ((uint32_t)sender << 16) | receiver_1;
     val_ffa_msg_send_direct_req_64(&payload);
     if (payload.fid != FFA_INTERRUPT_32)
     {
-        LOG(ERROR, "\tShould have received FFA_INTERRUPT fid=0x%x, err 0x%x\n",
+        LOG(ERROR, "Should have received FFA_INTERRUPT fid=0x%x, err 0x%x",
                   payload.fid, payload.arg2);
         status =  VAL_ERROR_POINT(18);
     }
 
     /* Disable system timer */
     val_sys_phy_timer_dis(false);
+    LOG(DBG, "System Timer Interrupt Disabled");
 
     if (interrupt_triggered != true)
     {
-        LOG(ERROR, "\tWD interrupt should be triggered\n", 0, 0);
+        LOG(ERROR, "WD interrupt should be triggered");
         status =  VAL_ERROR_POINT(19);
     }
 
     if (val_irq_unregister_handler(PALTFORM_AP_REFCLK_CNTPSIRQ1))
     {
-        LOG(ERROR, "\tIRQ handler unregister failed\n", 0, 0);
+        LOG(ERROR, "IRQ handler unregister failed");
         status = VAL_ERROR_POINT(20);
     }
 
+    LOG(DBG, "Call FFA RUN");
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 = (uint32_t)receiver_1 << 16;
     val_ffa_run(&payload);
     if (payload.fid != FFA_MSG_SEND_DIRECT_RESP_64)
     {
-        LOG(ERROR, "\tDIRECT_RESP_64 not received\n", 0, 0);
+        LOG(ERROR, "DIRECT_RESP_64 not received");
         status = VAL_ERROR_POINT(21);
         goto exit;
     }
@@ -307,7 +316,7 @@ exit:
     val_ffa_msg_send_direct_resp_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\tDirect response failed err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Direct response failed err %x", payload.arg2);
         status = status ? status : VAL_ERROR_POINT(22);
     }
 
@@ -326,7 +335,7 @@ static uint32_t sp4_entry(ffa_args_t args)
     payload = val_resp_client_fn_direct((uint32_t)args.arg3, 0, 0, 0, 0, 0);
     if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_64)
     {
-        LOG(ERROR, "\tDirect request failed, fid=0x%x, err 0x%x\n",
+        LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x",
                   payload.fid, payload.arg2);
         status =  VAL_ERROR_POINT(23);
         goto exit;
@@ -334,6 +343,7 @@ static uint32_t sp4_entry(ffa_args_t args)
 
     /* Wait for system timer interrupt */
     sp_sleep(AP_REFCLK_TIMEOUT);
+    LOG(DBG, "System Timer Interrupt Wait Complete");
 
 exit:
     val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -341,7 +351,7 @@ exit:
     val_ffa_msg_send_direct_resp_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\tDirect response failed err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Direct response failed err %x", payload.arg2);
         status = status ? status : VAL_ERROR_POINT(24);
     }
 

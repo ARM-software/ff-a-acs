@@ -21,7 +21,7 @@ bool val_irq_current(void)
 {
     if (pal_irq_handler_dispatcher())
     {
-        LOG(ERROR, "Got unexpected interrupt.\n", 0, 0);
+        LOG(ERROR, "Got unexpected interrupt.");
         return false;
     }
 
@@ -58,33 +58,32 @@ static bool default_sync_current_exception(void)
 
             if (!(esr & (1U << 10)))
             { /* Check FnV bit. */
-                LOG(ERROR, ", far=%x\n", val_far_el1_read(), 0);
+                LOG(ERROR, ", far=%x", val_far_el1_read());
             }
             else
             {
-                LOG(ERROR, ", far=invalid\n", 0, 0);
+                LOG(ERROR, ", far=invalid");
             }
 
             break;
 
         case EC_INSTRUCTION_ABORT_SAME_EL:
             LOG(ERROR, "Instruction abort: pc=%x, esr=%x", elr, esr);
-            LOG(ERROR, ", ec=%x", ec, 0);
+            LOG(ERROR, ", ec=%x", ec);
 
             if (!(esr & (1U << 10)))
             { /* Check FnV bit. */
-                LOG(ERROR, ", far=%x\n", far, 0);
+                LOG(ERROR, ", far=%x", far);
             } else
             {
-                LOG(ERROR, ", far=invalid\n", 0, 0);
+                LOG(ERROR, ", far=invalid");
             }
 
             break;
 
         default:
-            LOG(ERROR, "Unknown sync exception pc=%x, esr=%x",
-                 elr, esr);
-            LOG(ERROR, ", ec=%x\n", ec, 0);
+            LOG(ERROR, "Unknown sync exception pc=%x, esr=%x", elr, esr);
+            LOG(ERROR, ", ec=%x", ec);
     }
 
     for (;;)

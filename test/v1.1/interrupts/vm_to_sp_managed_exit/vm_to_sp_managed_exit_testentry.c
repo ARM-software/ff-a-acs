@@ -10,7 +10,7 @@
 void vm_to_sp_managed_exit_testentry(uint32_t test_num)
 {
 #ifdef TARGET_LINUX
-    LOG(TEST, "\tSkipping this test: Preempt test not supported for Linux env\n", 0, 0);
+    LOG(TEST, "Skipping this test: Preempt test not supported for Linux env")
     val_set_status(RESULT_SKIP(VAL_SKIP_CHECK));
     return;
 #endif

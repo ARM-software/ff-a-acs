@@ -29,32 +29,6 @@ test_status_buffer_t    g_status_buffer = {
                         };
 
 /**
- *   @brief    - This function prints the given string and data onto the uart
- *   @param    - str      : Input String
- *             - data1    : Value for first format specifier
- *             - data2    : Value for second format specifier
- *   @return   - SUCCESS(0)/FAILURE
-**/
-uint32_t val_printf(const char *msg, uint64_t data1, uint64_t data2)
-{
-    char s[TOTAL_PRINT_LIMIT] = "";
-
-    if (VERBOSITY <= DBG)
-    {
-        /* Prefix endpoint name to the string */
-        val_strcat(s, (char *)val_get_curr_endpoint_name(), TOTAL_PRINT_LIMIT);
-        val_strcat(s, ":  ", TOTAL_PRINT_LIMIT);
-        val_strcat(s, (char *)msg, TOTAL_PRINT_LIMIT);
-        return pal_printf(s, data1, data2);
-    }
-    else
-    {
-        return pal_printf(msg, data1, data2);
-    }
-}
-
-
-/**
  *   @brief    - Parses input status for a given test and
  *               outputs appropriate information on the console
  *   @param    - Void
@@ -63,11 +37,8 @@ uint32_t val_printf(const char *msg, uint64_t data1, uint64_t data2)
 uint32_t val_report_status(uint32_t test_num)
 {
     uint32_t status, status_code, state;
-    char      test_result_print[PRINT_LIMIT] = "> TEST -";
-
-    val_strcat(test_result_print,
-                (char *)test_list[test_num].test_name,
-                sizeof(test_result_print));
+    char      test_result_print[PRINT_LIMIT] = "RESULT:";
+    (void)test_num;
 
     status = val_get_status();
     state = (status >> TEST_STATE_SHIFT) & TEST_STATE_MASK;
@@ -78,30 +49,29 @@ uint32_t val_report_status(uint32_t test_num)
         case TEST_PASS:
         case TEST_PASS_WITH_SKIP:
             state = TEST_PASS;
-            val_strcat(test_result_print, " => PASSED\n",
+            val_strcat(test_result_print, " PASSED\n",
                 sizeof(test_result_print));
             break;
 
         case TEST_SKIP:
             state = TEST_SKIP;
-            val_strcat(test_result_print, " => SKIPPED (SKIP CODE=%d)\n",
+            val_strcat(test_result_print, " SKIPPED (SKIP CODE=%d)\n",
                 sizeof(test_result_print));
             break;
 
         case TEST_ERROR:
             state = TEST_ERROR;
-            val_strcat(test_result_print, " => SIM ERROR (ERROR CODE=%d)\n",
+            val_strcat(test_result_print, " SIM ERROR (ERROR CODE=%d)\n",
                 sizeof(test_result_print));
             break;
         default:
             state = TEST_FAIL;
-            val_strcat(test_result_print, " => FAILED (ERROR CODE=%d)\n",
+            val_strcat(test_result_print, " FAILED (ERROR CODE=%d)\n",
                 sizeof(test_result_print));
             break;
     }
 
-    LOG(ALWAYS, test_result_print, status_code, 0);
-    LOG(ALWAYS, "\n", 0, 0);
+    LOG(ALWAYS, test_result_print, status_code);
     return state;
 }
 
@@ -146,33 +116,24 @@ uint32_t val_get_status(void)
  * @param  Test number
  * @return void
 **/
-
 void val_test_init(uint32_t test_num)
 {
-   char testname[PRINT_LIMIT] = "> TEST -";
-   uint32_t test_progress = TEST_START;
+    uint32_t test_progress = TEST_START;
 
-   /* Clear test status */
-   val_set_status(RESULT_FAIL(VAL_STATUS_INVALID));
+    /* Clear test status */
+    val_set_status(RESULT_FAIL(VAL_STATUS_INVALID));
+    LOG(TEST, "TEST:%s SUITE: %s ", test_list[test_num].test_name,
+            test_suite_list[test_list[test_num].suite_num].suite_desc);
 
-   val_strcat(testname,
-                (char *)test_list[test_num].test_name,
-                sizeof(testname));
-   val_strcat(testname, " => START\n", sizeof(testname));
+    if (val_nvm_write(VAL_NVM_OFFSET(NVM_TEST_PROGRESS_INDEX), &test_progress, sizeof(uint32_t)))
+    {
+        VAL_PANIC("nvm write failed");
+    }
 
-   LOG(ALWAYS, "\n", 0, 0);
-   LOG(ALWAYS, testname, 0, 0);
-
-   if (val_nvm_write(VAL_NVM_OFFSET(NVM_TEST_PROGRESS_INDEX),
-           &test_progress, sizeof(uint32_t)))
-   {
-      VAL_PANIC("\tnvm write failed\n");
-   }
-
-   if (val_watchdog_enable())
-   {
-      VAL_PANIC("\tWatchdog enable failed\n");
-   }
+    if (val_watchdog_enable())
+    {
+        VAL_PANIC("Watchdog enable failed");
+    }
 }
 
 /**
@@ -186,13 +147,13 @@ void val_test_exit(void)
 
    if (val_watchdog_disable())
    {
-      VAL_PANIC("\tWatchdog disable failed\n");
+      VAL_PANIC("Watchdog disable failed");
    }
 
    if (val_nvm_write(VAL_NVM_OFFSET(NVM_TEST_PROGRESS_INDEX),
            &test_progress, sizeof(uint32_t)))
    {
-      VAL_PANIC("\tnvm write failed\n");
+      VAL_PANIC("nvm write failed");
    }
 }
 
@@ -205,11 +166,11 @@ void val_reprogram_watchdog(void)
 {
    if (val_watchdog_disable())
    {
-      VAL_PANIC("\tWatchdog disable failed\n");
+      VAL_PANIC("Watchdog disable failed");
    }
    if (val_watchdog_enable())
    {
-      VAL_PANIC("\tWatchdog enable failed\n");
+      VAL_PANIC("Watchdog enable failed");
    }
 }
 
@@ -267,7 +228,7 @@ uint32_t val_nvm_write(uint32_t offset, void *buffer, size_t size)
       val_ffa_msg_send_direct_req_32(&payload);
       if (payload.fid != FFA_MSG_SEND_DIRECT_RESP_32)
       {
-         LOG(ERROR, "\tInvalid fid received, fid=0x%x, err=0x%x\n", payload.fid, payload.arg2);
+         LOG(ERROR, "Invalid fid received, fid=0x%x, err=0x%x", payload.fid, payload.arg2);
          return VAL_ERROR;
       }
 
@@ -313,7 +274,7 @@ uint32_t val_nvm_read(uint32_t offset, void *buffer, size_t size)
       val_ffa_msg_send_direct_req_32(&payload);
       if (payload.fid != FFA_MSG_SEND_DIRECT_RESP_32)
       {
-         LOG(ERROR, "\tInvalid fid received, fid=0x%x, err=0x%x\n", payload.fid, payload.arg2);
+         LOG(ERROR, "Invalid fid received, fid=0x%x, err=0x%x", payload.fid, payload.arg2);
          return VAL_ERROR;
       }
 
@@ -354,7 +315,7 @@ uint32_t val_watchdog_enable(void)
       val_ffa_msg_send_direct_req_32(&payload);
       if (payload.fid != FFA_MSG_SEND_DIRECT_RESP_32)
       {
-         LOG(ERROR, "\tInvalid fid received, fid=0x%x, err=0x%x\n", payload.fid, payload.arg2);
+         LOG(ERROR, "Invalid fid received, fid=0x%x, err=0x%x", payload.fid, payload.arg2);
          return VAL_ERROR;
       }
 
@@ -396,7 +357,7 @@ uint32_t val_watchdog_disable(void)
       }
       if (payload.fid != FFA_MSG_SEND_DIRECT_RESP_32)
       {
-         LOG(ERROR, "\tInvalid fid received, fid=0x%x, err=0x%x\n", payload.fid, payload.arg2);
+         LOG(ERROR, "Invalid fid received, fid=0x%x, err=0x%x", payload.fid, payload.arg2);
          return VAL_ERROR;
       }
 
@@ -440,9 +401,9 @@ uint32_t val_get_last_run_test_info(test_info_t *test_info)
             &test_info->test_progress, sizeof(uint32_t)))
         return VAL_ERROR;
 
-    LOG(INFO, "\tIn val_get_last_run_test_info, test_num=%x\n", test_info->test_num, 0);
-    LOG(INFO, "\tsuite_num=%x\n", test_info->suite_num, 0);
-    LOG(INFO, "\ttest_progress=%x\n", test_info->test_progress, 0);
+    LOG(INFO, "In val_get_last_run_test_info, test_num=%x", test_info->test_num);
+    LOG(INFO, "suite_num=%x", test_info->suite_num);
+    LOG(INFO, "test_progress=%x", test_info->test_progress);
 
     /* Is power on reset or warm reset? Determine based on NVM content */
     while (i < (uint32_t)(sizeof(test_progress_pattern)/sizeof(test_progress_pattern[0])))
@@ -495,12 +456,12 @@ uint32_t val_get_last_run_test_info(test_info_t *test_info)
              return VAL_ERROR;
     }
 
-    LOG(INFO, "\tIn val_get_last_run_test_num, test_num=%x\n", test_info->test_num, 0);
-    LOG(INFO, "\tsuite_num=%x\n", test_info->suite_num, 0);
-    LOG(INFO, "\tregre_report.total_pass=%x\n", regre_report.total_pass, 0);
-    LOG(INFO, "\tregre_report.total_fail=%x\n", regre_report.total_fail, 0);
-    LOG(INFO, "\tregre_report.total_skip=%x\n", regre_report.total_skip, 0);
-    LOG(INFO, "\tregre_report.total_error=%x\n", regre_report.total_error, 0);
+    LOG(INFO, "In val_get_last_run_test_num, test_num=%x", test_info->test_num);
+    LOG(INFO, "suite_num=%x", test_info->suite_num);
+    LOG(INFO, "regre_report.total_pass=%x", regre_report.total_pass);
+    LOG(INFO, "regre_report.total_fail=%x", regre_report.total_fail);
+    LOG(INFO, "regre_report.total_skip=%x", regre_report.total_skip);
+    LOG(INFO, "regre_report.total_error=%x", regre_report.total_error);
     return VAL_SUCCESS;
 }
 
@@ -515,11 +476,11 @@ void val_set_reboot_flag(void)
 {
    uint32_t test_progress  = TEST_REBOOTING;
 
-   LOG(INFO, "\tSetting reboot flag\n", 0, 0);
+   LOG(INFO, "Setting reboot flag");
    if (val_nvm_write(VAL_NVM_OFFSET(NVM_TEST_PROGRESS_INDEX),
                  &test_progress, sizeof(uint32_t)))
    {
-      VAL_PANIC("\tnvm write failed\n");
+      VAL_PANIC("nvm write failed");
    }
 }
 
@@ -533,10 +494,10 @@ void val_reset_reboot_flag(void)
 {
    uint32_t test_progress  = TEST_FAIL;
 
-   LOG(INFO, "\tResetting reboot flag\n", 0, 0);
+   LOG(INFO, "Resetting reboot flag");
    if (val_nvm_write(VAL_NVM_OFFSET(NVM_TEST_PROGRESS_INDEX),
                  &test_progress, sizeof(uint32_t)))
    {
-      VAL_PANIC("\tnvm write failed\n");
+      VAL_PANIC("nvm write failed");
    }
 }

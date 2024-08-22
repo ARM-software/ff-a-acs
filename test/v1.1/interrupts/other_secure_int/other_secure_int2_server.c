@@ -15,6 +15,7 @@ static int wd_irq_handler(void)
 {
     interrupt_triggered = true;
     val_twdog_disable();
+    LOG(DBG, "T-WD IRQ Handler Processed");
     return 0;
 }
 
@@ -27,7 +28,7 @@ uint32_t other_secure_int2_server(ffa_args_t args)
 
    if (val_irq_register_handler(PLATFORM_TWDOG_INTID, wd_irq_handler))
     {
-        LOG(ERROR, "\tWD interrupt register failed\n", 0, 0);
+        LOG(ERROR, "WD interrupt register failed");
         status = VAL_ERROR_POINT(1);
         goto exit;
     }
@@ -40,7 +41,7 @@ uint32_t other_secure_int2_server(ffa_args_t args)
     payload = val_resp_client_fn_direct((uint32_t)args.arg3, 0, 0, 0, 0, 0);
     if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_64)
     {
-        LOG(ERROR, "\tDirect request failed, fid=0x%x, err 0x%x\n",
+        LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x",
                   payload.fid, payload.arg2);
         status =  VAL_ERROR_POINT(2);
         goto exit;
@@ -56,13 +57,15 @@ uint32_t other_secure_int2_server(ffa_args_t args)
 
     /* Wait for WD interrupt */
     sp_sleep(WD_TIME_OUT);
+    LOG(DBG, "SP Sleep Complete");
 
     if (interrupt_triggered == true)
     {
-        LOG(ERROR, "\t WD interrupt should be queued\n", 0, 0);
+        LOG(ERROR, "WD interrupt should be queued");
         status =  VAL_ERROR_POINT(3);
         goto free_interrupt;
     }
+    LOG(DBG, "IRQ Status %x", interrupt_triggered);
 
     /* Enter Wait state by responding to client to Get Interrupt */
     val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -70,7 +73,7 @@ uint32_t other_secure_int2_server(ffa_args_t args)
     val_ffa_msg_send_direct_resp_64(&payload);
     if (payload.fid != FFA_INTERRUPT_32)
     {
-        LOG(ERROR, "\t FFA_INTERRUPT_32 not received fid %x\n", payload.fid, 0);
+        LOG(ERROR, "FFA_INTERRUPT_32 not received fid %x", payload.fid);
         status = VAL_ERROR_POINT(4);
         goto exit;
     }
@@ -79,14 +82,15 @@ uint32_t other_secure_int2_server(ffa_args_t args)
 
     if (interrupt_triggered != true)
     {
-        LOG(ERROR, "\t WD interrupt should be triggered\n", 0, 0);
+        LOG(ERROR, "WD interrupt should be triggered");
         status =  VAL_ERROR_POINT(5);
     }
+    LOG(DBG, "IRQ Status %x", interrupt_triggered);
 
 free_interrupt:
     if (val_irq_unregister_handler(PLATFORM_TWDOG_INTID))
     {
-        LOG(ERROR, "\t  IRQ handler unregister failed\n", 0, 0);
+        LOG(ERROR, "IRQ handler unregister failed");
         status = VAL_ERROR_POINT(6);
     }
 

@@ -29,7 +29,7 @@ uint32_t vm_to_sp_notification_pcpu_server(ffa_args_t args)
     val_ffa_features(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\t  Failed to retrieve NPI err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Failed to retrieve NPI err %x", payload.arg2);
         status = VAL_ERROR_POINT(1);
         goto exit;
     }
@@ -37,17 +37,18 @@ uint32_t vm_to_sp_notification_pcpu_server(ffa_args_t args)
     npi_id = ffa_feature_intid(payload);
     if (val_irq_register_handler(npi_id, npi_irq_handler))
     {
-        LOG(ERROR, "\t  NPI interrupt register failed\n", 0, 0);
+        LOG(ERROR, "NPI interrupt register failed");
         status = VAL_ERROR_POINT(2);
         goto exit;
     }
+    LOG(DBG, "Interrupt registration Done NPI ID %x", npi_id);
 
     /* Wait for the message. */
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload = val_resp_client_fn_direct((uint32_t)args.arg3, 0, 0, 0, 0, 0);
     if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_64)
     {
-        LOG(ERROR, "\tDirect request failed, fid=0x%x, err 0x%x\n",
+        LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x",
                   payload.fid, payload.arg2);
         status =  VAL_ERROR_POINT(3);
         goto free_interrupt;
@@ -64,7 +65,7 @@ uint32_t vm_to_sp_notification_pcpu_server(ffa_args_t args)
     val_ffa_notification_bind(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\t  Failed notification bind err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Failed notification bind err %x", payload.arg2);
         status = VAL_ERROR_POINT(4);
         goto free_interrupt;
     }
@@ -74,15 +75,15 @@ uint32_t vm_to_sp_notification_pcpu_server(ffa_args_t args)
     val_ffa_msg_send_direct_resp_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\t  Direct response failed, err %d\n", payload.arg2, 0);
+        LOG(ERROR, "Direct response failed, err %d", payload.arg2);
         status =  VAL_ERROR_POINT(5);
         goto unbind;
     }
 
     if (npi_flag == 1) {
-        LOG(DBG, "\t  NPI inerrupt handled\n", 0, 0);
+        LOG(DBG, "NPI inerrupt handled");
     } else {
-        LOG(DBG, "\t  NPI inerrupt not received\n", 0, 0);
+        LOG(ERROR, "NPI inerrupt not received");
         status = VAL_ERROR_POINT(6);
         goto unbind;
     }
@@ -93,14 +94,17 @@ uint32_t vm_to_sp_notification_pcpu_server(ffa_args_t args)
     val_ffa_notification_get(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\t  Failed notification get err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Failed notification get err %x", payload.arg2);
         status = VAL_ERROR_POINT(7);
         goto unbind;
     }
 
+    LOG(DBG, "Notifications_bitmap %x payload.arg4 %x", notifications_bitmap,
+        (uint32_t)payload.arg4);
+
     if (notifications_bitmap != (uint32_t)payload.arg4)
     {
-        LOG(ERROR, "\t  Not received expected notification err %x\n", payload.arg4, 0);
+        LOG(ERROR, "Not received expected notification err %x", payload.arg4);
         status = VAL_ERROR_POINT(8);
     }
 
@@ -113,7 +117,7 @@ unbind:
     val_ffa_notification_unbind(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\t  Failed notification unbind err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Failed notification unbind err %x", payload.arg2);
         status = status ? status : VAL_ERROR_POINT(9);
     }
 
@@ -121,7 +125,7 @@ free_interrupt:
     val_secure_intr_disable(npi_id, INTERRUPT_TYPE_FIQ);
     if (val_irq_unregister_handler(npi_id))
     {
-        LOG(ERROR, "\t  IRQ handler unregister failed\n", 0, 0);
+        LOG(ERROR, "IRQ handler unregister failed");
         status = status ? status : VAL_ERROR_POINT(10);
     }
 
@@ -131,7 +135,7 @@ exit:
     val_ffa_msg_send_direct_resp_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\tDirect response failed err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Direct response failed err %x", payload.arg2);
         status = status ? status : VAL_ERROR_POINT(11);
     }
 

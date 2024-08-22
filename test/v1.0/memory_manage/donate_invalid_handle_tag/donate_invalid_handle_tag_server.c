@@ -55,7 +55,7 @@ static uint32_t mem_donate_back_to_sender(ffa_memory_handle_t handle, uint32_t f
 
     if (payload.fid != FFA_MEM_RETRIEVE_RESP_32)
     {
-        LOG(ERROR, "\tMem retrieve request failed err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Mem retrieve request failed err %x", payload.arg2);
         status =  VAL_ERROR_POINT(1);
         goto err;
     }
@@ -89,10 +89,12 @@ static uint32_t mem_donate_back_to_sender(ffa_memory_handle_t handle, uint32_t f
         val_ffa_mem_donate_32(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\tMem_donate request failed err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Mem_donate request failed err %x", payload.arg2);
         status = VAL_ERROR_POINT(2);
         goto rx_release;
     }
+
+    LOG(DBG, "Mem Donate Complete");
 
     handle = ffa_mem_success_handle(payload);
     val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -101,14 +103,14 @@ static uint32_t mem_donate_back_to_sender(ffa_memory_handle_t handle, uint32_t f
     val_ffa_msg_send_direct_resp_64(&payload);
     if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_32)
     {
-        LOG(ERROR, "\tDirect request failed fid %x err %x\n", payload.fid, payload.arg2);
+        LOG(ERROR, "Direct request failed fid %x err %x", payload.fid, payload.arg2);
         status = status ? status : VAL_ERROR_POINT(3);
     }
 
 rx_release:
     if (val_rx_release())
     {
-        LOG(ERROR, "\tval_rx_release failed\n", 0, 0);
+        LOG(ERROR, "val_rx_release failed");
         status = status ? status : VAL_ERROR_POINT(4);
     }
 
@@ -158,10 +160,11 @@ static uint32_t mem_donate_invalid_handle_tag_check(ffa_memory_handle_t handle, 
 
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
     {
-        LOG(ERROR, "\tRelayer must return error for invalid handle and tag err %x\n",
-                        payload.arg2, 0);
+        LOG(ERROR, "Relayer must return error for invalid handle and tag err %x",
+                        payload.arg2);
         status =  VAL_ERROR_POINT(5);
     }
+    LOG(DBG, "Mem Retrieve Check Invalid Handle Complete");
 
     return status;
 }
@@ -183,7 +186,7 @@ uint32_t donate_invalid_handle_tag_server(ffa_args_t args)
     mb.recv = val_memory_alloc(size);
     if (mb.send == NULL || mb.recv == NULL)
     {
-        LOG(ERROR, "\tFailed to allocate RxTx buffer\n", 0, 0);
+        LOG(ERROR, "Failed to allocate RxTx buffer");
         status = VAL_ERROR_POINT(6);
         goto free_memory;
     }
@@ -191,7 +194,7 @@ uint32_t donate_invalid_handle_tag_server(ffa_args_t args)
     /* Map TX and RX buffers */
     if (val_rxtx_map_64((uint64_t)mb.send, (uint64_t)mb.recv, (uint32_t)(size/PAGE_SIZE_4K)))
     {
-        LOG(ERROR, "\tRxTx Map failed\n", 0, 0);
+        LOG(ERROR, "RxTx Map failed");
         status = VAL_ERROR_POINT(7);
         goto free_memory;
     }
@@ -201,7 +204,7 @@ uint32_t donate_invalid_handle_tag_server(ffa_args_t args)
     payload = val_resp_client_fn_direct((uint32_t)args.arg3, 0, 0, 0, 0, 0);
     if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_64)
     {
-        LOG(ERROR, "\tDirect request failed, fid=0x%x, err 0x%x\n",
+        LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x",
                   payload.fid, payload.arg2);
         status =  VAL_ERROR_POINT(8);
         goto rxtx_unmap;
@@ -227,14 +230,14 @@ mem_donate:
 rxtx_unmap:
     if (val_rxtx_unmap(sender))
     {
-        LOG(ERROR, "RXTX_UNMAP failed\n", 0, 0);
+        LOG(ERROR, "RXTX_UNMAP failed");
         status = status ? status : VAL_ERROR_POINT(9);
     }
 
 free_memory:
     if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
     {
-        LOG(ERROR, "\tval_mem_free failed\n", 0, 0);
+        LOG(ERROR, "val_mem_free failed");
         status = status ? status : VAL_ERROR_POINT(10);
     }
 

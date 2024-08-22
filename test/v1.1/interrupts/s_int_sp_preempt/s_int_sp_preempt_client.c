@@ -25,7 +25,7 @@ uint32_t s_int_sp_preempt_client(uint32_t test_run_data)
     val_ffa_msg_send_direct_req_64(&payload);
     if (payload.fid != FFA_MSG_SEND_DIRECT_RESP_64)
     {
-        LOG(ERROR, "\tDIRECT_RESP_64 not received fid %x err %x\n", payload.fid, payload.arg2);
+        LOG(ERROR, "DIRECT_RESP_64 not received fid %x err %x", payload.fid, payload.arg2);
         status = VAL_ERROR_POINT(2);
         goto exit;
     }

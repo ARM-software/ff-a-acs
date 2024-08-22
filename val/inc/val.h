@@ -43,16 +43,6 @@ typedef struct {
     uint8_t  status_code;
 } test_status_buffer_t;
 
-/* Verbosity enums, Lower the value, higher the verbosity */
-typedef enum {
-    INFO    = 1,
-    DBG     = 2,
-    TEST    = 3,
-    WARN    = 4,
-    ERROR   = 5,
-    ALWAYS  = 9
-} print_verbosity_t;
-
 typedef struct {
     uint32_t total_pass;
     uint32_t total_fail;
@@ -115,8 +105,8 @@ typedef enum {
 #define IS_STATUS_FAIL(status)  ((status & TEST_STATUS_CODE_MASK) ? 1 : 0)
 
 /* Print char limit for val_printf caller */
-#define PRINT_LIMIT       80
-#define TOTAL_PRINT_LIMIT 90
+#define PRINT_LIMIT       100
+#define TOTAL_PRINT_LIMIT 120
 
 /* 32 Bit field to capture current test run information
  * Reserved [31:23],
@@ -150,19 +140,6 @@ typedef enum {
 /* Set the value in given position */
 #define VAL_SET_BITS(data, pos, len, val) (((uint32_t)(~(uint32_t)0 & ~(uint32_t) \
                     (VAL_BIT_MASK(len) << pos)) & data) | (val << pos))
-
-/* Macro to print the message and control the verbosity */
-#define LOG(print_verbosity, x, y, z)               \
-   do {                                             \
-    if (print_verbosity >= VERBOSITY)               \
-        val_printf(x, y, z);                        \
-    if (print_verbosity == ERROR)                   \
-    {                                               \
-        val_printf("\t(Check failed at:", 0, 0);    \
-        pal_printf(__FILE__, 0, 0);                 \
-        pal_printf(" ,line:%d)\n", __LINE__, 0);    \
-    }                                               \
-   } while (0);
 
 /* Terminate simulation for unexpected events */
 #define VAL_PANIC(x)                               \

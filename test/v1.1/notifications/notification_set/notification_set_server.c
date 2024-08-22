@@ -21,7 +21,7 @@ uint32_t notification_set_server(ffa_args_t args)
     payload = val_resp_client_fn_direct((uint32_t)args.arg3, 0, 0, 0, 0, 0);
     if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_64)
     {
-        LOG(ERROR, "\tDirect request failed, fid=0x%x, err 0x%x\n",
+        LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x",
                   payload.fid, payload.arg2);
         status =  VAL_ERROR_POINT(1);
         goto exit;
@@ -38,7 +38,7 @@ uint32_t notification_set_server(ffa_args_t args)
     val_ffa_notification_bind(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\t  Failed notification bind err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Failed notification bind err %x", payload.arg2);
         status = VAL_ERROR_POINT(2);
         goto exit;
     }
@@ -52,7 +52,7 @@ uint32_t notification_set_server(ffa_args_t args)
     val_ffa_notification_bind(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\t  Failed notification bind err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Failed notification bind err %x", payload.arg2);
         status = VAL_ERROR_POINT(3);
         goto unbind_global;
     }
@@ -62,7 +62,7 @@ uint32_t notification_set_server(ffa_args_t args)
     val_ffa_msg_send_direct_resp_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\t  Direct response failed, err %d\n", payload.arg2, 0);
+        LOG(ERROR, "Direct response failed, err %d", payload.arg2);
         status =  VAL_ERROR_POINT(4);
     }
 
@@ -74,7 +74,7 @@ uint32_t notification_set_server(ffa_args_t args)
     val_ffa_notification_unbind(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\t  Failed notification unbind err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Failed notification unbind err %x", payload.arg2);
         status = status ? status : VAL_ERROR_POINT(5);
     }
 
@@ -87,7 +87,7 @@ unbind_global:
     val_ffa_notification_unbind(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\t  Failed notification unbind err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Failed notification unbind err %x", payload.arg2);
         status = status ? status : VAL_ERROR_POINT(6);
     }
 

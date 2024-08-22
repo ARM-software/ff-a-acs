@@ -9,12 +9,12 @@
 
 const test_suite_info_t test_suite_list[] = {
     {0, ""},
-    {TESTSUITE_SETUP_DISCOVERY, "Running 'setup_discovery' test suite..\n"},
-    {TESTSUITE_DIRECT_MESSAGING, "Running 'direct_messaging' test suite..\n"},
-    {TESTSUITE_INDIRECT_MESSAGING, "Running 'indirect_messaging' test suite..\n"},
-    {TESTSUITE_MEMORY_MANAGE, "Running 'memory_management' test suite..\n"},
-    {TESTSUITE_NOTIFICATIONS, "Running 'notifications' test suite..\n"},
-    {TESTSUITE_INTERRUPTS, "Running 'interrupts' test suite..\n"},
+    {TESTSUITE_SETUP_DISCOVERY, "setup_discovery"},
+    {TESTSUITE_DIRECT_MESSAGING, "direct_messaging"},
+    {TESTSUITE_INDIRECT_MESSAGING, "indirect_messaging"},
+    {TESTSUITE_MEMORY_MANAGE, "memory_management"},
+    {TESTSUITE_NOTIFICATIONS, "notifications"},
+    {TESTSUITE_INTERRUPTS, "interrupts"},
 };
 
 const test_db_t test_list[] = {
@@ -150,6 +150,7 @@ const test_db_t test_list[] = {
     CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, share_ro_retrieve_rw_32_vmsp),
     CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, share_ro_retrieve_rw_32_spsp),
     CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, share_ro_retrieve_rw_32_vmvm),
+    CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, mem_lend_mmio),
 #endif
 
 #ifdef ACS_FFA_UNVERIFIED
@@ -186,9 +187,9 @@ const test_db_t test_list[] = {
     CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, donate_retrieve_align_hint_check),
     CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, donate_retrieve_with_address_range),
     CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, donate_input_error_checks1),
-    CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, mem_lend_mmio),
     CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, mem_share_mmio),
     CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, mem_donate_mmio),
+    CLIENT_TEST_FN_ONLY(TESTSUITE_MEMORY_MANAGE, static_mapping_dma),
 #endif
 #endif
 
@@ -215,8 +216,8 @@ const test_db_t test_list[] = {
 #endif
 
 #if (SUITE == all || SUITE == indirect_messaging)
-    CLIENT_SERVER_TEST_FN(TESTSUITE_DIRECT_MESSAGING, ffa_msg_send2),
-    CLIENT_SERVER_TEST_FN(TESTSUITE_DIRECT_MESSAGING, ffa_msg_send2_sp),
+    CLIENT_SERVER_TEST_FN(TESTSUITE_INDIRECT_MESSAGING, ffa_msg_send2),
+    CLIENT_SERVER_TEST_FN(TESTSUITE_INDIRECT_MESSAGING, ffa_msg_send2_sp),
 #endif
 
 #if (SUITE == all || SUITE == memory_manage)

@@ -12,7 +12,7 @@
     .extern val_stack
     .extern val_fixup_symbol_table
     .cfi_sections .debug_frame
-    .globl  inv_dcache_range
+    .globl  flush_dcache_range
     .globl    val_entry
 
 /* Provision one stack per Execution Context (or vCPU) */

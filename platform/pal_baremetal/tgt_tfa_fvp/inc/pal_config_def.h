@@ -102,11 +102,19 @@
 #define PLATFORM_MEM_READ_ONLY_BASE  0xfe300000
 #define PLATFORM_MEM_READ_ONLY_SIZE  0x1000
 
-/* SMMU upstream device memory region 8KB */
-#define PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION 0x78000000
+/* SMMU upstream device memory region 16KB */
+#define PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION 0x7800000
+#define PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION_INVALID 0x7700000
+
+#define PLAT_SMMU_UPSTREAM_DEVICE_MEM_SIZE   0x10000
+
+/* SMMU Test Engine Memory Map  */
+#define PLAT_SMMUV3_TEST_ENGINE_MEM_REGION 0x2bfe0000
+#define PLAT_SMMUV3_TEST_ENGINE_MEM_SIZE   0x20000
 
 /* SMMU stream id */
-#define PLATFORM_SMMU_STREAM_ID   1
+#define PLATFORM_SMMU_STREAM_ID           1
+#define PLATFORM_SMMU_STREAM_ID_INVALID   2
 
 /*******************************************************************************
  * GIC-400 & interrupt handling related constants

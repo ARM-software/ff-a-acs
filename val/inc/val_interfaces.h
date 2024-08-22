@@ -71,4 +71,5 @@ typedef enum {
 
 extern const test_db_t test_list[];
 extern const test_suite_info_t test_suite_list[];
+
 #endif /* _VAL_INTERFACES_H_ */

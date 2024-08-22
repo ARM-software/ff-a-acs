@@ -27,9 +27,8 @@ static uint32_t validate_test_config(uint32_t client_logical_id __UNUSED,
     if (client_logical_id == VM2 || client_logical_id == VM3
         || server_logical_id == VM2 || server_logical_id == VM3)
     {
-        LOG(TEST,
-            "\tNo support for ns-hyp, skipping the check\n",
-            0, 0);
+        LOG(TEST, "No support for ns-hyp, skipping the check for client %s server %s ",
+            val_get_endpoint_name(client_logical_id), val_get_endpoint_name(server_logical_id));
         return VAL_SKIP_CHECK;
     }
 #endif
@@ -41,9 +40,8 @@ static uint32_t validate_test_config(uint32_t client_logical_id __UNUSED,
         || client_logical_id == SP3 || server_logical_id == SP3
         || client_logical_id == SP4 || server_logical_id == SP4)
     {
-        LOG(TEST,
-            "\tNo support for FFA S-ENDPOINT, skipping the check\n",
-            0, 0);
+        LOG(TEST, "No support for FFA S-ENDPOINT, skipping the check for client %s server %s ",
+            val_get_endpoint_name(client_logical_id), val_get_endpoint_name(server_logical_id));
         return VAL_SKIP_CHECK;
     }
 #endif
@@ -53,9 +51,7 @@ static uint32_t validate_test_config(uint32_t client_logical_id __UNUSED,
         || server_logical_id == SP2 || server_logical_id == SP3
         || client_logical_id == SP4 || server_logical_id == SP4)
     {
-        LOG(TEST,
-            "\tBoth SP & SPMC at EL1 config isn't supported, skipping the check\n",
-            0, 0);
+        LOG(TEST, "Both SP & SPMC at EL1 config isn't supported, skipping the check");
         return VAL_SKIP_CHECK;
     }
 #endif
@@ -63,9 +59,7 @@ static uint32_t validate_test_config(uint32_t client_logical_id __UNUSED,
 #if (PLATFORM_SP_SEND_DIRECT_REQ == 0)
     if (client_logical_id <= SP4 && server_logical_id != NO_SERVER_EP)
     {
-        LOG(TEST,
-            "\tSP doesn't support DIRECT_REQ, skipping the check\n",
-            0, 0);
+        LOG(TEST, "SP doesn't support DIRECT_REQ, skipping the check");
         return VAL_SKIP_CHECK;
     }
 #endif
@@ -73,10 +67,7 @@ static uint32_t validate_test_config(uint32_t client_logical_id __UNUSED,
 #if (PLATFORM_VM_SEND_DIRECT_RESP == 0)
     if (server_logical_id > SP4 && server_logical_id != NO_SERVER_EP)
     {
-        LOG(TEST,
-            "\tNS-ENDPOINT doesn't support DIRECT_RESP,\
-                 skipping the check\n",
-            0, 0);
+        LOG(TEST, "NS-ENDPOINT doesn't support DIRECT_RESP,skipping the check");
         return VAL_SKIP_CHECK;
     }
 #endif
@@ -98,7 +89,7 @@ static uint32_t val_execute_client_test_fn(uint32_t test_run_data)
     client_fn_ptr = (client_test_t)(test_list[test_num].client_fn);
     if (client_fn_ptr == NULL)
     {
-       VAL_PANIC("\tInvalid client test function\n");
+       VAL_PANIC("Invalid client test function");
     }
     /* Execute client function of given test num */
     client_fn_ptr = client_fn_ptr + val_image_load_offset;
@@ -121,7 +112,7 @@ static uint32_t val_execute_server_test_fn(ffa_args_t args)
     server_fn_ptr = (server_test_t)(test_list[test_num].server_fn);
     if (server_fn_ptr == NULL)
     {
-       VAL_PANIC("\tInvalid server test function\n");
+       VAL_PANIC("Invalid server test function");
     }
     /* Execute server function of given test num */
     server_fn_ptr = server_fn_ptr + val_image_load_offset;
@@ -160,7 +151,7 @@ void val_run_test_suite(void)
             val_ffa_secondary_ep_register_64();
         }
         val_wait_for_test_fn_req();
-        VAL_PANIC("\tSomething wrong, shouldn't have reached here\n");
+        VAL_PANIC("Something wrong, shouldn't have reached here");
     }
 }
 
@@ -171,11 +162,10 @@ void val_run_test_suite(void)
 **/
 static void val_print_acs_header(void)
 {
-   LOG(ALWAYS, "\n\n", 0, 0);
-   LOG(ALWAYS,
-   "***** FF-A ACS Version %d.%d *****\n\n",
-   ACS_MAJOR_VERSION,
-   ACS_MINOR_VERSION);
+   LOG(ALWAYS, "===========================================================");
+   LOG(ALWAYS, "\t\t***** FF-A v%d.%d ACS EAC *****",
+            FFA_VERSION_MAJOR, FFA_VERSION_MINOR);
+   LOG(ALWAYS, "===========================================================");
 }
 
 /**
@@ -190,12 +180,10 @@ void val_test_dispatch(void)
     uint32_t          test_result, test_num, suite_num, i, reboot_run = 0;
     uint32_t          test_num_start = 0, test_num_end = 0;
     test_entry_fptr_t test_entry_fn_ptr;
-    ffa_args_t payload;
-    uint32_t input_version_number;
 
     if (val_get_last_run_test_info(&test_info))
     {
-        LOG(ERROR, "\tUnable to read last test_info\n", 0, 0);
+        LOG(ERROR, "Unable to read last test_info");
         return;
     }
 
@@ -251,7 +239,7 @@ void val_test_dispatch(void)
         if ((val_nvm_write(VAL_NVM_OFFSET(NVM_END_TEST_NUM_INDEX),
                                                   &test_num_end, sizeof(test_num_end))))
         {
-            LOG(ERROR, "\tUnable to write nvm\n", 0, 0);
+            LOG(ERROR, "Unable to write nvm");
             return;
         }
 #else
@@ -260,7 +248,7 @@ void val_test_dispatch(void)
         if ((val_nvm_write(VAL_NVM_OFFSET(NVM_END_TEST_NUM_INDEX),
                                                   &test_num_end, sizeof(test_num_end))))
         {
-            LOG(ERROR, "\tUnable to write nvm\n", 0, 0);
+            LOG(ERROR, "Unable to write nvm");
             return;
         }
 #endif
@@ -302,9 +290,6 @@ void val_test_dispatch(void)
             {
                 /* Print test suite name */
                 suite_num = test_list[i].suite_num;
-                LOG(ALWAYS, "\n", 0, 0);
-                LOG(ALWAYS, test_suite_list[suite_num].suite_desc, 0, 0);
-                LOG(ALWAYS, "====================================\n", 0, 0);
             }
 
             if ((val_nvm_write(VAL_NVM_OFFSET(NVM_CUR_SUITE_NUM_INDEX),
@@ -312,7 +297,7 @@ void val_test_dispatch(void)
                 (val_nvm_write(VAL_NVM_OFFSET(NVM_CUR_TEST_NUM_INDEX),
                     &test_num, sizeof(test_num))))
             {
-                LOG(ERROR, "\tUnable to write nvm\n", 0, 0);
+                LOG(ERROR, "Unable to write nvm");
                 return;
             }
 
@@ -323,23 +308,6 @@ void val_test_dispatch(void)
             * */
            g_mp_state.g_current_test_num = i;
            val_dataCacheCleanInvalidateVA((uint64_t)&g_mp_state);
-
-           /* Execute FFA_VERSION call before each test case */
-           input_version_number = (uint32_t)(((FFA_VERSION_MAJOR << 16)
-                                             | FFA_VERSION_MINOR));
-           val_memset(&payload, 0, sizeof(ffa_args_t));
-           payload.arg1 = input_version_number;
-           val_ffa_version(&payload);
-           if (payload.fid != ((FFA_VERSION_MAJOR << 16) | FFA_VERSION_MINOR))
-           {
-              if (!((FFA_VERSION_MAJOR == payload.fid >> 16)
-                 && FFA_VERSION_MINOR <= (payload.fid & 0xFFFF)))
-                {
-                    LOG(WARN, "\tExpected=0x%x but Actual=0x%x\n",
-                           ((FFA_VERSION_MAJOR << 16) | FFA_VERSION_MINOR),
-                              payload.fid);
-                }
-           }
 
            val_test_init(i);
 
@@ -361,7 +329,7 @@ void val_test_dispatch(void)
                  &regre_report.total_error, sizeof(uint32_t)))
 
         {
-            LOG(ERROR, "\tUnable to read regre_report\n", 0, 0);
+            LOG(ERROR, "Unable to read regre_report");
             return;
         }
 
@@ -390,26 +358,27 @@ void val_test_dispatch(void)
             val_nvm_write(VAL_NVM_OFFSET(NVM_TOTAL_ERROR_INDEX),
                  &regre_report.total_error, sizeof(uint32_t)))
         {
-            LOG(ERROR, "\tUnable to write regre_report\n", 0, 0);
+            LOG(ERROR, "Unable to write regre_report");
             return;
         }
     }
 
     /* Print Regression report */
-    LOG(ALWAYS, "\n\n", 0, 0);
-    LOG(ALWAYS, "REGRESSION REPORT: \n", 0, 0);
-    LOG(ALWAYS, "==================\n", 0, 0);
-    LOG(ALWAYS, "   TOTAL TESTS     : %d\n",
+    LOG(ALWAYS, "");
+    LOG(ALWAYS, "REGRESSION REPORT: ");
+    LOG(ALWAYS, "==========================");
+    LOG(ALWAYS, "   TOTAL TESTS     : %d",
         (uint64_t)(regre_report.total_pass
         + regre_report.total_fail
         + regre_report.total_skip
         + regre_report.total_error),
         0);
-    LOG(ALWAYS, "   TOTAL PASSED    : %d\n", regre_report.total_pass, 0);
-    LOG(ALWAYS, "   TOTAL FAILED    : %d\n", regre_report.total_fail, 0);
-    LOG(ALWAYS, "   TOTAL SKIPPED   : %d\n", regre_report.total_skip, 0);
-    LOG(ALWAYS, "   TOTAL SIM ERROR : %d\n\n", regre_report.total_error, 0);
-    LOG(ALWAYS, "******* END OF ACS *******\n", 0, 0);
+    LOG(ALWAYS, "   TOTAL PASSED    : %d", regre_report.total_pass);
+    LOG(ALWAYS, "   TOTAL FAILED    : %d", regre_report.total_fail);
+    LOG(ALWAYS, "   TOTAL SKIPPED   : %d", regre_report.total_skip);
+    LOG(ALWAYS, "   TOTAL SIM ERROR : %d", regre_report.total_error);
+    LOG(ALWAYS, "==========================");
+    LOG(ALWAYS, "******* END OF ACS *******");
 }
 
 /**
@@ -437,7 +406,7 @@ void val_wait_for_test_fn_req(void)
     {
         if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_32)
         {
-            LOG(ERROR, "\tInvalid fid received, fid=0x%x, error=0x%x\n", payload.fid, payload.arg2);
+            LOG(ERROR, "Invalid fid received, fid=0x%x, error=0x%x", payload.fid, payload.arg2);
             return;
         }
 
@@ -451,7 +420,7 @@ void val_wait_for_test_fn_req(void)
             buffer = (uint32_t) payload.arg6;
             if (val_nvm_write((uint32_t)payload.arg4, &buffer, payload.arg5))
             {
-               VAL_PANIC("\tnvm write failed\n");
+               VAL_PANIC("nvm write failed");
             }
             val_memset(&payload, 0, sizeof(ffa_args_t));
             payload.arg1 = ((uint32_t)my_id << 16) | target_id;
@@ -461,7 +430,7 @@ void val_wait_for_test_fn_req(void)
             case NVM_READ_SERVICE:
             if (val_nvm_read((uint32_t)payload.arg4, &buffer, payload.arg5))
             {
-               VAL_PANIC("\tnvm write failed\n");
+               VAL_PANIC("nvm write failed");
             }
             val_memset(&payload, 0, sizeof(ffa_args_t));
             payload.arg1 = ((uint32_t)my_id << 16) | target_id;
@@ -472,7 +441,7 @@ void val_wait_for_test_fn_req(void)
             case WD_ENABLE_SERVICE:
             if (val_watchdog_enable())
             {
-               VAL_PANIC("\tWatchdog enable failed\n");
+               VAL_PANIC("Watchdog enable failed");
             }
             val_memset(&payload, 0, sizeof(ffa_args_t));
             payload.arg1 = ((uint32_t)my_id << 16) | target_id;
@@ -482,7 +451,7 @@ void val_wait_for_test_fn_req(void)
             case WD_DISABLE_SERVICE:
             if (val_watchdog_disable())
             {
-               VAL_PANIC("\tWatchdog disable failed\n");
+               VAL_PANIC("Watchdog disable failed");
             }
             val_memset(&payload, 0, sizeof(ffa_args_t));
             payload.arg1 = ((uint32_t)my_id << 16) | target_id;
@@ -524,26 +493,21 @@ uint32_t val_execute_test(
     uint32_t        status = VAL_ERROR;
     ffa_args_t      payload;
     uint32_t        test_run_data;
-    char            string[PRINT_LIMIT] = "\tExecuting test from client=";
 
     test_run_data = TEST_RUN_DATA(test_num,
                                   client_logical_id,
                                   server_logical_id,
                                   CLIENT_TEST);
 
-    val_strcat(string,
-               val_get_endpoint_name(client_logical_id),
-               sizeof(string));
-
     if (server_logical_id != NO_SERVER_EP)
     {
-        val_strcat(string, ", server=", sizeof(string));
-        val_strcat(string,
-                   val_get_endpoint_name(server_logical_id),
-                   sizeof(string));
+        LOG(TEST, "Executing Test Setup client: %s server: %s",
+                val_get_endpoint_name(client_logical_id), val_get_endpoint_name(server_logical_id));
     }
-    val_strcat(string, "\n", sizeof(string));
-    LOG(TEST, string, 0, 0);
+    else
+    {
+        LOG(TEST, "Executing Test Setup client: %s", val_get_endpoint_name(client_logical_id));
+    }
 
     status = validate_test_config(client_logical_id, server_logical_id);
     if (status)
@@ -558,7 +522,7 @@ uint32_t val_execute_test(
     }
     else if (server_logical_id == VM1)
     {
-        LOG(ERROR, "\tUnsupported: VM1 can't be server_ep", 0, 0);
+        LOG(ERROR, "Unsupported: VM1 can't be server_ep");
         status = VAL_ERROR;
         goto exit;
     }
@@ -582,7 +546,7 @@ uint32_t val_execute_test(
         }
         else
         {
-            LOG(ERROR, "\tInvalid fid received, fid=0x%x\n", payload.fid, 0);
+            LOG(ERROR, "Invalid fid received, fid=0x%x", payload.fid);
             status = VAL_ERROR;
             goto exit;
         }
@@ -697,7 +661,7 @@ void val_secondary_cpu_test_entry(void)
           (sec_cpu_client_test_t)(test_list[g_mp_state.g_current_test_num].sec_cpu_client_fn);
         if (sec_cpu_client_fn_ptr == NULL)
         {
-            VAL_PANIC("\tInvalid sec cpu test function\n");
+            VAL_PANIC("Invalid sec cpu test function");
         }
 
         sec_cpu_client_fn_ptr = sec_cpu_client_fn_ptr + val_image_load_offset;
@@ -738,7 +702,7 @@ static uint32_t val_sec_cpu_execute_server_test_fn(ffa_args_t args)
     sec_cpu_server_fn_ptr = (sec_cpu_server_test_t)(test_list[test_num].sec_cpu_server_fn);
     if (sec_cpu_server_fn_ptr == NULL)
     {
-       VAL_PANIC("\tInvalid server test function\n");
+       VAL_PANIC("\tInvalid server test function");
     }
 
     /* Execute server function of given test num */
@@ -773,7 +737,7 @@ void val_sec_cpu_wait_for_test_fn_req(void)
     {
         if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_32)
         {
-            LOG(ERROR, "\tInvalid fid received, fid=0x%x, error=0x%x\n", payload.fid, payload.arg2);
+            LOG(ERROR, "Invalid fid received, fid=0x%x, error=0x%x", payload.fid, payload.arg2);
             return;
         }
 
@@ -787,8 +751,8 @@ void val_sec_cpu_wait_for_test_fn_req(void)
         }
         else
         {
-            // TODO Sec CPU Non Primary VM Client handling
-            VAL_PANIC("\tNo Support for Sec CPU non Primary VM Client \n");
+            //Sec CPU Non Primary VM Client handling
+            VAL_PANIC("No Support for Sec CPU non Primary VM Client ");
         }
 
         /* Send test status back */
@@ -817,7 +781,7 @@ uint32_t val_get_multi_pe_test_status(uint64_t mpid, uint32_t test_num)
 
     if (mp_test_num != test_num)
     {
-        VAL_PANIC("\tInconsistent test_num and g_test_num \n");
+        VAL_PANIC("Inconsistent test_num and g_test_num ");
     }
 
     /** check and wait for all pe to reach test completion */
@@ -849,7 +813,7 @@ uint32_t val_get_multi_pe_test_status(uint64_t mpid, uint32_t test_num)
     }
     else
     {
-        VAL_PANIC("\tOther-PE test state incomplete \n");
+        VAL_PANIC("Other-PE test state incomplete ");
     }
 
     return status;

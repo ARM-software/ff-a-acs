@@ -12,6 +12,7 @@ static volatile uint32_t sri_flag;
 static int sri_irq_handler(void)
 {
     sri_flag = 1;
+    LOG(DBG, "SRI IRQ Handler Processed");
     return 0;
 }
 #endif
@@ -37,7 +38,7 @@ uint32_t ffa_msg_send2_sp_client(uint32_t test_run_data)
 
     if (val_is_ffa_feature_supported(FFA_MSG_SEND2_32))
     {
-        LOG(ERROR, "\tFFA_MSG_SEND2_32 not supported, skipping the test\n", 0, 0);
+        LOG(ERROR, "FFA_MSG_SEND2_32 not supported, skipping the test");
         return VAL_SKIP_CHECK;
     }
 
@@ -46,7 +47,7 @@ uint32_t ffa_msg_send2_sp_client(uint32_t test_run_data)
     val_ffa_features(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\t  Failed to retrieve SRI err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Failed to retrieve SRI err %x", payload.arg2);
         status = VAL_ERROR_POINT(1);
         goto exit;
     }
@@ -55,10 +56,11 @@ uint32_t ffa_msg_send2_sp_client(uint32_t test_run_data)
     sri_id = ffa_feature_intid(payload);
     if (val_irq_register_handler(sri_id, sri_irq_handler))
     {
-        LOG(ERROR, "\t  SRI interrupt register failed\n", 0, 0);
+        LOG(ERROR, "SRI interrupt register failed");
         status = VAL_ERROR_POINT(2);
         goto exit;
     }
+    LOG(DBG, "Interrupt Registeration Done SRI ID %x", sri_id);
 #endif
 
     val_select_server_fn_direct(test_run_data, 0, 0, 0, 0);
@@ -74,16 +76,16 @@ uint32_t ffa_msg_send2_sp_client(uint32_t test_run_data)
     val_ffa_msg_send_direct_req_64(&payload);
     if (payload.fid != FFA_MSG_SEND_DIRECT_RESP_64)
     {
-        LOG(ERROR, "\tDIRECT_RESP_64 not received fid %x err %x\n", payload.fid, payload.arg2);
+        LOG(ERROR, "DIRECT_RESP_64 not received fid %x err %x", payload.fid, payload.arg2);
         status = VAL_ERROR_POINT(2);
         goto exit;
     }
 
 #ifndef TARGET_LINUX
     if (sri_flag == 1) {
-        LOG(DBG, "\tSRI interrupt handled\n", 0, 0);
+        LOG(DBG, "SRI interrupt handled");
     } else {
-        LOG(ERROR, "\tSRI interrupt not received\n", 0, 0);
+        LOG(ERROR, "SRI interrupt not received");
         status = VAL_ERROR_POINT(3);
         goto exit;
     }
@@ -94,20 +96,24 @@ uint32_t ffa_msg_send2_sp_client(uint32_t test_run_data)
     val_ffa_notification_info_get_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\tFailed notification info get err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Failed notification info get err %x", payload.arg2);
         status = VAL_ERROR_POINT(4);
         goto exit;
     }
 
     id_list_count = ffa_notifications_info_get_lists_count(payload);
+    LOG(DBG, "id_list_count %x expected_id_list_count %x receiver_rx %x", id_list_count,
+        expected_id_list_count, payload.arg3);
 
     if ((id_list_count != expected_id_list_count) || (payload.arg3 != receiver_rx))
     {
-        LOG(ERROR, "\tNotification info get not as expected."
-                        "list_count %x id %x\n", id_list_count, payload.arg3);
+        LOG(ERROR, "Notification info get not as expected."
+                        "list_count %x id %x", id_list_count, payload.arg3);
         status = VAL_ERROR_POINT(5);
         goto exit;
     }
+
+    LOG(DBG, "Schedule SP using FFA_RUN");
 
     /* Schedule the SP using FFA_RUN */
     val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -125,7 +131,7 @@ uint32_t ffa_msg_send2_sp_client(uint32_t test_run_data)
     val_ffa_msg_send_direct_req_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\tDirect request failed err %d\n", payload.arg2, 0);
+        LOG(ERROR, "Direct request failed err %d", payload.arg2);
         status = VAL_ERROR_POINT(7);
         goto exit;
     }
@@ -135,7 +141,7 @@ uint32_t ffa_msg_send2_sp_client(uint32_t test_run_data)
     val_ffa_msg_send_direct_req_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\tDirect request failed err %d\n", payload.arg2, 0);
+        LOG(ERROR, "Direct request failed err %d", payload.arg2);
         status = VAL_ERROR_POINT(8);
     }
 
@@ -143,7 +149,7 @@ exit:
 #ifndef TARGET_LINUX
     if (val_irq_unregister_handler(sri_id))
     {
-        LOG(ERROR, "\tIRQ handler unregister failed\n", 0, 0);
+        LOG(ERROR, "IRQ handler unregister failed");
         status = status ? status : VAL_ERROR_POINT(9);
     }
 #endif

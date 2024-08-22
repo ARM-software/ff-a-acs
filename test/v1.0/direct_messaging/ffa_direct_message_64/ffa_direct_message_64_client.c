@@ -19,7 +19,7 @@ uint32_t ffa_direct_message_64_client(uint32_t test_run_data)
     payload = val_select_server_fn_direct(test_run_data, 0, 0, 0, 0);
     if (payload.fid != FFA_MSG_SEND_DIRECT_RESP_32)
     {
-        LOG(ERROR, "\tDirect request failed, fid=0x%x, err 0x%x\n",
+        LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x",
                   payload.fid, payload.arg2);
         status = VAL_ERROR_POINT(1);
         goto exit;
@@ -37,7 +37,7 @@ uint32_t ffa_direct_message_64_client(uint32_t test_run_data)
             val_ffa_run(&req_data_64);
             if (req_data_64.fid != FFA_MSG_SEND_DIRECT_RESP_64)
             {
-                LOG(ERROR, "\tFFA_RUN Failed err %x\n", req_data_64.fid, 0);
+                LOG(ERROR, "FFA_RUN Failed err %x", req_data_64.fid);
                 status = VAL_ERROR_POINT(2);
                 goto exit;
             }
@@ -45,13 +45,20 @@ uint32_t ffa_direct_message_64_client(uint32_t test_run_data)
         else
 #endif
         {
-            LOG(ERROR, "\tDirect request failed, fid=0x%x, err 0x%x\n",
+            LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x",
             req_data_64.fid, req_data_64.arg2);
             status = VAL_ERROR_POINT(3);
             goto exit;
         }
 
     }
+
+    LOG(DBG, "req data arg3 %x arg4 %x arg5 %x arg 6 %x arg7 %x",
+        req_data_64.arg3, req_data_64.arg4, req_data_64.arg5, req_data_64.arg6, req_data_64.arg7);
+
+    LOG(DBG, "expected resp arg3 %x arg4 %x arg5 %x arg 6 %x arg7 %x",
+        expected_resp_data_64.arg3, expected_resp_data_64.arg4, expected_resp_data_64.arg5,
+        expected_resp_data_64.arg6, expected_resp_data_64.arg7);
 
     /* Direct respond received, Compare the respond req_data_64 */
     if (req_data_64.arg3 != expected_resp_data_64.arg3 ||
@@ -60,7 +67,7 @@ uint32_t ffa_direct_message_64_client(uint32_t test_run_data)
         req_data_64.arg6 != expected_resp_data_64.arg6 ||
         req_data_64.arg7 != expected_resp_data_64.arg7)
     {
-        LOG(ERROR, "\tDirect response data mismatched\n", 0, 0);
+        LOG(ERROR, "Direct response data mismatched");
         status = VAL_ERROR_POINT(4);
         goto exit;
     }
@@ -72,7 +79,7 @@ uint32_t ffa_direct_message_64_client(uint32_t test_run_data)
     val_ffa_msg_send_direct_req_64(&payload);
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
     {
-        LOG(ERROR, "\tWrong source and dest id check failed, fid=0x%x\n, err=0x%x",
+        LOG(ERROR, "Wrong source and dest id check failed, fid=0x%x, err=0x%x",
             payload.fid, payload.arg2);
         status = VAL_ERROR_POINT(5);
         goto exit;
@@ -85,7 +92,7 @@ uint32_t ffa_direct_message_64_client(uint32_t test_run_data)
     val_ffa_msg_send_direct_req_64(&payload);
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
     {
-        LOG(ERROR, "\tSame source and dest id check failed, fid=0x%x\n, err=0x%x",
+        LOG(ERROR, "Same source and dest id check failed, fid=0x%x, err=0x%x",
         payload.fid, payload.arg2);
         status = VAL_ERROR_POINT(6);
         goto exit;
@@ -99,7 +106,7 @@ uint32_t ffa_direct_message_64_client(uint32_t test_run_data)
     val_ffa_msg_send_direct_req_64(&payload);
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
     {
-        LOG(ERROR, "\tW2 reserved register mbz check failed, fid=0x%x\n, err=0x%x",
+        LOG(ERROR, "W2 reserved register mbz check failed, fid=0x%x, err=0x%x",
                  payload.fid, payload.arg2);
         status = VAL_ERROR_POINT(7);
         goto exit;

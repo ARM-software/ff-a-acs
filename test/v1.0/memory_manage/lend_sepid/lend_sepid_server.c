@@ -29,7 +29,7 @@ uint32_t lend_sepid_server(ffa_args_t args)
     mb.recv = val_memory_alloc(size);
     if (mb.send == NULL || mb.recv == NULL)
     {
-        LOG(ERROR, "\tFailed to allocate RxTx buffer\n", 0, 0);
+        LOG(ERROR, "Failed to allocate RxTx buffer");
         status = VAL_ERROR_POINT(1);
         goto free_memory;
     }
@@ -37,7 +37,7 @@ uint32_t lend_sepid_server(ffa_args_t args)
     /* Map TX and RX buffers */
     if (val_rxtx_map_64((uint64_t)mb.send, (uint64_t)mb.recv, (uint32_t)(size/PAGE_SIZE_4K)))
     {
-        LOG(ERROR, "\tRxTx Map failed\n", 0, 0);
+        LOG(ERROR, "RxTx Map failed");
         status = VAL_ERROR_POINT(2);
         goto free_memory;
     }
@@ -47,7 +47,7 @@ uint32_t lend_sepid_server(ffa_args_t args)
     payload = val_resp_client_fn_direct((uint32_t)args.arg3, 0, 0, 0, 0, 0);
     if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_64)
     {
-        LOG(ERROR, "\tDirect request failed, fid=0x%x, err 0x%x\n",
+        LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x",
                   payload.fid, payload.arg2);
         status =  VAL_ERROR_POINT(3);
         goto rxtx_unmap;
@@ -83,10 +83,11 @@ uint32_t lend_sepid_server(ffa_args_t args)
 
     if (payload.fid != FFA_MEM_RETRIEVE_RESP_32)
     {
-        LOG(ERROR, "\tMem retrieve request failed err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Mem retrieve request failed err %x", payload.arg2);
         status =  VAL_ERROR_POINT(4);
         goto rxtx_unmap;
     }
+    LOG(DBG, "Mem Retrieve Complete");
 
     memory_region = (struct ffa_memory_region *)mb.recv;
     composite = ffa_memory_region_get_composite(memory_region, 0);
@@ -104,7 +105,7 @@ uint32_t lend_sepid_server(ffa_args_t args)
 
     if (val_mem_map_pgt(&mem_desc))
     {
-        LOG(ERROR, "\tVa to pa mapping failed\n", 0, 0);
+        LOG(ERROR, "Va to pa mapping failed");
         status =  VAL_ERROR_POINT(5);
         goto rx_release;
     }
@@ -124,7 +125,7 @@ uint32_t lend_sepid_server(ffa_args_t args)
 
     if (val_memcmp(ptr, ptr + PAGE_SIZE_4K, size))
     {
-        LOG(ERROR, "\tData mismatch\n", 0, 0);
+        LOG(ERROR, "Data mismatch");
         status =  VAL_ERROR_POINT(6);
     }
 
@@ -133,7 +134,7 @@ uint32_t lend_sepid_server(ffa_args_t args)
     val_ffa_msg_send_direct_resp_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\tDirect response failed err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Direct response failed err %x", payload.arg2);
         status = VAL_ERROR_POINT(7);
     }
 
@@ -143,29 +144,30 @@ uint32_t lend_sepid_server(ffa_args_t args)
     val_ffa_mem_relinquish(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\tMem relinquish failed err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Mem relinquish failed err %x", payload.arg2);
         status = status ? status : VAL_ERROR_POINT(8);
         goto rx_release;
     }
+    LOG(DBG, "Mem Relinquish Complete");
 
 rx_release:
     if (val_rx_release())
     {
-        LOG(ERROR, "\tval_rx_release failed\n", 0, 0);
+        LOG(ERROR, "val_rx_release failed");
         status = status ? status : VAL_ERROR_POINT(9);
     }
 
 rxtx_unmap:
     if (val_rxtx_unmap(sender))
     {
-        LOG(ERROR, "\tRXTX_UNMAP failed\n", 0, 0);
+        LOG(ERROR, "RXTX_UNMAP failed");
         status = status ? status : VAL_ERROR_POINT(10);
     }
 
 free_memory:
     if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
     {
-        LOG(ERROR, "\tfree_rxtx_buffers failed\n", 0, 0);
+        LOG(ERROR, "free_rxtx_buffers failed");
         status = status ? status : VAL_ERROR_POINT(11);
     }
 
@@ -174,7 +176,7 @@ free_memory:
     val_ffa_msg_send_direct_resp_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\tDirect response failed err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Direct response failed err %x", payload.arg2);
         status = status ? status : VAL_ERROR_POINT(12);
     }
 

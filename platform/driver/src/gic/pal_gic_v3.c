@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -466,7 +466,7 @@ void gicv3_probe_redistif_addr(void)
         rdistif_base += (1 << GICR_PCPUBASE_SHIFT);
     } while (!(typer_val & TYPER_LAST_BIT));
 
-    pal_printf("Re-distributor address not found for core %d\n", (uint64_t)core_pos, 0);
+    PAL_LOG(ERROR, "Re-distributor address not found for core %d", (uint64_t)core_pos);
     //panic();
 }
 

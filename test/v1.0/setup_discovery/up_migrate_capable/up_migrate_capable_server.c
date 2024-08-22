@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -11,10 +11,11 @@ uint32_t up_migrate_capable_server(ffa_args_t args)
 {
     ffa_args_t payload = args;
 
+    LOG(DBG, "Up migrate Server Func Init");
     /* Is direct request received? */
     if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_32)
     {
-        LOG(ERROR, "\tDirect request failed, fid=0x%x, err %x\n",
+        LOG(ERROR, "Direct request failed, fid=0x%x, err %x",
                   payload.fid, payload.arg2);
         return VAL_ERROR_POINT(1);
     }
@@ -32,7 +33,7 @@ uint32_t up_migrate_capable_server(ffa_args_t args)
      * */
     if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_32)
     {
-        LOG(ERROR, "\tDirect request failed, fid=0x%x, err %x\n",
+        LOG(ERROR, "Direct request failed, fid=0x%x, err %x",
                   payload.fid, payload.arg2);
         return VAL_ERROR_POINT(2);
     }

@@ -30,7 +30,7 @@ static uint32_t donate_input_error_checks4_helper(uint32_t test_run_data, uint32
     mb.recv = val_memory_alloc(size);
     if (mb.send == NULL || mb.recv == NULL)
     {
-        LOG(ERROR, "\tFailed to allocate RxTx buffer\n", 0, 0);
+        LOG(ERROR, "Failed to allocate RxTx buffer");
         status = VAL_ERROR_POINT(1);
         goto free_memory;
     }
@@ -38,7 +38,7 @@ static uint32_t donate_input_error_checks4_helper(uint32_t test_run_data, uint32
     /* Map TX and RX buffers */
     if (val_rxtx_map_64((uint64_t)mb.send, (uint64_t)mb.recv, (uint32_t)(size/PAGE_SIZE_4K)))
     {
-        LOG(ERROR, "\tRxTx Map failed\n", 0, 0);
+        LOG(ERROR, "RxTx Map failed");
         status = VAL_ERROR_POINT(2);
         goto free_memory;
     }
@@ -73,11 +73,13 @@ static uint32_t donate_input_error_checks4_helper(uint32_t test_run_data, uint32
 
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_DENIED))
     {
-        LOG(ERROR, "\tMem_donate request must return DENIED for Read only access to memory region %x\n",
-           payload.arg2, 0);
+        LOG(ERROR, "Mem_donate request must return DENIED for Read only access to memory region %x",
+           payload.arg2);
         status = VAL_ERROR_POINT(3);
         goto rxtx_unmap;
     }
+
+    LOG(DBG, "Mem Donate RO Region Check Complete");
 
     mem_region_init.flags = 0;
 
@@ -93,10 +95,12 @@ static uint32_t donate_input_error_checks4_helper(uint32_t test_run_data, uint32
 
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\t mem_donate request failed err %x\n", payload.arg2, 0);
+        LOG(ERROR, " mem_donate request failed err %x", payload.arg2);
         status = VAL_ERROR_POINT(4);
         goto rxtx_unmap;
     }
+
+    LOG(DBG, "Mem Donate Complete");
 
     handle = ffa_mem_success_handle(payload);
 
@@ -111,11 +115,13 @@ static uint32_t donate_input_error_checks4_helper(uint32_t test_run_data, uint32
     val_ffa_mem_reclaim(&payload);
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_DENIED))
     {
-        LOG(ERROR, "\tMem Reclaim must return DENIED if zero memory before reclaim flag is not set\
-                                            for owner read only access err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Mem Reclaim must return DENIED if zero memory before reclaim flag is not set\
+                                            for owner read only access err %x", payload.arg2);
         status = VAL_ERROR_POINT(5);
         goto rxtx_unmap;
     }
+
+    LOG(DBG, "Mem Reclaim Zero Memory RO Check Complete");
 
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 = (uint32_t)handle;
@@ -124,21 +130,23 @@ static uint32_t donate_input_error_checks4_helper(uint32_t test_run_data, uint32
     val_ffa_mem_reclaim(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\tMem Reclaim failed err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Mem Reclaim failed err %x", payload.arg2);
         status = status ? status : VAL_ERROR_POINT(6);
     }
+
+    LOG(DBG, "Mem Reclaim Complete");
 
 rxtx_unmap:
     if (val_rxtx_unmap(sender))
     {
-        LOG(ERROR, "\tRXTX_UNMAP failed\n", 0, 0);
+        LOG(ERROR, "RXTX_UNMAP failed");
         status = status ? status : VAL_ERROR_POINT(7);
     }
 
 free_memory:
     if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
     {
-        LOG(ERROR, "\tfree_rxtx_buffers failed\n", 0, 0);
+        LOG(ERROR, "free_rxtx_buffers failed");
         status = status ? status : VAL_ERROR_POINT(8);
     }
 
@@ -154,7 +162,7 @@ uint32_t donate_input_error_checks4_client(uint32_t test_run_data)
     status_32 = val_is_ffa_feature_supported(FFA_MEM_DONATE_32);
     if (status_64 && status_32)
     {
-        LOG(TEST, "\tFFA_MEM_DONATE not supported, skipping the check\n", 0, 0);
+        LOG(TEST, "FFA_MEM_DONATE not supported, skipping the check");
         return VAL_SKIP_CHECK;
     }
     else if (status_64 && !status_32)

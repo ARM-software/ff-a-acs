@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -187,13 +187,13 @@ void arm_gic_init(uintptr_t gicc_base,
     if (is_gicv3_mode()) {
         gicv3_detected = 1;
         gicv3_init(gicr_base, gicd_base);
-        pal_printf("GICv3 mode detected\n", 0, 0);
+        PAL_LOG(INFO, "GICv3 mode detected");
         arm_gic_setup_global();
         arm_gic_setup_local();
-        pal_printf("GICv3 local and global initialisation done\n", 0, 0);
+        PAL_LOG(INFO, "GICv3 local and global initialisation done");
     } else {
         gicv2_init(gicc_base, gicd_base);
-        pal_printf("GICv2 mode detected\n", 0, 0);
+        PAL_LOG(INFO, "GICv2 mode detected");
     }
 
 }

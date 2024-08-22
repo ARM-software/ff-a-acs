@@ -19,7 +19,7 @@
 void expect(int expr, int expected)
 {
     if (expr != expected) {
-        pal_printf("\tExpected value %i, got %i\n", (uint64_t)expected, (uint64_t)expr);
+        PAL_LOG(ERROR, "Expected value %i, got %i", (uint64_t)expected, (uint64_t)expr);
         while (1)
             continue;
     }
@@ -28,7 +28,7 @@ void expect(int expr, int expected)
 uint64_t sp_sleep_elapsed_time(uint64_t ms)
 {
     uint64_t timer_freq = read_cntfrq_el0();
-    pal_printf("\tTimer frequency = 0x%x Sleeping for %d milliseconds\n", timer_freq, (uint64_t)ms);
+    PAL_LOG(INFO, "Timer frequency = 0x%x Sleeping for %d milliseconds", timer_freq, (uint64_t)ms);
 
     uint64_t time1 = virtualcounter_read();
     volatile uint64_t time2 = time1;
@@ -50,7 +50,7 @@ static inline void while_wait_loop(uint64_t ms)
     uint64_t loop;
     volatile uint64_t count = 0; /* to prevent optimization*/
 
-    pal_printf("\tExecuting software loop based wait for ms %d \n", ms, 0);
+    PAL_LOG(INFO, "Executing software loop based wait for ms %d", ms, 0);
     for (loop = 0; loop < timeout; loop++) {
         /* Wait */
         count++;

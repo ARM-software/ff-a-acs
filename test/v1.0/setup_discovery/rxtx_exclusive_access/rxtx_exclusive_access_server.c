@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -15,6 +15,8 @@ uint32_t rxtx_exclusive_access_server(ffa_args_t args)
     uint64_t tx_buff = (args.arg5 << 32) | args.arg4;
     uint64_t rx_buff = (args.arg7 << 32) | args.arg6;
 
+    LOG(DBG, "tx_buff %x rx_buff %x", tx_buff, rx_buff);
+
     /* Try to register the client buffers from servers */
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 = tx_buff;
@@ -23,7 +25,7 @@ uint32_t rxtx_exclusive_access_server(ffa_args_t args)
     val_ffa_rxtx_map_64(&payload);
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
     {
-        LOG(ERROR, "\tCheck failed for rxtx_map: fid=0x%x, err=0x%x\n",
+        LOG(ERROR, "Check failed for rxtx_map: fid=0x%x, err=0x%x",
             payload.fid, payload.arg2);
         status = VAL_ERROR_POINT(1);
     }

@@ -10,7 +10,7 @@
 void other_secure_int2_testentry(uint32_t test_num)
 {
 #ifdef TARGET_LINUX
-    LOG(TEST, "\tSkipping this test: UP test not supported for Linux env\n", 0, 0);
+    LOG(TEST, "Skipping this test: UP test not supported for Linux env");
     val_set_status(RESULT_SKIP(VAL_SKIP_CHECK));
     return;
 #endif

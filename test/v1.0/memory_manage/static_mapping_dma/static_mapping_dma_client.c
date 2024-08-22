@@ -14,7 +14,7 @@ static uint32_t ffa_mem_share_helper(uint32_t test_run_data, uint32_t fid)
     uint32_t status = VAL_SUCCESS;
     uint32_t client_logical_id = GET_CLIENT_LOGIC_ID(test_run_data);
     ffa_endpoint_id_t sender = val_get_endpoint_id(client_logical_id);
-    ffa_endpoint_id_t recipient = val_get_endpoint_id(SP2);
+    ffa_endpoint_id_t recipient = val_get_endpoint_id(SP3);
     mb_buf_t mb;
     memory_region_descriptor_t mem_desc;
     uint64_t size = 0x1000;
@@ -29,7 +29,7 @@ static uint32_t ffa_mem_share_helper(uint32_t test_run_data, uint32_t fid)
     mb.recv = val_memory_alloc(size);
     if (mb.send == NULL || mb.recv == NULL)
     {
-        LOG(ERROR, "\tFailed to allocate RxTx buffer\n", 0, 0);
+        LOG(ERROR, "Failed to allocate RxTx buffer");
         status = VAL_ERROR_POINT(1);
         goto free_memory;
     }
@@ -37,16 +37,30 @@ static uint32_t ffa_mem_share_helper(uint32_t test_run_data, uint32_t fid)
     /* Map TX and RX buffers */
     if (val_rxtx_map_64((uint64_t)mb.send, (uint64_t)mb.recv, (uint32_t)(size/PAGE_SIZE_4K)))
     {
-        LOG(ERROR, "\tRxTx Map failed\n", 0, 0);
+        LOG(ERROR, "RxTx Map failed");
         status = VAL_ERROR_POINT(2);
         goto free_memory;
     }
 
-    val_select_server_fn_direct(test_run_data, fid, 0, 0, 0);
-
     /* Map the region into endpoint translation */
     mem_desc.virtual_address = PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION;
     mem_desc.physical_address = PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION;
+    mem_desc.length = size * 2;
+    if (VAL_IS_ENDPOINT_SECURE(client_logical_id))
+        mem_desc.attributes = ATTR_RW_DATA;
+    else
+        mem_desc.attributes = ATTR_RW_DATA | ATTR_NS;
+
+    if (val_mem_map_pgt(&mem_desc))
+    {
+        LOG(ERROR, "Va to pa mapping failed");
+        status =  VAL_ERROR_POINT(3);
+        goto rxtx_unmap;
+    }
+
+    /* Map the region into endpoint translation */
+    mem_desc.virtual_address = PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION_INVALID;
+    mem_desc.physical_address = PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION_INVALID;
     mem_desc.length = size * 2;
     if (VAL_IS_ENDPOINT_SECURE(client_logical_id))
         mem_desc.attributes = ATTR_RW_DATA;
@@ -61,31 +75,57 @@ static uint32_t ffa_mem_share_helper(uint32_t test_run_data, uint32_t fid)
     }
 
     val_memset((void *)PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION, 0xab, size);
+    val_memset((void *)PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION_INVALID, 0xea, size);
+
     /* Initiate the DMA transactions to
      * memory regions using device upstream of SMMU
      */
+    flush_dcache_range(PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION, size*2);
+    flush_dcache_range(PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION_INVALID, size*2);
+
     if (VAL_IS_ENDPOINT_SECURE(val_get_endpoint_logical_id(sender)))
     {
         smmuv3_configure_testengine(PLATFORM_SMMU_STREAM_ID,
                  PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION,
-                PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION + PAGE_SIZE_4K, size, true);
+                 PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION + PAGE_SIZE_4K, size, true);
     }
     else
     {
         smmuv3_configure_testengine(PLATFORM_SMMU_STREAM_ID,
                  PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION,
-                PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION + PAGE_SIZE_4K, size, false);
+                 PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION + PAGE_SIZE_4K, size, false);
+    }
+
+    if (VAL_IS_ENDPOINT_SECURE(val_get_endpoint_logical_id(sender)))
+    {
+        smmuv3_configure_testengine(PLATFORM_SMMU_STREAM_ID,
+                 PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION_INVALID,
+                 PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION_INVALID + PAGE_SIZE_4K, size, true);
+    }
+    else
+    {
+        smmuv3_configure_testengine(PLATFORM_SMMU_STREAM_ID,
+                 PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION_INVALID,
+                 PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION_INVALID + PAGE_SIZE_4K, size, false);
     }
 
     if (val_memcmp((void *)PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION,
                     (void *)PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION + PAGE_SIZE_4K, size))
     {
-        LOG(ERROR, "\tData mismatch\n", 0, 0);
+        LOG(ERROR, "Data mismatch");
         status =  VAL_ERROR_POINT(4);
         goto rxtx_unmap;
     }
 
-    val_memset((void *)PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION + PAGE_SIZE_4K, 0x0, size);
+    if (!(val_memcmp((void *)PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION_INVALID,
+                    (void *)PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION_INVALID + PAGE_SIZE_4K, size)))
+    {
+        LOG(ERROR, "\tDMA transaction should not have occured\n", 0, 0);
+        status =  VAL_ERROR_POINT(5);
+        goto rxtx_unmap;
+    }
+
+    val_memset((void *)PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION + (2*PAGE_SIZE_4K), 0x0, size);
 
     constituents[0].address = (void *)PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION;
     constituents[0].page_count = 2;
@@ -118,13 +158,14 @@ static uint32_t ffa_mem_share_helper(uint32_t test_run_data, uint32_t fid)
     else
         val_ffa_mem_share_32(&payload);
 
-    if (payload.fid != FFA_ERROR_32)
+    if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\tMem_share request must fail for static dma mappings fid:%x err:%x\n",
+        LOG(ERROR, "Mem_share request must fail for static dma mappings fid:%x err:%x",
                                                                 payload.fid, payload.arg2);
-        status = VAL_ERROR_POINT(5);
+        status = VAL_ERROR_POINT(6);
         goto reclaim;
     }
+    LOG(DBG, "Mem Share Complete");
 
 reclaim:
     handle = ffa_mem_success_handle(payload);
@@ -135,20 +176,22 @@ reclaim:
     val_ffa_mem_reclaim(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\tMem Reclaim failed err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Mem Reclaim failed err %x", payload.arg2);
         status = VAL_ERROR_POINT(6);
     }
+    LOG(DBG, "Mem Reclaim Complete");
+
 rxtx_unmap:
     if (val_rxtx_unmap(sender))
     {
-        LOG(ERROR, "\tRXTX_UNMAP failed\n", 0, 0);
+        LOG(ERROR, "RXTX_UNMAP failed");
         status = status ? status : VAL_ERROR_POINT(7);
     }
 
 free_memory:
     if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
     {
-        LOG(ERROR, "\tfree_rxtx_buffers failed\n", 0, 0);
+        LOG(ERROR, "free_rxtx_buffers failed");
         status = status ? status : VAL_ERROR_POINT(8);
     }
 
@@ -163,7 +206,7 @@ uint32_t static_mapping_dma_client(uint32_t test_run_data)
     status_32 = val_is_ffa_feature_supported(FFA_MEM_SHARE_32);
     if (status_64 && status_32)
     {
-        LOG(TEST, "\tFFA_MEM_SHARE not supported, skipping the check\n", 0, 0);
+        LOG(TEST, "FFA_MEM_SHARE not supported, skipping the check");
         return VAL_SKIP_CHECK;
     }
     else if (status_64 && !status_32)

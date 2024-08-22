@@ -28,7 +28,7 @@ uint32_t notification_set_client(uint32_t test_run_data)
     val_ffa_notification_bitmap_create(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\t  Notification bitmap create failed %x\n", payload.arg2, 0);
+        LOG(ERROR, "Notification bitmap create failed %x", payload.arg2);
         status = VAL_ERROR_POINT(1);
         goto exit;
     }
@@ -43,7 +43,7 @@ uint32_t notification_set_client(uint32_t test_run_data)
     val_ffa_msg_send_direct_req_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\t  Direct request failed err %d\n", payload.arg2, 0);
+        LOG(ERROR, "Direct request failed err %d", payload.arg2);
         status = VAL_ERROR_POINT(2);
         goto bitmap_destroy;
     }
@@ -56,7 +56,7 @@ uint32_t notification_set_client(uint32_t test_run_data)
     val_ffa_notification_set(&payload);
     if (payload.fid != FFA_ERROR_32 || payload.arg2 != FFA_ERROR_INVALID_PARAMETERS)
     {
-        LOG(ERROR, "\t  Notification_set must return err for invalid id %x\n", payload.arg2, 0);
+        LOG(ERROR, "Notification_set must return err for invalid id %x", payload.arg2);
         status = VAL_ERROR_POINT(3);
         goto bitmap_destroy;
     }
@@ -69,7 +69,7 @@ uint32_t notification_set_client(uint32_t test_run_data)
     val_ffa_notification_set(&payload);
     if (payload.fid != FFA_ERROR_32 || payload.arg2 != FFA_ERROR_INVALID_PARAMETERS)
     {
-        LOG(ERROR, "\t  Notification_set must return err for invalid id %x\n", payload.arg2, 0);
+        LOG(ERROR, "Notification_set must return err for invalid id %x", payload.arg2);
         status = VAL_ERROR_POINT(4);
         goto bitmap_destroy;
     }
@@ -83,7 +83,7 @@ uint32_t notification_set_client(uint32_t test_run_data)
     val_ffa_notification_set(&payload);
     if (payload.fid != FFA_ERROR_32 || payload.arg2 != FFA_ERROR_INVALID_PARAMETERS)
     {
-        LOG(ERROR, "\t  Notification_set must return err for invalid flag %x\n", payload.arg2, 0);
+        LOG(ERROR, "Notification_set must return err for invalid flag %x", payload.arg2);
         status = VAL_ERROR_POINT(5);
         goto bitmap_destroy;
     }
@@ -98,7 +98,7 @@ uint32_t notification_set_client(uint32_t test_run_data)
     val_ffa_notification_set(&payload);
     if (payload.fid != FFA_ERROR_32 || payload.arg2 != FFA_ERROR_INVALID_PARAMETERS)
     {
-        LOG(ERROR, "\t  Notification_set must return err for invalid flag %x\n", payload.arg2, 0);
+        LOG(ERROR, "Notification_set must return err for invalid flag %x", payload.arg2);
         status = VAL_ERROR_POINT(6);
         goto bitmap_destroy;
     }
@@ -114,7 +114,7 @@ uint32_t notification_set_client(uint32_t test_run_data)
     val_ffa_notification_set(&payload);
     if (payload.fid != FFA_ERROR_32 || payload.arg2 != FFA_ERROR_INVALID_PARAMETERS)
     {
-        LOG(ERROR, "\t  Notification_set must return err for invalid flag %x\n", payload.arg2, 0);
+        LOG(ERROR, "Notification_set must return err for invalid flag %x", payload.arg2);
         status = VAL_ERROR_POINT(7);
         goto bitmap_destroy;
     }
@@ -127,7 +127,7 @@ uint32_t notification_set_client(uint32_t test_run_data)
     val_ffa_notification_set(&payload);
     if (payload.fid != FFA_ERROR_32 || payload.arg2 != FFA_ERROR_DENIED)
     {
-        LOG(ERROR, "\t  Notification_set must return err for invalid bitmap %x\n", payload.arg2, 0);
+        LOG(ERROR, "Notification_set must return err for invalid bitmap %x", payload.arg2);
         status = VAL_ERROR_POINT(8);
     }
 
@@ -137,7 +137,7 @@ bitmap_destroy:
     val_ffa_notification_bitmap_destroy(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\t  Bitmap destroy failed err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Bitmap destroy failed err %x", payload.arg2);
         status = status ? status : VAL_ERROR_POINT(9);
     }
 

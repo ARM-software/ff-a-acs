@@ -43,7 +43,7 @@ void val_main(void)
 #ifndef TARGET_LINUX
 exit:
 #endif
-    LOG(ALWAYS, "Entering standby.. \n", 0, 0);
+    LOG(ALWAYS, "Entering standby.. ");
     pal_terminate_simulation();
 }
 #else
@@ -57,15 +57,15 @@ void val_main(void)
     val_ffa_id_get(&payload);
     if (payload.fid != FFA_SUCCESS_32)
     {
-        LOG(ERROR, "\tEL0: Check failed for ffa_id_get success case\n", 0, 0);
+        LOG(ERROR, "EL0: Check failed for ffa_id_get success case");
         goto exit;
     }
 
-    LOG(ALWAYS, "EL0 entry.. id %lx\n", payload.arg2, 0);
+    LOG(ALWAYS, "EL0 entry.. id %lx", payload.arg2);
     val_run_test_suite();
 
 exit:
-    LOG(ALWAYS, "Entering standby.. \n", 0, 0);
+    LOG(ALWAYS, "Entering standby.. ");
     pal_terminate_simulation();
 }
 #endif

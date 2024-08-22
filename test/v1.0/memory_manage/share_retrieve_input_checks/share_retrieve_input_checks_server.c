@@ -17,11 +17,11 @@ static void relinquish_memory(ffa_memory_handle_t handle, void *tx_buf, ffa_endp
     val_ffa_mem_relinquish(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\tMem relinquish failed err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Mem relinquish failed err %x", payload.arg2);
     }
     if (val_rx_release())
     {
-        LOG(ERROR, "\tval_rx_release failed\n", 0, 0);
+        LOG(ERROR, "val_rx_release failed");
     }
 }
 
@@ -73,13 +73,13 @@ static uint32_t retrieve_zero_flag_check(ffa_memory_handle_t handle, uint32_t fi
         if (flags == FFA_MEMORY_REGION_FLAG_CLEAR)
         {
             LOG(ERROR,
-                "\tRelayer must return error if zero memory before retrieval flag is set\n",
+                "Relayer must return error if zero memory before retrieval flag is set",
                 0, 0);
         }
         else if (flags == FFA_MEMORY_REGION_FLAG_CLEAR_RELINQUISH)
         {
             LOG(ERROR,
-                "\tRelayer must return error if zero memory after relinquish flag is set\n",
+                "Relayer must return error if zero memory after relinquish flag is set",
                 0, 0);
         }
         status =  VAL_ERROR_POINT(1);
@@ -134,14 +134,14 @@ static uint32_t retrieve_with_invalid_cache_attr_check(ffa_memory_handle_t handl
 
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_DENIED))
     {
-        LOG(ERROR, "Relayer must return denied for cache attribute mismatch %x\n", payload.arg2, 0);
+        LOG(ERROR, "Relayer must return denied for cache attribute mismatch %x", payload.arg2);
         status =  VAL_ERROR_POINT(2);
         if (payload.fid == FFA_MEM_RETRIEVE_RESP_32)
         {
             relinquish_memory(handle, tx_buf, receiver);
         }
     }
-
+    LOG(DBG, "Mem Retrieve Check for Attribute Mismatch Complete");
     return status;
 }
 
@@ -188,8 +188,8 @@ static uint32_t retrieve_with_invalid_total_length_check(ffa_memory_handle_t han
 
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
     {
-        LOG(ERROR, "\ttotal length must be lesser than transaction buffer size\n", 0, 0);
-        LOG(ERROR, "\tRelayer must return %x instead of %x\n",
+        LOG(ERROR, "total length must be lesser than transaction buffer size");
+        LOG(ERROR, "Relayer must return %x instead of %x",
                   FFA_ERROR_INVALID_PARAMETERS, payload.arg2);
         status =  VAL_ERROR_POINT(3);
         if (payload.fid == FFA_MEM_RETRIEVE_RESP_32)
@@ -244,7 +244,7 @@ static uint32_t retrieve_with_invalid_mem_transaction_type_check(ffa_memory_hand
 
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
     {
-        LOG(ERROR, "\tRelayer must return %x instead of %x for invalid transaction type flag\n",
+        LOG(ERROR, "Relayer must return %x instead of %x for invalid transaction type flag",
                   FFA_ERROR_INVALID_PARAMETERS, payload.arg2);
         status =  VAL_ERROR_POINT(4);
         if (payload.fid == FFA_MEM_RETRIEVE_RESP_32)
@@ -252,7 +252,7 @@ static uint32_t retrieve_with_invalid_mem_transaction_type_check(ffa_memory_hand
             relinquish_memory(handle, tx_buf, receiver);
         }
     }
-
+    LOG(DBG, "Mem Retrieve Check for Invalid Transaction Type Complete");
     return status;
 }
 
@@ -299,8 +299,8 @@ static uint32_t retrieve_with_invalid_sender_id(ffa_memory_handle_t handle, uint
 
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
     {
-        LOG(ERROR, "\ttotal length must be lesser than transaction buffer size\n", 0, 0);
-        LOG(ERROR, "\tRelayer must return %x instead of %x\n",
+        LOG(ERROR, "total length must be lesser than transaction buffer size");
+        LOG(ERROR, "Relayer must return %x instead of %x",
                   FFA_ERROR_INVALID_PARAMETERS, payload.arg2);
         status =  VAL_ERROR_POINT(5);
         if (payload.fid == FFA_MEM_RETRIEVE_RESP_32)
@@ -308,7 +308,7 @@ static uint32_t retrieve_with_invalid_sender_id(ffa_memory_handle_t handle, uint
             relinquish_memory(handle, tx_buf, receiver);
         }
     }
-
+    LOG(DBG, "Mem Retrieve Check for Invalid Sender ID Complete");
     return status;
 }
 
@@ -352,8 +352,8 @@ static uint32_t retrieve_with_invalid_inst_perm(ffa_memory_handle_t handle, uint
 
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
     {
-        LOG(ERROR, "\tMem retrieve request must fail for non-zero value of inst perm\n", 0, 0);
-        LOG(ERROR, "\tRelayer must return %x instead of %x\n",
+        LOG(ERROR, "Mem retrieve request must fail for non-zero value of inst perm");
+        LOG(ERROR, "Relayer must return %x instead of %x",
                   FFA_ERROR_INVALID_PARAMETERS, payload.arg2);
         status =  VAL_ERROR_POINT(6);
         if (payload.fid == FFA_MEM_RETRIEVE_RESP_32)
@@ -361,7 +361,7 @@ static uint32_t retrieve_with_invalid_inst_perm(ffa_memory_handle_t handle, uint
             relinquish_memory(handle, tx_buf, receiver);
         }
     }
-
+    LOG(DBG, "Mem Retrieve Check for Invalid Inst Param Complete");
     return status;
 }
 
@@ -380,7 +380,7 @@ uint32_t share_retrieve_input_checks_server(ffa_args_t args)
     mb.recv = val_memory_alloc(size);
     if (mb.send == NULL || mb.recv == NULL)
     {
-        LOG(ERROR, "\tFailed to allocate RxTx buffer\n", 0, 0);
+        LOG(ERROR, "Failed to allocate RxTx buffer");
         status = VAL_ERROR_POINT(7);
         goto free_memory;
     }
@@ -388,7 +388,7 @@ uint32_t share_retrieve_input_checks_server(ffa_args_t args)
     /* Map TX and RX buffers */
     if (val_rxtx_map_64((uint64_t)mb.send, (uint64_t)mb.recv, (uint32_t)(size/PAGE_SIZE_4K)))
     {
-        LOG(ERROR, "\tRxTx Map failed\n", 0, 0);
+        LOG(ERROR, "RxTx Map failed");
         status = VAL_ERROR_POINT(8);
         goto free_memory;
     }
@@ -398,7 +398,7 @@ uint32_t share_retrieve_input_checks_server(ffa_args_t args)
     payload = val_resp_client_fn_direct((uint32_t)args.arg3, 0, 0, 0, 0, 0);
     if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_64)
     {
-        LOG(ERROR, "\tDirect request failed, fid=0x%x, err 0x%x\n",
+        LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x",
                   payload.fid, payload.arg2);
         status =  VAL_ERROR_POINT(9);
         goto rxtx_unmap;
@@ -440,14 +440,14 @@ uint32_t share_retrieve_input_checks_server(ffa_args_t args)
 rxtx_unmap:
     if (val_rxtx_unmap(sender))
     {
-        LOG(ERROR, "RXTX_UNMAP failed\n", 0, 0);
+        LOG(ERROR, "RXTX_UNMAP failed");
         status = status ? status : VAL_ERROR_POINT(10);
     }
 
 free_memory:
     if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
     {
-        LOG(ERROR, "\tfree_rxtx_buffers failed\n", 0, 0);
+        LOG(ERROR, "free_rxtx_buffers failed");
         status = status ? status : VAL_ERROR_POINT(11);
     }
 
@@ -456,7 +456,7 @@ free_memory:
     val_ffa_msg_send_direct_resp_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\tDirect response failed err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Direct response failed err %x", payload.arg2);
         status = status ? status : VAL_ERROR_POINT(12);
     }
 

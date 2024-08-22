@@ -17,11 +17,11 @@ static void relinquish_memory(ffa_memory_handle_t handle, void *tx_buf, ffa_endp
     val_ffa_mem_relinquish(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\tMem relinquish failed err %x\n", payload.arg2, 0);
+        LOG(ERROR, "Mem relinquish failed err %x", payload.arg2);
     }
     if (val_rx_release())
     {
-        LOG(ERROR, "\tval_rx_release failed\n", 0, 0);
+        LOG(ERROR, "val_rx_release failed");
     }
 }
 
@@ -48,7 +48,7 @@ uint32_t share_retrieve_with_address_range_server(ffa_args_t args)
     mb.recv = val_memory_alloc(size);
     if (mb.send == NULL || mb.recv == NULL)
     {
-        LOG(ERROR, "\tFailed to allocate RxTx buffer\n", 0, 0);
+        LOG(ERROR, "Failed to allocate RxTx buffer");
         status = VAL_ERROR_POINT(1);
         goto free_memory;
     }
@@ -56,7 +56,7 @@ uint32_t share_retrieve_with_address_range_server(ffa_args_t args)
     /* Map TX and RX buffers */
     if (val_rxtx_map_64((uint64_t)mb.send, (uint64_t)mb.recv, (uint32_t)(size/PAGE_SIZE_4K)))
     {
-        LOG(ERROR, "\tRxTx Map failed\n", 0, 0);
+        LOG(ERROR, "RxTx Map failed");
         status = VAL_ERROR_POINT(2);
         goto free_memory;
     }
@@ -65,7 +65,7 @@ uint32_t share_retrieve_with_address_range_server(ffa_args_t args)
     pages = (uint8_t *)val_memory_alloc(size * 2);
     if (!pages)
     {
-        LOG(ERROR, "\tMemory allocation failed\n", 0, 0);
+        LOG(ERROR, "Memory allocation failed");
         status = VAL_ERROR_POINT(3);
         goto rxtx_unmap;
     }
@@ -73,7 +73,7 @@ uint32_t share_retrieve_with_address_range_server(ffa_args_t args)
     tmp_buf = (uint8_t *)val_memory_alloc(size);
     if (!tmp_buf)
     {
-        LOG(ERROR, "\tMemory allocation failed\n", 0, 0);
+        LOG(ERROR, "Memory allocation failed");
         status = VAL_ERROR_POINT(4);
         goto rxtx_unmap;
     }
@@ -83,7 +83,7 @@ uint32_t share_retrieve_with_address_range_server(ffa_args_t args)
     payload = val_resp_client_fn_direct((uint32_t)args.arg3, 0, 0, 0, 0, 0);
     if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_64)
     {
-        LOG(ERROR, "\tDirect request failed, fid=0x%x, err 0x%x\n",
+        LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x",
                   payload.fid, payload.arg2);
         status =  VAL_ERROR_POINT(5);
         goto rxtx_unmap;
@@ -130,8 +130,8 @@ uint32_t share_retrieve_with_address_range_server(ffa_args_t args)
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
     {
         LOG(ERROR,
-            "\tRelayer must return error if a reserved value is specified by the receiver err %x\n",
-                payload.arg2, 0);
+            "Relayer must return error if a reserved value is specified by the receiver err %x",
+                payload.arg2);
         status =  VAL_ERROR_POINT(6);
         if (payload.fid == FFA_MEM_RETRIEVE_RESP_32)
         {
@@ -159,8 +159,8 @@ uint32_t share_retrieve_with_address_range_server(ffa_args_t args)
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
     {
         LOG(ERROR,
-            "\tRelayer must return error if the size of memory region mismatch err %x\n",
-                payload.arg2, 0);
+            "Relayer must return error if the size of memory region mismatch err %x",
+                payload.arg2);
         status =  VAL_ERROR_POINT(7);
         if (payload.fid == FFA_MEM_RETRIEVE_RESP_32)
         {
@@ -169,6 +169,7 @@ uint32_t share_retrieve_with_address_range_server(ffa_args_t args)
         }
     }
 
+    LOG(DBG, "Mem Retrieve Check for Memory Region Mismatch Complete Complete");
 
     constituents[0].page_count = 1;
     val_ffa_memory_region_init(&mem_region_init, constituents, constituents_count);
@@ -184,8 +185,8 @@ uint32_t share_retrieve_with_address_range_server(ffa_args_t args)
 #if (PLATFORM_MEM_RETRIEVE_USING_ADDRESS_RANGES == 1)
     if (payload.fid != FFA_MEM_RETRIEVE_RESP_32)
     {
-        LOG(ERROR, "\tMEM_RETRIEVE_REQ failed for given address ranges, err %x\n",
-        payload.arg2, 0);
+        LOG(ERROR, "MEM_RETRIEVE_REQ failed for given address ranges, err %x",
+        payload.arg2);
         status = VAL_ERROR_POINT(8);
         goto rxtx_unmap;
     }
@@ -194,7 +195,7 @@ uint32_t share_retrieve_with_address_range_server(ffa_args_t args)
 
     if (val_memcmp(pages, tmp_buf, size))
     {
-        LOG(ERROR, "\tData mismatch\n", 0, 0);
+        LOG(ERROR, "Data mismatch");
         status =  VAL_ERROR_POINT(9);
         relinquish_memory(handle, mb.send, sender);
         goto rxtx_unmap;
@@ -213,14 +214,14 @@ uint32_t share_retrieve_with_address_range_server(ffa_args_t args)
         if (payload.fid == FFA_MEM_RETRIEVE_RESP_32)
         {
             LOG(ERROR,
-            "\tPLATFORM_MEM_RETRIEVE_USING_ADDRESS_RANGES parameter isn't configured correctly\n",
+            "PLATFORM_MEM_RETRIEVE_USING_ADDRESS_RANGES parameter isn't configured correctly",
              0, 0);
             status =  VAL_ERROR_POINT(10);
             relinquish_memory(handle, mb.send, sender);
             goto rxtx_unmap;
         }
     }
-    LOG(TEST, "\tFFA_MEM_RETRIEVE_REQ using address range isn't supported\n", 0, 0);
+    LOG(TEST, "FFA_MEM_RETRIEVE_REQ using address range isn't supported");
     /* Unused variable */
     (void)(i);
 #endif
@@ -228,26 +229,26 @@ uint32_t share_retrieve_with_address_range_server(ffa_args_t args)
 rxtx_unmap:
     if (val_rxtx_unmap(sender))
     {
-        LOG(ERROR, "\tRXTX_UNMAP failed\n", 0, 0);
+        LOG(ERROR, "RXTX_UNMAP failed");
         status = status ? status : VAL_ERROR_POINT(11);
     }
 
 free_memory:
     if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
     {
-        LOG(ERROR, "\tfree_rxtx_buffers failed\n", 0, 0);
+        LOG(ERROR, "free_rxtx_buffers failed");
         status = status ? status : VAL_ERROR_POINT(12);
     }
 
     if (val_memory_free(pages, size * 2))
     {
-        LOG(ERROR, "\tval_mem_free failed\n", 0, 0);
+        LOG(ERROR, "val_mem_free failed");
         status = status ? status : VAL_ERROR_POINT(13);
     }
 
     if (val_memory_free(tmp_buf, size))
     {
-        LOG(ERROR, "\tval_mem_free failed\n", 0, 0);
+        LOG(ERROR, "val_mem_free failed");
         status = status ? status : VAL_ERROR_POINT(14);
     }
 
@@ -256,7 +257,7 @@ free_memory:
     val_ffa_msg_send_direct_resp_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "\tDirect response failed err %d\n", payload.arg2, 0);
+        LOG(ERROR, "Direct response failed err %d", payload.arg2);
         status = status ? status : VAL_ERROR_POINT(15);
     }
 

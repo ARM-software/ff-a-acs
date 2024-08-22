@@ -41,6 +41,36 @@
             attributes = <0x3>; /* read-write */
             interrupts = <58 0x900>;
         };
+
+        /*
+         * SMMUv3TestEngine is a DMA IP modeled in the
+         * Base-RevC FVP Model.
+         * User Frame: 0x2bfe0000
+         * Privileged Frame: 0x2bff0000
+         */
+        smmuv3-testengine {
+            base-address = <0x00000000 0x2bfe0000>;
+            pages-count = <18>; /* Two 64KB pages */
+            attributes = <0x3>; /* read-write */
+            smmu-id = <0>;
+            stream-ids = <0x1>;
+        };
     };
 
+    memory-regions {
+        compatible = "arm,ffa-manifest-memory-regions";
+
+        /*
+         * Scratch memory used for the purpose of testing SMMUv3 driver
+         */
+        smmuv3-memcpy-1 {
+            description = "smmuv3-memcpy-source";
+            pages-count = <16>; /* 16 4KB pages */
+            base-address = <0x00000000 0x7800000>;
+            attributes = <0x3>; /* read-write */
+            smmu-id = <0>;
+            stream-ids = <0x1>;
+            stream-ids-access-permissions = <0x3>;
+        };
+    };
 };

@@ -31,7 +31,10 @@ static memory_region_descriptor_t endpoint_device_regions[] = {
 #endif
 
 #if defined(SP2_COMPILE)
-    {PLATFORM_AP_REFCLK_CNTBASE1, PLATFORM_AP_REFCLK_CNTBASE1, PLATFORM_AP_REFCLK_SIZE, ATTR_DEVICE_RW_S},
+    {PLATFORM_AP_REFCLK_CNTBASE1, PLATFORM_AP_REFCLK_CNTBASE1, PLATFORM_AP_REFCLK_SIZE, \
+        ATTR_DEVICE_RW_S},
+    {PLAT_SMMUV3_TEST_ENGINE_MEM_REGION, PLAT_SMMUV3_TEST_ENGINE_MEM_REGION, \
+        PLAT_SMMUV3_TEST_ENGINE_MEM_SIZE, ATTR_DEVICE_RW_S},
 #endif
 
 #if defined(VM1_COMPILE)
@@ -86,11 +89,11 @@ void *pal_memory_alloc(uint64_t size)
     }
     else
     {
-        /* TBD: Need to add logic for 16K and 64K pages */
-        pal_printf("\tval_memory_alloc failed\n", 0, 0);
+        /* Need to add logic for 16K and 64K pages */
+        PAL_LOG(ERROR, "val_memory_alloc failed");
     }
 
-    return NULL;
+    return NULL; 
 }
 
 uint32_t pal_memory_free(void *address, uint64_t size)

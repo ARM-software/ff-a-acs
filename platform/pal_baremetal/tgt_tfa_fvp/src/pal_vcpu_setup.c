@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -92,7 +92,7 @@ uint32_t pal_power_on_cpu(uint64_t mpid)
     }
     else
     {
-        pal_printf("\tPSCI_CPU_ON failed, ret=0x%x\n", ret, 0);
+        PAL_LOG(ERROR, "PSCI_CPU_ON failed, ret=0x%x", ret);
         return PAL_ERROR;
     }
 }
@@ -101,6 +101,6 @@ uint32_t pal_power_off_cpu(void)
 {
     uint32_t ret = pal_psci_cpu_off();
 
-    pal_printf("\tPSCI_CPU_OFF failed, ret=0x%x\n", ret, 0);
+    PAL_LOG(ERROR, "PSCI_CPU_OFF failed, ret=0x%x", ret);
     return PAL_ERROR;
 }

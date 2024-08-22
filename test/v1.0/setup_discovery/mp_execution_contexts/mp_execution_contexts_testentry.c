@@ -10,7 +10,7 @@
 void mp_execution_contexts_testentry(uint32_t test_num)
 {
 #ifdef TARGET_LINUX
-    LOG(TEST, "\tSkipping this test: MP test not supported for Linux env\n", 0, 0);
+    LOG(TEST, "Skipping this test: MP test not supported for Linux env");
     val_set_status(RESULT_SKIP(VAL_SKIP_CHECK));
     return;
 #endif
