@@ -1,0 +1,35 @@
+/*
+ * Copyright (c) 2024, Arm Limited or its affiliates. All rights reserved.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
+ */
+
+/dts-v1/;
+
+/ {
+    compatible = "arm,ffa-manifest-1.0";
+
+    /* Properties */
+    description = "Base-1";
+    ffa-version = <0x00010002>; /* 31:16 - Major, 15:0 - Minor */
+    uuid = <0x2658cda4 0xcf6713e1 0x49cd10f9 0x31ef6813>;
+    id = <4>;
+    auxiliary-id = <0xae>;
+    stream-endpoint-ids = <0 1 2 3>;
+    execution-ctx-count = <1>;
+    exception-level = <2>; /* S-EL1 */
+    execution-state = <0>; /* AARCH64 */
+    load-address = <0x7300000>;
+    entrypoint-offset = <0x4000>;
+    xlat-granule = <0>; /* 4KiB */
+    boot-order = <3>;
+    notification-support;
+    messaging-method = <0x603>; /* Direct messaging/Direct messaging-2 only */
+    managed-exit-virq; /* Managed exit virq is supported */
+    ns-interrupts-action = <1>; /* Managed exit is supported. */
+
+    /* Boot protocol */
+    gp-register-num = <0x0>;
+
+};

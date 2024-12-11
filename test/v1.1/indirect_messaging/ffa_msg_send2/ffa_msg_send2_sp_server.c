@@ -54,6 +54,7 @@ static uint32_t ffa_msg_send2_sp_tx(ffa_args_t args)
         status = VAL_ERROR_POINT(2);
         goto free_memory;
     }
+    val_memset(mb.send, 0, size);
 
     /* Wait for the message. */
     val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -68,7 +69,7 @@ static uint32_t ffa_msg_send2_sp_tx(ffa_args_t args)
 
     partition_message_header = (ffa_partition_rxtx_header_t *)mb.send;
     partition_message_header->flags = 0;
-    partition_message_header->reserved = 0;
+    partition_message_header->reserved_0 = 0;
     partition_message_header->offset = sizeof(ffa_partition_rxtx_header_t);
     partition_message_header->size = 32;
 
@@ -251,9 +252,9 @@ static uint32_t ffa_msg_send2_sp_rx(ffa_args_t args)
 
 #if (PLATFORM_SP_EL == 1)
     if (npi_flag == 1) {
-        LOG(DBG, "NPI inerrupt handled");
+        LOG(DBG, "NPI interrupt handled");
     } else {
-        LOG(DBG, "NPI inerrupt not received");
+        LOG(DBG, "NPI interrupt not received");
         status = VAL_ERROR_POINT(18);
         goto rxtx_unmap;
     }

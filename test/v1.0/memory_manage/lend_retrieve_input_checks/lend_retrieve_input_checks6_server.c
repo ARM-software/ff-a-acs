@@ -36,6 +36,7 @@ uint32_t lend_retrieve_input_checks6_server(ffa_args_t args)
         status = VAL_ERROR_POINT(2);
         goto free_memory;
     }
+    val_memset(mb.send, 0, size);
 
     /* Wait for the message. */
     val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -51,6 +52,7 @@ uint32_t lend_retrieve_input_checks6_server(ffa_args_t args)
     handle = payload.arg3;
 
     /* Invalid sender id */
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = val_get_endpoint_id(SP3);
     mem_region_init.receiver = sender;

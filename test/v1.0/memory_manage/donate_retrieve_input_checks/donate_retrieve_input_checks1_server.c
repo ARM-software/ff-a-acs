@@ -45,6 +45,7 @@ uint32_t donate_retrieve_input_checks1_server(ffa_args_t args)
         status = VAL_ERROR_POINT(2);
         goto free_memory;
     }
+    val_memset(mb.send, 0, size);
 
     pages = (uint8_t *)val_memory_alloc(size);
     if (!pages)
@@ -68,6 +69,7 @@ uint32_t donate_retrieve_input_checks1_server(ffa_args_t args)
     handle = payload.arg3;
 
     /* Invalid memory management transaction type flag Bit[4:3] check */
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = receiver;
     mem_region_init.receiver = sender;
@@ -117,6 +119,7 @@ uint32_t donate_retrieve_input_checks1_server(ffa_args_t args)
     }
     LOG(DBG, "Mem Retrieve Check for Invalid Transaction Type Complete");
 
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = receiver;
     mem_region_init.receiver = sender;
@@ -210,6 +213,7 @@ mem_donate:
     constituents[0].address = composite->constituents[0].address;
     constituents[0].page_count = 1;
 
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = sender;
     mem_region_init.receiver = receiver;

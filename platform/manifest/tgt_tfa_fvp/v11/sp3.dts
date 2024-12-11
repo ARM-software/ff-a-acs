@@ -25,7 +25,7 @@
     xlat-granule = <0>; /* 4KiB */
     boot-order = <2>;
     notification-support;
-    messaging-method = <3>; /* Direct messaging only */
+    messaging-method = <0x3>; /* Direct messaging */
     ns-interrupts-action = <0>; /* Non secure interrupts are queued. */
 
     /* Boot protocol */

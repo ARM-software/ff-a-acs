@@ -1,0 +1,76 @@
+/*
+ * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
+ */
+
+/dts-v1/;
+
+/ {
+    compatible = "arm,ffa-manifest-1.0";
+
+    /* Properties */
+    description = "Base-1";
+    ffa-version = <0x00010002>; /* 31:16 - Major, 15:0 - Minor */
+    uuid = <0x092358d1 0xb94723f0 0x64447c82 0xc88f57f5>;
+    id = <2>;
+    auxiliary-id = <0xae>;
+    stream-endpoint-ids = <0 1 2 3>;
+    execution-ctx-count = <8>;
+    exception-level = <2>; /* S-EL1 */
+    execution-state = <0>; /* AARCH64 */
+    load-address = <0x7100000>;
+    entrypoint-offset = <0x4000>;
+    xlat-granule = <0>; /* 4KiB */
+    boot-order = <1>;
+    messaging-method = <0x607>; /* Indirect and Direct messaging/Direct messaging-2 only */
+    notification-support; /* Support receipt of notifications. */
+    managed-exit; /* Managed exit is supported */
+
+    /* Boot protocol */
+    gp-register-num = <0x0>;
+
+    device-regions {
+        compatible = "arm,ffa-manifest-device-regions";
+
+        ref_clk_system {
+            /* AP_REFCLK_1 System Timer Module */
+            base-address = <0x00000000 0x2a830000>;
+            pages-count = <1>; /* Two 4KB page */
+            attributes = <0x3>; /* read-write */
+            interrupts = <58 0x900>;
+        };
+
+        /*
+         * SMMUv3TestEngine is a DMA IP modeled in the
+         * Base-RevC FVP Model.
+         * User Frame: 0x2bfe0000
+         * Privileged Frame: 0x2bff0000
+         */
+        smmuv3-testengine {
+            base-address = <0x00000000 0x2bfe0000>;
+            pages-count = <18>; /* Two 64KB pages */
+            attributes = <0x3>; /* read-write */
+            smmu-id = <0>;
+            stream-ids = <0x1>;
+        };
+    };
+
+    memory-regions {
+        compatible = "arm,ffa-manifest-memory-regions";
+
+        /*
+         * Scratch memory used for the purpose of testing SMMUv3 driver
+         */
+        smmuv3-memcpy-1 {
+            description = "smmuv3-memcpy-source";
+            pages-count = <16>; /* 16 4KB pages */
+            base-address = <0x00000000 0x7800000>;
+            attributes = <0x3>; /* read-write */
+            smmu-id = <0>;
+            stream-ids = <0x1>;
+            stream-ids-access-permissions = <0x3>;
+        };
+    };
+};

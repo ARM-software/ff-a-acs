@@ -201,13 +201,17 @@ struct ffa_memory_region_attributes {
    */
  typedef struct {
     uint32_t flags; /* MBZ */
-    uint32_t reserved;
+    uint32_t reserved_0;
     /* Offset from the beginning of the buffer to the message payload. */
     uint32_t offset;
     /* Sender(Bits[31:16]) and Receiver(Bits[15:0]) endpoint IDs. */
     uint32_t sender_receiver;
     /* Size of message in buffer. */
     uint32_t size;
+#if INDIRECT_MESSAGE_UUID_SUPPORT
+    uint32_t reserved_1;
+    uint32_t uuid[4];
+#endif
   } ffa_partition_rxtx_header_t;
 /** Flags to control the behaviour of a memory sharing transaction. */
 typedef uint32_t ffa_memory_region_flags_t;
@@ -236,6 +240,11 @@ typedef uint32_t ffa_memory_region_flags_t;
 #define FFA_MEMORY_REGION_TRANSACTION_TYPE_SHARE       0x1
 #define FFA_MEMORY_REGION_TRANSACTION_TYPE_LEND        0x2
 #define FFA_MEMORY_REGION_TRANSACTION_TYPE_DONATE      0x3
+
+/**
+ * Bypass multiple borrower identification check.
+ */
+#define BYPASS_MULTI_BORROWER_CHECK 0x400U
 
 /** The maximum number of recipients a memory region may be sent to. */
 #define MAX_MEM_SHARE_RECIPIENTS 1U
@@ -310,6 +319,29 @@ static inline uint32_t ffa_notifications_info_get_lists_count(ffa_args_t r)
            & FFA_NOTIFICATIONS_LISTS_COUNT_MASK;
 }
 
+#if (PLATFORM_FFA_V >= FFA_V_1_2)
+/**
+  * Struct to store the impdef value seen in Table 11.16 of the
+  * FF-A v1.2 ALP0 specification "Endpoint memory access descriptor".
+  */
+  struct ffa_memory_access_impdef {
+  uint64_t val[2];
+  };
+/**
+ * This corresponds to table "Endpoint memory access descriptor" of the FFA 1.0
+ * specification.
+ */
+struct ffa_memory_access {
+    struct ffa_memory_region_attributes receiver_permissions;
+    /**
+     * Offset in bytes from the start of the outer `ffa_memory_region` to
+     * an `ffa_composite_memory_region` struct.
+     */
+    uint32_t composite_memory_region_offset;
+    struct ffa_memory_access_impdef impdef;
+    uint64_t reserved_0;
+};
+#else
 /**
  * This corresponds to table "Endpoint memory access descriptor" of the FFA 1.0
  * specification.
@@ -323,9 +355,9 @@ struct ffa_memory_access {
     uint32_t composite_memory_region_offset;
     uint64_t reserved_0;
 };
+#endif
 
-#if (PLATFORM_FFA_V_1_0 == 1)
-
+#if (PLATFORM_FFA_V == FFA_V_1_0)
 /**
  * Information about a set of pages which are being shared. This corresponds to
  * table "Lend, donate or share memory transaction descriptor" of the FFA
@@ -364,9 +396,7 @@ struct ffa_memory_region {
      */
     struct ffa_memory_access receivers[];
 };
-
 #else
-
 #define EP_MEM_ACCESS_DESC_ARR_OFFSET 0x30U
 /**
   * Information about a set of pages which are being shared. This corresponds to
@@ -438,6 +468,9 @@ typedef struct {
     ffa_endpoint_id_t receiver;
     uint64_t tag;
     ffa_memory_region_flags_t flags;
+#if PLATFORM_FFA_V >= FFA_V_1_2
+    struct ffa_memory_access_impdef impdef;
+#endif
     enum ffa_data_access data_access;
     enum ffa_instruction_access instruction_access;
     enum ffa_memory_type type;

@@ -72,6 +72,7 @@ static uint32_t sp2_flow(ffa_args_t args)
         status = VAL_ERROR_POINT(2);
         goto free_memory;
     }
+    val_memset(mb.send, 0, size);
 
     pages = (uint32_t *)val_memory_alloc(size);
     if (!pages)
@@ -109,6 +110,7 @@ static uint32_t sp2_flow(ffa_args_t args)
     constituents[0].address = val_mem_virt_to_phys((void *)pages);
     constituents[0].page_count = 1;
 
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = sender;
     mem_region_init.receiver = receiver_1;
@@ -288,6 +290,7 @@ static uint32_t sp1_flow(ffa_args_t args)
 
     handle = payload.arg3;
 
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = receiver;
     mem_region_init.receiver = sender;
@@ -378,6 +381,10 @@ static uint32_t sp1_flow(ffa_args_t args)
 
     /* Enter Wait State back */
     val_memset(&payload, 0, sizeof(ffa_args_t));
+#if (PLATFORM_FFA_V >= FFA_V_1_2)
+    /* Prevent RX Buffer Release*/
+    payload.arg2 = 0x1;
+#endif
     val_ffa_msg_wait(&payload);
     if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_64)
     {
@@ -404,11 +411,13 @@ free_interrupt:
         status = status ? status : VAL_ERROR_POINT(27);
     }
 
+#if (PLATFORM_FFA_V >= FFA_V_1_2)
     if (val_rx_release())
     {
         LOG(ERROR, "val_rx_release failed");
         status = status ? status : VAL_ERROR_POINT(28);
     }
+#endif
 
 rxtx_unmap:
     if (val_rxtx_unmap(sender))

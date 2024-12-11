@@ -25,7 +25,7 @@
     xlat-granule = <0>; /* 4KiB */
     boot-order = <3>;
     notification-support;
-    messaging-method = <3>; /* Direct messaging only */
+    messaging-method = <0x3>; /* Direct messaging */
     managed-exit-virq; /* Managed exit virq is supported */
     ns-interrupts-action = <1>; /* Managed exit is supported. */
 

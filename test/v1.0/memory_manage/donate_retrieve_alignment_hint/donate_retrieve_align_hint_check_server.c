@@ -20,6 +20,7 @@ static uint32_t mem_donate_back_to_sender(ffa_memory_handle_t handle, uint32_t f
     const uint32_t constituents_count = sizeof(constituents) /
                 sizeof(struct ffa_memory_region_constituent);
 
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = sender;
     mem_region_init.receiver = receiver;
@@ -61,6 +62,7 @@ static uint32_t mem_donate_back_to_sender(ffa_memory_handle_t handle, uint32_t f
     constituents[0].page_count = 1;
 
     /* Give up ownership back to the sender */
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = receiver;
     mem_region_init.receiver = sender;
@@ -122,6 +124,7 @@ static uint32_t retrieve_align_hint_err_check(ffa_memory_handle_t handle, uint32
     ffa_args_t payload;
     uint32_t status = VAL_SUCCESS;
 
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = sender;
     mem_region_init.receiver = receiver;
@@ -179,6 +182,7 @@ static uint32_t retrieve_align_hint_check(ffa_memory_handle_t handle, uint32_t f
     struct ffa_memory_region *memory_region;
     struct ffa_composite_memory_region *composite;
 
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = sender;
     mem_region_init.receiver = receiver;

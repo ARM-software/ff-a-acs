@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+# Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
@@ -14,6 +14,12 @@ add_definitions(-DSP1_COMPILE)
 set(VAL_LIB ${EXE_NAME}_val_lib)
 set(PAL_LIB ${EXE_NAME}_pal_lib)
 set(TEST_LIB ${EXE_NAME}_test_lib)
+
+if(DEFINED SP1_FFA_V)
+    set(PLATFORM_FFA_V ${SP1_FFA_V})
+    add_definitions(-DPLATFORM_FFA_V=${SP1_FFA_V})
+    message(STATUS "[ACS] : SP1 PLATFORM_FFA_V is set to ${SP1_FFA_V}")
+endif()
 
 include(${ROOT_DIR}/platform/pal_baremetal/${TARGET}/pal.cmake)
 include(${ROOT_DIR}/val/val.cmake)

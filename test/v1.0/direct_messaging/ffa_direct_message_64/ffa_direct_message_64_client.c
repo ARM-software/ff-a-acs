@@ -30,7 +30,7 @@ uint32_t ffa_direct_message_64_client(uint32_t test_run_data)
     val_ffa_msg_send_direct_req_64(&req_data_64);
     if (req_data_64.fid != FFA_MSG_SEND_DIRECT_RESP_32)
     {
-#if (PLATFORM_FFA_V_1_0 != 1)
+#if (PLATFORM_FFA_V >= FFA_V_1_1)
         if  (req_data_64.fid == FFA_YIELD_32)
         {
             req_data_64.arg1 = ((uint32_t)val_get_endpoint_id(server_logical_id) << 16);

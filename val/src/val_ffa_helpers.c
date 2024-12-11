@@ -22,7 +22,7 @@ static void ffa_memory_region_init_header(mem_region_init_t *mem_region_init,
     memory_region->sender = mem_region_init->sender;
     memory_region->attributes = attributes;
 
-#if (PLATFORM_FFA_V_1_0 == 1)
+#if (PLATFORM_FFA_V == FFA_V_1_0)
     memory_region->reserved_0 = 0;
     memory_region->reserved_1 = 0;
 #else
@@ -44,6 +44,10 @@ static void ffa_memory_region_init_header(mem_region_init_t *mem_region_init,
         memory_region->receivers[0].receiver_permissions.permissions = permissions;
         memory_region->receivers[0].receiver_permissions.flags = 0;
         memory_region->receivers[0].reserved_0 = 0;
+#if PLATFORM_FFA_V >= FFA_V_1_2
+        memory_region->receivers[0].impdef.val[0] = mem_region_init->impdef.val[0];
+        memory_region->receivers[0].impdef.val[1] = mem_region_init->impdef.val[1];
+#endif
     }
 }
 
@@ -62,7 +66,7 @@ static void ffa_memory_region_retrieve_init_header(mem_region_init_t *mem_region
     memory_region->attributes = attributes;
 
 
-#if (PLATFORM_FFA_V_1_0 == 1)
+#if (PLATFORM_FFA_V == FFA_V_1_0)
     memory_region->reserved_0 = 0;
     memory_region->reserved_1 = 0;
 #else
@@ -84,6 +88,10 @@ static void ffa_memory_region_retrieve_init_header(mem_region_init_t *mem_region
         memory_region->receivers[0].receiver_permissions.permissions = permissions;
         memory_region->receivers[0].receiver_permissions.flags = 0;
         memory_region->receivers[0].reserved_0 = 0;
+#if PLATFORM_FFA_V >= FFA_V_1_2
+        memory_region->receivers[0].impdef.val[0] = mem_region_init->impdef.val[0];
+        memory_region->receivers[0].impdef.val[1] = mem_region_init->impdef.val[1];
+#endif
     }
 
 }
@@ -138,6 +146,10 @@ uint32_t val_ffa_memory_region_init(mem_region_init_t *mem_region_init,
             memory_region->receivers[i].receiver_permissions.flags =
                               mem_region_init->receivers[i].receiver_permissions.flags;
             memory_region->receivers[i].reserved_0 = 0;
+#if PLATFORM_FFA_V >= FFA_V_1_2
+            memory_region->receivers[i].impdef.val[0] = mem_region_init->receivers[i].impdef.val[0];
+            memory_region->receivers[i].impdef.val[1] = mem_region_init->receivers[i].impdef.val[1];
+#endif
         }
     }
     /*
@@ -155,6 +167,9 @@ uint32_t val_ffa_memory_region_init(mem_region_init_t *mem_region_init,
             (uint32_t)(sizeof(struct ffa_memory_region) +
             mem_region_init->memory_region->receiver_count *
                 sizeof(struct ffa_memory_access));
+#if (PLATFORM_FFA_V >= FFA_V_1_2)
+            LOG(DBG, "rx %d impdef %x", i, memory_region->receivers[i].impdef);
+#endif
         }
     }
     else
@@ -215,7 +230,7 @@ uint32_t val_ffa_memory_retrieve_request_init(mem_region_init_t *mem_region_init
                                 ffa_memory_handle_t handle)
 {
 
-#if (PLATFORM_FFA_V_1_1 == 1 || PLATFORM_FFA_V_ALL == 1)
+#if (PLATFORM_FFA_V >= FFA_V_1_1)
     struct ffa_memory_region *memory_region = mem_region_init->memory_region;
 #endif
     uint32_t i = 0;
@@ -240,7 +255,7 @@ uint32_t val_ffa_memory_retrieve_request_init(mem_region_init_t *mem_region_init
 
     ffa_memory_region_retrieve_init_header(mem_region_init, attributes, handle, permissions);
 
-#if (PLATFORM_FFA_V_1_1 == 1 || PLATFORM_FFA_V_ALL == 1)
+#if (PLATFORM_FFA_V >= FFA_V_1_1)
     if (mem_region_init->multi_share)
     {
         memory_region->receiver_count = mem_region_init->receiver_count;
@@ -252,6 +267,10 @@ uint32_t val_ffa_memory_retrieve_request_init(mem_region_init_t *mem_region_init
             memory_region->receivers[i].receiver_permissions.flags =
                                mem_region_init->receivers[i].receiver_permissions.flags;
             memory_region->receivers[i].reserved_0 = 0;
+#if PLATFORM_FFA_V >= FFA_V_1_2
+            memory_region->receivers[i].impdef.val[0] = mem_region_init->receivers[i].impdef.val[0];
+            memory_region->receivers[i].impdef.val[1] = mem_region_init->receivers[i].impdef.val[1];
+#endif
         }
      }
 #endif

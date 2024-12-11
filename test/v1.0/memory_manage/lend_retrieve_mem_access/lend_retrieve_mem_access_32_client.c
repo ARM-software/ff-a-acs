@@ -82,6 +82,7 @@ static uint32_t lend_retrieve_mem_access(uint32_t test_run_data)
         status = VAL_ERROR_POINT(2);
         goto free_memory;
     }
+    val_memset(mb.send, 0, size);
 
     pages = (uint8_t *)val_memory_alloc(size);
     if (!pages)
@@ -98,6 +99,7 @@ static uint32_t lend_retrieve_mem_access(uint32_t test_run_data)
     constituents[0].address = val_mem_virt_to_phys((void *)pages);
     constituents[0].page_count = 1;
 
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = sender;
     mem_region_init.receiver = recipient;

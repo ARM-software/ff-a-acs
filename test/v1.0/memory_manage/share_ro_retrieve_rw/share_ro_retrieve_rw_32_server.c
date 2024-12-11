@@ -74,6 +74,7 @@ static uint32_t share_ro_retrieve_rw_32_server(ffa_args_t args)
         status = VAL_ERROR_POINT(2);
         goto free_memory;
     }
+    val_memset(mb.send, 0, size);
 
     pages = (uint8_t *)val_memory_alloc(size);
     if (!pages)
@@ -98,6 +99,7 @@ static uint32_t share_ro_retrieve_rw_32_server(ffa_args_t args)
 
     /* Sender shared read only memory but reciever
      * tries to retrieve with read-write. This must fail. */
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = receiver;
     mem_region_init.receiver = sender;
@@ -134,6 +136,7 @@ static uint32_t share_ro_retrieve_rw_32_server(ffa_args_t args)
 
     /* Sender shared read-only memory and also reciever
      * tries to retrieve with read-only. This should pass. */
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = receiver;
     mem_region_init.receiver = sender;

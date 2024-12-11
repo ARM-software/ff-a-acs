@@ -22,6 +22,7 @@ ffa_endpoint_id_t recipient, mb_buf_t mb, void *pages)
     constituents[0].address = val_mem_virt_to_phys((void *)pages);
     constituents[0].page_count = 2;
 
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = sender;
     mem_region_init.receiver = recipient;
@@ -121,6 +122,7 @@ uint32_t lend_retrieve_input_checks10_server(ffa_args_t args)
 
     handle = payload.arg3;
 
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = receiver;
     mem_region_init.receiver = sender;

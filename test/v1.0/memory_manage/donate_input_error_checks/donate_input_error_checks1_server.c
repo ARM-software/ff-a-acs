@@ -41,6 +41,7 @@ uint32_t donate_input_error_checks1_server(ffa_args_t args)
         status = VAL_ERROR_POINT(2);
         goto free_memory;
     }
+    val_memset(mb.send, 0, size);
 
     /* Wait for the message. */
     val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -55,6 +56,7 @@ uint32_t donate_input_error_checks1_server(ffa_args_t args)
 
     handle = payload.arg3;
 
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = receiver;
     mem_region_init.receiver = sender;
@@ -111,6 +113,7 @@ uint32_t donate_input_error_checks1_server(ffa_args_t args)
     constituents[0].address = composite->constituents[0].address;
     constituents[0].page_count = 2;
 
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = sender;
     mem_region_init.receiver = receiver;

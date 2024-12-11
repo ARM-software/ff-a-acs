@@ -1,21 +1,21 @@
 {
     "sp1" : {
          "image": "../../../build/output/sp1.bin",
-         "pm": "sp1.dts"
+         "pm": "v12/sp1_el0.dts"
     },
 
     "sp2" : {
          "image": "../../../build/output/sp2.bin",
-         "pm": "sp2.dts"
+         "pm": "v11/sp2_el0.dts"
      },
 
     "sp3" : {
          "image": "../../../build/output/sp3.bin",
-         "pm": "sp3.dts"
+         "pm": "v12/sp3_el0.dts"
      },
 
      "sp4" : {
           "image": "../../../build/output/sp4.bin",
-          "pm": "sp4.dts"
+          "pm": "v11/sp4_el0.dts"
       }
 }

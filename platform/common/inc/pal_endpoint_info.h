@@ -10,35 +10,45 @@
 
 #include "pal_interfaces.h"
 
-#define FFA_RECEIPT_DIRECT_REQUEST_SUPPORT 0x1
-#define FFA_DIRECT_REQUEST_SEND            0x2
-#define FFA_INDIRECT_MESSAGE_SUPPORT       0x4
-#define FFA_NOTIFICATION_SUPPORT           0x8
-#define FFA_MESSAGING_MASK                 0x7
 
-#if (PLATFORM_FFA_V_1_0 != 1)
-#define FFA_PARTITION_INFO_FLAG_RETCOUNT   0x00000001
-#define FFA_PARTITION_INFO_FLAG_RETDESC    0x00000000
+#define FFA_RECEIPT_DIRECT_REQUEST_SUPPORT     0x1
+#define FFA_DIRECT_REQUEST_SEND                0x2
+#define FFA_INDIRECT_MESSAGE_SUPPORT           0x4
+#define FFA_NOTIFICATION_SUPPORT               0x8
+#define FFA_MESSAGING_MASK                     0x7
+
+#if (PLATFORM_FFA_V >= FFA_V_1_1)
+#define FFA_PARTITION_INFO_FLAG_RETCOUNT       0x00000001
+#define FFA_PARTITION_INFO_FLAG_RETDESC        0x00000000
 #endif
 
-#if (PLATFORM_FFA_V_1_0 != 1)
-#define FFA_PARTITION_ID_PE_EP_ID          0x00
-#define FFA_PARTITION_ID_SEPID_INDEP       0x10
-#define FFA_PARTITION_ID_SEPID_DEP         0x20
-#define FFA_PARTITION_ID_AUX_ID            0x30
-#define FFA_HYP_VM_CREATE_INFO             0x40
-#define FFA_HYP_VM_DESTROY_INFO            0x80
-#define FFA_PARTITION_EXEC_STATE_ARCH64    0x100
+#if (PLATFORM_FFA_V >= FFA_V_1_1)
+#define FFA_PARTITION_ID_PE_EP_ID              0x00
+#define FFA_PARTITION_ID_SEPID_INDEP           0x10
+#define FFA_PARTITION_ID_SEPID_DEP             0x20
+#define FFA_PARTITION_ID_AUX_ID                0x30
+#define FFA_HYP_VM_CREATE_INFO                 0x40
+#define FFA_HYP_VM_DESTROY_INFO                0x80
+#define FFA_PARTITION_EXEC_STATE_ARCH64        0x100
 #endif
 
-#if (PLATFORM_FFA_V_1_0 == 1)
+#if (PLATFORM_FFA_V >= FFA_V_1_2)
+#define FFA_RECEIPT_DIRECT_REQUEST2_SUPPORT    0x200
+#define FFA_DIRECT_REQUEST2_SEND               0x400
+#else
+#define FFA_RECEIPT_DIRECT_REQUEST2_SUPPORT    0x0
+#define FFA_DIRECT_REQUEST2_SEND               0x0
+#endif
+
+
+#if (PLATFORM_FFA_V == FFA_V_1_0)
 #define PLATFORM_VM1_EP_PROPERTIES (FFA_RECEIPT_DIRECT_REQUEST_SUPPORT | \
-                                    FFA_DIRECT_REQUEST_SEND | \
+                                    FFA_DIRECT_REQUEST_SEND            | \
                                     FFA_INDIRECT_MESSAGE_SUPPORT)
 #define PLATFORM_VM1_UUID {0, 0, 0, 0}
 
 #define PLATFORM_VM2_EP_PROPERTIES (FFA_RECEIPT_DIRECT_REQUEST_SUPPORT | \
-                                    FFA_DIRECT_REQUEST_SEND | \
+                                    FFA_DIRECT_REQUEST_SEND            | \
                                     FFA_INDIRECT_MESSAGE_SUPPORT)
 #define PLATFORM_VM2_UUID {0, 0, 0, 1}
 
@@ -53,38 +63,55 @@
 #define PLATFORM_SP3_EP_PROPERTIES (FFA_RECEIPT_DIRECT_REQUEST_SUPPORT | \
                                     FFA_DIRECT_REQUEST_SEND)
 #else
-#define PLATFORM_VM1_EP_PROPERTIES (FFA_RECEIPT_DIRECT_REQUEST_SUPPORT | \
-                                    FFA_DIRECT_REQUEST_SEND | \
-                                    FFA_INDIRECT_MESSAGE_SUPPORT | \
-                                    FFA_PARTITION_EXEC_STATE_ARCH64)
+#define PLATFORM_VM1_EP_PROPERTIES (FFA_RECEIPT_DIRECT_REQUEST_SUPPORT  | \
+                                    FFA_DIRECT_REQUEST_SEND             | \
+                                    FFA_INDIRECT_MESSAGE_SUPPORT        | \
+                                    FFA_PARTITION_EXEC_STATE_ARCH64     | \
+                                    FFA_RECEIPT_DIRECT_REQUEST2_SUPPORT | \
+                                    FFA_DIRECT_REQUEST2_SEND)
 #define PLATFORM_VM1_UUID {0, 0, 0, 0}
 
-#define PLATFORM_VM2_EP_PROPERTIES (FFA_RECEIPT_DIRECT_REQUEST_SUPPORT | \
-                                    FFA_DIRECT_REQUEST_SEND | \
-                                    FFA_INDIRECT_MESSAGE_SUPPORT | \
-                                    FFA_PARTITION_EXEC_STATE_ARCH64)
+#define PLATFORM_VM2_EP_PROPERTIES (FFA_RECEIPT_DIRECT_REQUEST_SUPPORT  | \
+                                    FFA_DIRECT_REQUEST_SEND             | \
+                                    FFA_INDIRECT_MESSAGE_SUPPORT        | \
+                                    FFA_PARTITION_EXEC_STATE_ARCH64     | \
+                                    FFA_RECEIPT_DIRECT_REQUEST2_SUPPORT | \
+                                    FFA_DIRECT_REQUEST2_SEND)
 #define PLATFORM_VM2_UUID {0, 0, 0, 1}
 
 #define PLATFORM_VM3_EP_PROPERTIES (FFA_INDIRECT_MESSAGE_SUPPORT | \
                                     FFA_PARTITION_EXEC_STATE_ARCH64)
 #define PLATFORM_VM3_UUID {0, 0, 0, 2}
 
-#define PLATFORM_SP1_EP_PROPERTIES (FFA_RECEIPT_DIRECT_REQUEST_SUPPORT | \
-                                    FFA_NOTIFICATION_SUPPORT | \
-                                    FFA_DIRECT_REQUEST_SEND | \
-                                    FFA_PARTITION_EXEC_STATE_ARCH64)
-#define PLATFORM_SP2_EP_PROPERTIES (FFA_RECEIPT_DIRECT_REQUEST_SUPPORT | \
-                                    FFA_NOTIFICATION_SUPPORT | \
-                                    FFA_DIRECT_REQUEST_SEND | \
-                                    FFA_PARTITION_EXEC_STATE_ARCH64)
-#define PLATFORM_SP3_EP_PROPERTIES (FFA_RECEIPT_DIRECT_REQUEST_SUPPORT | \
-                                    FFA_NOTIFICATION_SUPPORT | \
-                                    FFA_DIRECT_REQUEST_SEND | \
-                                    FFA_PARTITION_EXEC_STATE_ARCH64)
-#define PLATFORM_SP4_EP_PROPERTIES (FFA_RECEIPT_DIRECT_REQUEST_SUPPORT | \
-                                    FFA_NOTIFICATION_SUPPORT | \
-                                    FFA_DIRECT_REQUEST_SEND | \
-                                    FFA_PARTITION_EXEC_STATE_ARCH64)
+#define PLATFORM_SP1_EP_PROPERTIES (FFA_RECEIPT_DIRECT_REQUEST_SUPPORT  | \
+                                    FFA_INDIRECT_MESSAGE_SUPPORT        | \
+                                    FFA_NOTIFICATION_SUPPORT            | \
+                                    FFA_DIRECT_REQUEST_SEND             | \
+                                    FFA_PARTITION_EXEC_STATE_ARCH64     | \
+                                    FFA_RECEIPT_DIRECT_REQUEST2_SUPPORT | \
+                                    FFA_DIRECT_REQUEST2_SEND)
+
+#define PLATFORM_SP2_EP_PROPERTIES (FFA_RECEIPT_DIRECT_REQUEST_SUPPORT  | \
+                                    FFA_INDIRECT_MESSAGE_SUPPORT        | \
+                                    FFA_NOTIFICATION_SUPPORT            | \
+                                    FFA_DIRECT_REQUEST_SEND             | \
+                                    FFA_PARTITION_EXEC_STATE_ARCH64     | \
+                                    FFA_RECEIPT_DIRECT_REQUEST2_SUPPORT | \
+                                    FFA_DIRECT_REQUEST2_SEND)
+
+#define PLATFORM_SP3_EP_PROPERTIES (FFA_RECEIPT_DIRECT_REQUEST_SUPPORT  | \
+                                    FFA_NOTIFICATION_SUPPORT            | \
+                                    FFA_DIRECT_REQUEST_SEND             | \
+                                    FFA_PARTITION_EXEC_STATE_ARCH64     | \
+                                    FFA_RECEIPT_DIRECT_REQUEST2_SUPPORT | \
+                                    FFA_DIRECT_REQUEST2_SEND)
+
+#define PLATFORM_SP4_EP_PROPERTIES (FFA_RECEIPT_DIRECT_REQUEST_SUPPORT  | \
+                                    FFA_NOTIFICATION_SUPPORT            | \
+                                    FFA_DIRECT_REQUEST_SEND             | \
+                                    FFA_PARTITION_EXEC_STATE_ARCH64     | \
+                                    FFA_RECEIPT_DIRECT_REQUEST2_SUPPORT | \
+                                    FFA_DIRECT_REQUEST2_SEND)
 #endif
 #define PLATFORM_SP1_UUID {0x1e67b5b4, 0xe14f904a, 0x13fb1fb8, 0xcbdae1da}
 

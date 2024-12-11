@@ -92,6 +92,7 @@ static uint32_t retrieve_align_hint_check(ffa_memory_handle_t handle, uint32_t f
     struct ffa_memory_region *memory_region;
     struct ffa_composite_memory_region *composite;
 
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = sender;
     mem_region_init.receiver = receiver;

@@ -33,6 +33,7 @@ uint32_t relinquish_state_machine_5_server(ffa_args_t args)
         status = VAL_ERROR_POINT(2);
         goto free_memory;
     }
+    val_memset(mb.send, 0, size);
 
     /* Wait for the message. */
     val_memset(&payload, 0, sizeof(ffa_args_t));

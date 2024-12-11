@@ -11,7 +11,10 @@
 
 static ffa_args_t ffa_smccc(uint64_t fid, uint64_t arg1, uint64_t arg2,
                             uint64_t arg3, uint64_t arg4, uint64_t arg5,
-                            uint64_t arg6, uint64_t arg7)
+                            uint64_t arg6, uint64_t arg7, uint64_t arg8,
+                            uint64_t arg9, uint64_t arg10, uint64_t arg11,
+                            uint64_t arg12, uint64_t arg13, uint64_t arg14,
+                            uint64_t arg15, uint64_t arg16, uint64_t arg17)
 {
     ffa_args_t args;
 
@@ -23,6 +26,16 @@ static ffa_args_t ffa_smccc(uint64_t fid, uint64_t arg1, uint64_t arg2,
     args.arg5 = arg5;
     args.arg6 = arg6;
     args.arg7 = arg7;
+    args.ext_args.arg8 = arg8;
+    args.ext_args.arg9 = arg9;
+    args.ext_args.arg10 = arg10;
+    args.ext_args.arg11 = arg11;
+    args.ext_args.arg12 = arg12;
+    args.ext_args.arg13 = arg13;
+    args.ext_args.arg14 = arg14;
+    args.ext_args.arg15 = arg15;
+    args.ext_args.arg16 = arg16;
+    args.ext_args.arg17 = arg17;
     val_call_conduit(&args);
     return args;
 }
@@ -30,7 +43,8 @@ static ffa_args_t ffa_smccc(uint64_t fid, uint64_t arg1, uint64_t arg2,
 static void ffa_error(ffa_args_t *args)
 {
     *args = ffa_smccc(FFA_ERROR_32, args->arg1, args->arg2, args->arg3,
-                      args->arg4, args->arg5, args->arg6, args->arg7);
+                      args->arg4, args->arg5, args->arg6, args->arg7,
+                      0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 }
 
 /**
@@ -49,14 +63,16 @@ static void ffa_success(ffa_args_t *args, bool arch64)
     if (arch64)
     {
         *args = ffa_smccc(FFA_SUCCESS_64, args->arg1, args->arg2, args->arg3,
-                          args->arg4, args->arg5, args->arg6, args->arg7);
+                          args->arg4, args->arg5, args->arg6, args->arg7,
+                          0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     }
     else
     {
         *args = ffa_smccc(FFA_SUCCESS_32, (uint32_t)args->arg1,
                           (uint32_t)args->arg2, (uint32_t)args->arg3,
                           (uint32_t)args->arg4, (uint32_t)args->arg5,
-                          (uint32_t)args->arg6, (uint32_t)args->arg7);
+                          (uint32_t)args->arg6, (uint32_t)args->arg7,
+                          0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     }
 }
 
@@ -87,7 +103,8 @@ static void ffa_version(ffa_args_t *args)
     *args = ffa_smccc(FFA_VERSION_32, (uint32_t)args->arg1,
                       (uint32_t)args->arg2, (uint32_t)args->arg3,
                       (uint32_t)args->arg4, (uint32_t)args->arg5,
-                      (uint32_t)args->arg6, (uint32_t)args->arg7);
+                      (uint32_t)args->arg6, (uint32_t)args->arg7,
+                      0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 }
 
 /**
@@ -101,6 +118,43 @@ void val_ffa_version(ffa_args_t *args)
     ffa_version(args);
 }
 
+static void ffa_msg_send_direct_req2(ffa_args_t *args)
+{
+#ifdef TARGET_LINUX
+    ffa_args_t  payload;
+#endif
+
+    *args = ffa_smccc(FFA_MSG_SEND_DIRECT_REQ2_64, args->arg1, args->arg2,
+                        args->arg3, args->arg4, args->arg5, args->arg6,
+                        args->arg7, args->ext_args.arg8, args->ext_args.arg9, args->ext_args.arg10,
+                        args->ext_args.arg11, args->ext_args.arg12, args->ext_args.arg13,
+                        args->ext_args.arg14, args->ext_args.arg15, args->ext_args.arg16,
+                        args->ext_args.arg17);
+
+#ifdef TARGET_LINUX
+    while (args->fid == FFA_INTERRUPT_32)
+    {
+        val_memset(&payload, 0, sizeof(ffa_args_t));
+        payload.arg1 = args->arg1;
+        val_ffa_run(&payload);
+        *args = payload;
+    }
+#endif
+}
+
+/**
+ * @brief - Send a Partition message in parameter registers as a request to
+ *          a target endpoint, run the endpoint and block until a response is
+ *          available
+ * @param args - Input arguments to FFA_MSG_SEND_DIRECT_REQ2_64 abi.
+ * @return - Returns success/error status code in response to
+ *           FFA_MSG_SEND_DIRECT_REQ function.
+**/
+void val_ffa_msg_send_direct_req2_64(ffa_args_t *args)
+{
+    ffa_msg_send_direct_req2(args);
+}
+
 static void ffa_msg_send_direct_req(ffa_args_t *args, bool arch64)
 {
 #ifdef TARGET_LINUX
@@ -111,13 +165,13 @@ static void ffa_msg_send_direct_req(ffa_args_t *args, bool arch64)
     {
         *args = ffa_smccc(FFA_MSG_SEND_DIRECT_REQ_64, args->arg1, args->arg2,
                           args->arg3, args->arg4, args->arg5, args->arg6,
-                          args->arg7);
+                          args->arg7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     }
     else
     {
         *args = ffa_smccc(FFA_MSG_SEND_DIRECT_REQ_32, args->arg1, args->arg2,
                           args->arg3, args->arg4, args->arg5, args->arg6,
-                          args->arg7);
+                          args->arg7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     }
 
 #ifdef TARGET_LINUX
@@ -163,14 +217,38 @@ static void ffa_msg_send_direct_resp(ffa_args_t *args, bool arch64)
     {
         *args = ffa_smccc(FFA_MSG_SEND_DIRECT_RESP_64, args->arg1, args->arg2,
                           args->arg3, args->arg4, args->arg5, args->arg6,
-                          args->arg7);
+                          args->arg7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     }
     else
     {
         *args = ffa_smccc(FFA_MSG_SEND_DIRECT_RESP_32, args->arg1, args->arg2,
                           args->arg3, args->arg4, args->arg5, args->arg6,
-                          args->arg7);
+                          args->arg7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     }
+}
+
+
+static void ffa_msg_send_direct_resp2(ffa_args_t *args)
+{
+    *args = ffa_smccc(FFA_MSG_SEND_DIRECT_RESP2_64, args->arg1, args->arg2,
+                        args->arg3, args->arg4, args->arg5, args->arg6,
+                        args->arg7, args->ext_args.arg8, args->ext_args.arg9, args->ext_args.arg10,
+                        args->ext_args.arg11, args->ext_args.arg12, args->ext_args.arg13,
+                        args->ext_args.arg14, args->ext_args.arg15, args->ext_args.arg16,
+                        args->ext_args.arg17);
+}
+
+/**
+ * @brief - Send a Partition message in parameter registers as a response to
+ *          a target endpoint, run the endpoint and block until a response is
+ *          available
+ * @param args - Input arguments to FFA_MSG_SEND_DIRECT_RESP_64 abi.
+ * @return - Returns success/error status code in response to
+ *           FFA_MSG_SEND_DIRECT_RESP function.
+**/
+void val_ffa_msg_send_direct_resp2_64(ffa_args_t *args)
+{
+    ffa_msg_send_direct_resp2(args);
 }
 
 /**
@@ -204,7 +282,8 @@ static void ffa_id_get(ffa_args_t *args)
     *args = ffa_smccc(FFA_ID_GET_32, (uint32_t)args->arg1,
                           (uint32_t)args->arg2, (uint32_t)args->arg3,
                           (uint32_t)args->arg4, (uint32_t)args->arg5,
-                          (uint32_t)args->arg6, (uint32_t)args->arg7);
+                          (uint32_t)args->arg6, (uint32_t)args->arg7,
+                          0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 }
 
 static void ffa_spm_id_get(ffa_args_t *args)
@@ -212,7 +291,8 @@ static void ffa_spm_id_get(ffa_args_t *args)
     *args = ffa_smccc(FFA_SPM_ID_GET_32, (uint32_t)args->arg1,
                           (uint32_t)args->arg2, (uint32_t)args->arg3,
                           (uint32_t)args->arg4, (uint32_t)args->arg5,
-                          (uint32_t)args->arg6, (uint32_t)args->arg7);
+                          (uint32_t)args->arg6, (uint32_t)args->arg7,
+                          0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 }
 
 /**
@@ -225,7 +305,7 @@ ffa_endpoint_id_t val_get_curr_endpoint_id(void)
     ffa_args_t ret;
     ffa_endpoint_id_t id;
 
-    ret = ffa_smccc(FFA_ID_GET_32, 0, 0, 0, 0, 0, 0, 0);
+    ret = ffa_smccc(FFA_ID_GET_32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     if (ret.fid == FFA_ERROR_32)
         VAL_PANIC("Error: FFA_ID_GET_32 failed");
 
@@ -258,7 +338,8 @@ static void ffa_rx_release(ffa_args_t *args)
     *args = ffa_smccc(FFA_RX_RELEASE_32, (uint32_t)args->arg1,
                           (uint32_t)args->arg2, (uint32_t)args->arg3,
                           (uint32_t)args->arg4, (uint32_t)args->arg5,
-                          (uint32_t)args->arg6, (uint32_t)args->arg7);
+                          (uint32_t)args->arg6, (uint32_t)args->arg7,
+                          0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 }
 
 /**
@@ -276,7 +357,8 @@ static void ffa_rxtx_unmap(ffa_args_t *args)
     *args = ffa_smccc(FFA_RXTX_UNMAP_32, (uint32_t)args->arg1,
                           (uint32_t)args->arg2, (uint32_t)args->arg3,
                           (uint32_t)args->arg4, (uint32_t)args->arg5,
-                          (uint32_t)args->arg6, (uint32_t)args->arg7);
+                          (uint32_t)args->arg6, (uint32_t)args->arg7,
+                          0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
 }
 /**
@@ -295,14 +377,16 @@ static void ffa_rxtx_map(ffa_args_t *args, bool arch64)
     if (arch64)
     {
         *args = ffa_smccc(FFA_RXTX_MAP_64, args->arg1, args->arg2, args->arg3,
-                                args->arg4, args->arg5, args->arg6, args->arg7);
+                                args->arg4, args->arg5, args->arg6, args->arg7,
+                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     }
     else
     {
         *args = ffa_smccc(FFA_RXTX_MAP_32, (uint32_t)args->arg1,
                           (uint32_t)args->arg2, (uint32_t)args->arg3,
                           (uint32_t)args->arg4, (uint32_t)args->arg5,
-                          (uint32_t)args->arg6, (uint32_t)args->arg7);
+                          (uint32_t)args->arg6, (uint32_t)args->arg7,
+                          0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     }
 }
 
@@ -335,7 +419,8 @@ static void ffa_msg_send(ffa_args_t *args)
     *args = ffa_smccc(FFA_MSG_SEND_32, (uint32_t)args->arg1,
                           (uint32_t)args->arg2, (uint32_t)args->arg3,
                           (uint32_t)args->arg4, (uint32_t)args->arg5,
-                          (uint32_t)args->arg6, (uint32_t)args->arg7);
+                          (uint32_t)args->arg6, (uint32_t)args->arg7,
+                          0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 }
 
 /**
@@ -355,7 +440,8 @@ static void ffa_msg_send2(ffa_args_t *args)
     *args = ffa_smccc(FFA_MSG_SEND2_32, (uint32_t)args->arg1,
                           (uint32_t)args->arg2, (uint32_t)args->arg3,
                           (uint32_t)args->arg4, (uint32_t)args->arg5,
-                          (uint32_t)args->arg6, (uint32_t)args->arg7);
+                          (uint32_t)args->arg6, (uint32_t)args->arg7,
+                          0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 }
 
 /**
@@ -370,12 +456,35 @@ void val_ffa_msg_send2(ffa_args_t *args)
     ffa_msg_send2(args);
 }
 
+static void ffa_partition_info_get_regs(ffa_args_t *args)
+{
+    *args = ffa_smccc(FFA_PARTITION_INFO_GET_REGS_64, args->arg1, args->arg2,
+                        args->arg3, args->arg4, args->arg5, args->arg6,
+                        args->arg7, args->ext_args.arg8, args->ext_args.arg9, args->ext_args.arg10,
+                        args->ext_args.arg11, args->ext_args.arg12, args->ext_args.arg13,
+                        args->ext_args.arg14, args->ext_args.arg15, args->ext_args.arg16,
+                        args->ext_args.arg17);
+}
+
+/**
+ * @brief - Request Hypervisor and SPM to return information about
+ *          partitions instantiated in the system.
+ * @param args - Input arguments to FFA_PARTITION_INFO_GET abi.
+ * @return - Returns success/error status code in response to
+ *           FFA_PARTITION_INFO_GET function.
+**/
+void val_ffa_partition_info_get_regs(ffa_args_t *args)
+{
+    ffa_partition_info_get_regs(args);
+}
+
 static void ffa_partition_info_get(ffa_args_t *args)
 {
     *args = ffa_smccc(FFA_PARTITION_INFO_GET_32, (uint32_t)args->arg1,
                           (uint32_t)args->arg2, (uint32_t)args->arg3,
                           (uint32_t)args->arg4, (uint32_t)args->arg5,
-                          (uint32_t)args->arg6, (uint32_t)args->arg7);
+                          (uint32_t)args->arg6, (uint32_t)args->arg7,
+                          0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 }
 
 /**
@@ -395,7 +504,8 @@ static void ffa_features(ffa_args_t *args)
     *args = ffa_smccc(FFA_FEATURES_32, (uint32_t)args->arg1,
                           (uint32_t)args->arg2, (uint32_t)args->arg3,
                           (uint32_t)args->arg4, (uint32_t)args->arg5,
-                          (uint32_t)args->arg6, (uint32_t)args->arg7);
+                          (uint32_t)args->arg6, (uint32_t)args->arg7,
+                          0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 }
 
 /**
@@ -415,7 +525,8 @@ static void ffa_mem_reclaim(ffa_args_t *args)
     *args = ffa_smccc(FFA_MEM_RECLAIM_32, (uint32_t)args->arg1,
                           (uint32_t)args->arg2, (uint32_t)args->arg3,
                           (uint32_t)args->arg4, (uint32_t)args->arg5,
-                          (uint32_t)args->arg6, (uint32_t)args->arg7);
+                          (uint32_t)args->arg6, (uint32_t)args->arg7,
+                          0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 }
 
 /**
@@ -434,7 +545,8 @@ static void ffa_msg_wait(ffa_args_t *args)
     *args = ffa_smccc(FFA_MSG_WAIT_32, (uint32_t)args->arg1,
                           (uint32_t)args->arg2, (uint32_t)args->arg3,
                           (uint32_t)args->arg4, (uint32_t)args->arg5,
-                          (uint32_t)args->arg6, (uint32_t)args->arg7);
+                          (uint32_t)args->arg6, (uint32_t)args->arg7,
+                          0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 }
 
 /**
@@ -454,7 +566,8 @@ static void ffa_yield(ffa_args_t *args)
     *args = ffa_smccc(FFA_YIELD_32, (uint32_t)args->arg1,
                           (uint32_t)args->arg2, (uint32_t)args->arg3,
                           (uint32_t)args->arg4, (uint32_t)args->arg5,
-                          (uint32_t)args->arg6, (uint32_t)args->arg7);
+                          (uint32_t)args->arg6, (uint32_t)args->arg7,
+                          0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 }
 
 /**
@@ -473,7 +586,8 @@ static void ffa_run(ffa_args_t *args)
     *args = ffa_smccc(FFA_RUN_32, (uint32_t)args->arg1,
                           (uint32_t)args->arg2, (uint32_t)args->arg3,
                           (uint32_t)args->arg4, (uint32_t)args->arg5,
-                          (uint32_t)args->arg6, (uint32_t)args->arg7);
+                          (uint32_t)args->arg6, (uint32_t)args->arg7,
+                          0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 }
 
 /**
@@ -491,7 +605,8 @@ static void ffa_msg_poll(ffa_args_t *args)
     *args = ffa_smccc(FFA_MSG_POLL_32, (uint32_t)args->arg1,
                           (uint32_t)args->arg2, (uint32_t)args->arg3,
                           (uint32_t)args->arg4, (uint32_t)args->arg5,
-                          (uint32_t)args->arg6, (uint32_t)args->arg7);
+                          (uint32_t)args->arg6, (uint32_t)args->arg7,
+                          0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 }
 
 /**
@@ -510,14 +625,16 @@ static void ffa_mem_donate(ffa_args_t *args, bool arch64)
     if (arch64)
     {
         *args = ffa_smccc(FFA_MEM_DONATE_64, args->arg1, args->arg2, args->arg3,
-                                args->arg4, args->arg5, args->arg6, args->arg7);
+                                args->arg4, args->arg5, args->arg6, args->arg7,
+                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     }
     else
     {
         *args = ffa_smccc(FFA_MEM_DONATE_32, (uint32_t)args->arg1,
                           (uint32_t)args->arg2, (uint32_t)args->arg3,
                           (uint32_t)args->arg4, (uint32_t)args->arg5,
-                          (uint32_t)args->arg6, (uint32_t)args->arg7);
+                          (uint32_t)args->arg6, (uint32_t)args->arg7,
+                          0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     }
 }
 
@@ -548,14 +665,16 @@ static void ffa_mem_lend(ffa_args_t *args, bool arch64)
     if (arch64)
     {
         *args = ffa_smccc(FFA_MEM_LEND_64, args->arg1, args->arg2, args->arg3,
-                                args->arg4, args->arg5, args->arg6, args->arg7);
+                                args->arg4, args->arg5, args->arg6, args->arg7,
+                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     }
     else
     {
         *args = ffa_smccc(FFA_MEM_LEND_32, (uint32_t)args->arg1,
                           (uint32_t)args->arg2, (uint32_t)args->arg3,
                           (uint32_t)args->arg4, (uint32_t)args->arg5,
-                          (uint32_t)args->arg6, (uint32_t)args->arg7);
+                          (uint32_t)args->arg6, (uint32_t)args->arg7,
+                          0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     }
 }
 
@@ -586,14 +705,16 @@ static void ffa_mem_share(ffa_args_t *args, bool arch64)
     if (arch64)
     {
         *args = ffa_smccc(FFA_MEM_SHARE_64, args->arg1, args->arg2, args->arg3,
-                                args->arg4, args->arg5, args->arg6, args->arg7);
+                                args->arg4, args->arg5, args->arg6, args->arg7,
+                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     }
     else
     {
         *args = ffa_smccc(FFA_MEM_SHARE_32, (uint32_t)args->arg1,
                           (uint32_t)args->arg2, (uint32_t)args->arg3,
                           (uint32_t)args->arg4, (uint32_t)args->arg5,
-                          (uint32_t)args->arg6, (uint32_t)args->arg7);
+                          (uint32_t)args->arg6, (uint32_t)args->arg7,
+                          0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     }
 }
 
@@ -625,14 +746,15 @@ static void ffa_mem_retrieve(ffa_args_t *args, bool arch64)
     {
         *args = ffa_smccc(FFA_MEM_RETRIEVE_REQ_64, args->arg1, args->arg2,
                           args->arg3, args->arg4, args->arg5, args->arg6,
-                          args->arg7);
+                          args->arg7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     }
     else
     {
         *args = ffa_smccc(FFA_MEM_RETRIEVE_REQ_32, (uint32_t)args->arg1,
                           (uint32_t)args->arg2, (uint32_t)args->arg3,
                           (uint32_t)args->arg4, (uint32_t)args->arg5,
-                          (uint32_t)args->arg6, (uint32_t)args->arg7);
+                          (uint32_t)args->arg6, (uint32_t)args->arg7,
+                          0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     }
 }
 
@@ -665,7 +787,8 @@ static void ffa_mem_relinquish(ffa_args_t *args)
     *args = ffa_smccc(FFA_MEM_RELINQUISH_32, (uint32_t)args->arg1,
                           (uint32_t)args->arg2, (uint32_t)args->arg3,
                           (uint32_t)args->arg4, (uint32_t)args->arg5,
-                          (uint32_t)args->arg6, (uint32_t)args->arg7);
+                          (uint32_t)args->arg6, (uint32_t)args->arg7,
+                          0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 }
 
 /**
@@ -686,7 +809,8 @@ static void ffa_secondary_ep_register_64(ffa_args_t *args)
                       (uint64_t)&pal_secondary_cpu_boot_entry,
                           args->arg2, args->arg3,
                           args->arg4, args->arg5,
-                          args->arg6, args->arg7);
+                          args->arg6, args->arg7,
+                          0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 }
 
 /**
@@ -707,7 +831,8 @@ void val_ffa_notification_bitmap_create(ffa_args_t *args)
     *args = ffa_smccc(FFA_NOTIFICATION_BITMAP_CREATE, (uint32_t)args->arg1,
                                     (uint32_t)args->arg2, (uint32_t)args->arg3,
                                     (uint32_t)args->arg4, (uint32_t)args->arg5,
-                                    (uint32_t)args->arg6, (uint32_t)args->arg7);
+                                    (uint32_t)args->arg6, (uint32_t)args->arg7,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 }
 
 void val_ffa_notification_bitmap_destroy(ffa_args_t *args)
@@ -715,7 +840,8 @@ void val_ffa_notification_bitmap_destroy(ffa_args_t *args)
     *args = ffa_smccc(FFA_NOTIFICATION_BITMAP_DESTROY, (uint32_t)args->arg1,
                                     (uint32_t)args->arg2, (uint32_t)args->arg3,
                                     (uint32_t)args->arg4, (uint32_t)args->arg5,
-                                    (uint32_t)args->arg6, (uint32_t)args->arg7);
+                                    (uint32_t)args->arg6, (uint32_t)args->arg7,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 }
 
 void val_ffa_notification_bind(ffa_args_t *args)
@@ -723,7 +849,8 @@ void val_ffa_notification_bind(ffa_args_t *args)
     *args = ffa_smccc(FFA_NOTIFICATION_BIND, (uint32_t)args->arg1,
                                     (uint32_t)args->arg2, (uint32_t)args->arg3,
                                     (uint32_t)args->arg4, (uint32_t)args->arg5,
-                                    (uint32_t)args->arg6, (uint32_t)args->arg7);
+                                    (uint32_t)args->arg6, (uint32_t)args->arg7,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 }
 
 void val_ffa_notification_unbind(ffa_args_t *args)
@@ -731,7 +858,8 @@ void val_ffa_notification_unbind(ffa_args_t *args)
     *args = ffa_smccc(FFA_NOTIFICATION_UNBIND, (uint32_t)args->arg1,
                                     (uint32_t)args->arg2, (uint32_t)args->arg3,
                                     (uint32_t)args->arg4, (uint32_t)args->arg5,
-                                    (uint32_t)args->arg6, (uint32_t)args->arg7);
+                                    (uint32_t)args->arg6, (uint32_t)args->arg7,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 }
 
 void val_ffa_notification_set(ffa_args_t *args)
@@ -739,7 +867,8 @@ void val_ffa_notification_set(ffa_args_t *args)
     *args = ffa_smccc(FFA_NOTIFICATION_SET, (uint32_t)args->arg1,
                                     (uint32_t)args->arg2, (uint32_t)args->arg3,
                                     (uint32_t)args->arg4, (uint32_t)args->arg5,
-                                    (uint32_t)args->arg6, (uint32_t)args->arg7);
+                                    (uint32_t)args->arg6, (uint32_t)args->arg7,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 }
 
 void val_ffa_notification_get(ffa_args_t *args)
@@ -747,7 +876,8 @@ void val_ffa_notification_get(ffa_args_t *args)
     *args = ffa_smccc(FFA_NOTIFICATION_GET, (uint32_t)args->arg1,
                                     (uint32_t)args->arg2, (uint32_t)args->arg3,
                                     (uint32_t)args->arg4, (uint32_t)args->arg5,
-                                    (uint32_t)args->arg6, (uint32_t)args->arg7);
+                                    (uint32_t)args->arg6, (uint32_t)args->arg7,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 }
 
 void val_ffa_notification_info_get_32(ffa_args_t *args)
@@ -755,7 +885,8 @@ void val_ffa_notification_info_get_32(ffa_args_t *args)
     *args = ffa_smccc(FFA_NOTIFICATION_INFO_GET_32, (uint32_t)args->arg1,
                                     (uint32_t)args->arg2, (uint32_t)args->arg3,
                                     (uint32_t)args->arg4, (uint32_t)args->arg5,
-                                    (uint32_t)args->arg6, (uint32_t)args->arg7);
+                                    (uint32_t)args->arg6, (uint32_t)args->arg7,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 }
 
 void val_ffa_notification_info_get_64(ffa_args_t *args)
@@ -763,7 +894,8 @@ void val_ffa_notification_info_get_64(ffa_args_t *args)
     *args = ffa_smccc(FFA_NOTIFICATION_INFO_GET_64, args->arg1,
                                     args->arg2, args->arg3,
                                     args->arg4, args->arg5,
-                                    args->arg6, args->arg7);
+                                    args->arg6, args->arg7,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 }
 
 static void ffa_mem_perm_set(ffa_args_t *args, bool arch64)
@@ -771,14 +903,16 @@ static void ffa_mem_perm_set(ffa_args_t *args, bool arch64)
     if (arch64)
     {
         *args = ffa_smccc(FFA_MEM_PERM_SET_64, args->arg1, args->arg2, args->arg3,
-                                args->arg4, args->arg5, args->arg6, args->arg7);
+                                args->arg4, args->arg5, args->arg6, args->arg7,
+                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     }
     else
     {
         *args = ffa_smccc(FFA_MEM_PERM_SET_32, (uint32_t)args->arg1,
                           (uint32_t)args->arg2, (uint32_t)args->arg3,
                           (uint32_t)args->arg4, (uint32_t)args->arg5,
-                          (uint32_t)args->arg6, (uint32_t)args->arg7);
+                          (uint32_t)args->arg6, (uint32_t)args->arg7,
+                          0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     }
 }
 
@@ -797,14 +931,16 @@ static void ffa_mem_perm_get(ffa_args_t *args, bool arch64)
     if (arch64)
     {
         *args = ffa_smccc(FFA_MEM_PERM_GET_64, args->arg1, args->arg2, args->arg3,
-                                args->arg4, args->arg5, args->arg6, args->arg7);
+                                args->arg4, args->arg5, args->arg6, args->arg7,
+                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     }
     else
     {
         *args = ffa_smccc(FFA_MEM_PERM_GET_32, (uint32_t)args->arg1,
                           (uint32_t)args->arg2, (uint32_t)args->arg3,
                           (uint32_t)args->arg4, (uint32_t)args->arg5,
-                          (uint32_t)args->arg6, (uint32_t)args->arg7);
+                          (uint32_t)args->arg6, (uint32_t)args->arg7,
+                          0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     }
 }
 
@@ -939,3 +1075,45 @@ uint32_t val_reserve_param_check(ffa_args_t args, uint32_t param_count)
     return VAL_SUCCESS;
 }
 
+static void ffa_console_log(ffa_args_t *args, bool arch64)
+{
+    if (arch64)
+    {
+        *args = ffa_smccc(FFA_CONSOLE_LOG_64, args->arg1, args->arg2,
+                        args->arg3, args->arg4, args->arg5, args->arg6,
+                        args->arg7, args->ext_args.arg8, args->ext_args.arg9, args->ext_args.arg10,
+                        args->ext_args.arg11, args->ext_args.arg12, args->ext_args.arg13,
+                        args->ext_args.arg14, args->ext_args.arg15, args->ext_args.arg16,
+                        args->ext_args.arg17);
+    }
+    else
+    {
+        *args = ffa_smccc(FFA_CONSOLE_LOG_32, (uint32_t)args->arg1,
+                          (uint32_t)args->arg2, (uint32_t)args->arg3,
+                          (uint32_t)args->arg4, (uint32_t)args->arg5,
+                          (uint32_t)args->arg6, (uint32_t)args->arg7,
+                          0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    }
+}
+
+/**
+ * @brief - Starts a transaction to grant access to a memory region
+ *          to one or more Borrowers.
+ * @param args - Input arguments to FFA_MEM_SHARE_32 abi.
+ * @return - Returns success/error status code in response to FFA_MEM_SHARE abi.
+**/
+void val_ffa_console_log_32(ffa_args_t *args)
+{
+    ffa_console_log(args, false);
+}
+
+/**
+ * @brief - Starts a transaction to grant access to a memory region
+ *          to one or more Borrowers.
+ * @param args - Input arguments to FFA_MEM_SHARE_64 abi.
+ * @return - Returns success/error status code in response to FFA_MEM_SHARE abi
+**/
+void val_ffa_console_log_64(ffa_args_t *args)
+{
+    ffa_console_log(args, true);
+}

@@ -60,6 +60,7 @@ uint32_t lend_retrieve_with_address_range_server(ffa_args_t args)
         status = VAL_ERROR_POINT(2);
         goto free_memory;
     }
+    val_memset(mb.send, 0, size);
 
     /* Allocate 8k page */
     pages = (uint8_t *)val_memory_alloc(size * 2);
@@ -101,6 +102,7 @@ uint32_t lend_retrieve_with_address_range_server(ffa_args_t args)
      */
     flags = VAL_SET_BITS(flags, 5, 5, 0x11);
     mem_region_init.flags = flags;
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = receiver;
     mem_region_init.receiver = sender;

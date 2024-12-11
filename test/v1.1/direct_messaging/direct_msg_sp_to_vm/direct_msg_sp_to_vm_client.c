@@ -88,7 +88,7 @@ uint32_t direct_msg_sp_to_vm_client(uint32_t test_run_data)
 
     partition_message_header = (ffa_partition_rxtx_header_t *)mb.send;
     partition_message_header->flags = 0;
-    partition_message_header->reserved = 0;
+    partition_message_header->reserved_0 = 0;
     partition_message_header->offset = sizeof(ffa_partition_rxtx_header_t);
     partition_message_header->sender_receiver = (uint32_t)(receiver | (sender << 16));
     partition_message_header->size = 32;
@@ -102,7 +102,7 @@ uint32_t direct_msg_sp_to_vm_client(uint32_t test_run_data)
     val_ffa_msg_send2(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, " FFA Message Send 2 request failed err %x", payload.arg2);
+        LOG(ERROR, "FFA Message Send 2 request failed err %x", payload.arg2);
         status = VAL_ERROR_POINT(5);
         goto rxtx_unmap;
     }

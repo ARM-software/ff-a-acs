@@ -33,9 +33,9 @@ This suite is not a substitute for design verification. To review the test logs,
 For more information on Architecture Compliance Suite see [Validation Methodology](./docs/Arm_FF_A_ACS_Validation_Methodology.pdf) document.
 
 ## This release
-- Release Version - v1.0
+- Release Version - v1.2
 - Code Quality: EAC - ACS is being developed, please use this opportunity to ameliorate.
-- The tests are written for Arm FF-A v1.1 specification version.
+- The tests are written for Arm FF-A v1.2 specification version.
 - For information about the test coverage scenarios that are implemented in the current release of ACS and the scenarios that are planned for the future releases, see [Docs](./docs/).
 
 ## GitHub branch
@@ -89,14 +89,16 @@ make
 -	-DPLATFORM_NS_HYPERVISOR_PRESENT=<0|1>: Does the system support the non-secure hypervisor implementing FF-A features? 1 for yes, 0 for no. The default value is 1. System is expected to intergrate and load all the three of nonsecure test endpoints(vm1, vm2 and vm3) if the value is set to 1. Otherwise needs to use single non-secure test endpoint(vm1) which would act as NS OS kernel.
 -   -DPLATFORM_FFA_V_1_0=<0|1>: It runs only tests that are supported by the Arm FF-A v1.0 specification. The default value is 0.
 -   -DPLATFORM_FFA_V_1_1=<0|1>: It only tests the Arm FF-A v1.1 specifications as updates to Arm FF-A v1.0. The default value is 0.
--   -DPLATFORM_FFA_V_ALL=<0|1>: It runs all tests that are supported by the Arm FF-A v1.1 specification. The default value is 1.
+-   -DPLATFORM_FFA_V_1_2=<0|1>: It only tests the Arm FF-A v1.2 specifications as updates to Arm FF-A v1.1. The default value is 0.
+-   -DPLATFORM_FFA_V_ALL=<0|1>: It runs all tests that are supported by the Arm FF-A v1.2 specification. The default value is 1.
+-   -DPLATFORM_FFA_V_MULTI=<0|1>: It runs tests with multiple FF-A version SP combination. The default value is 0.
 -   -DENABLE_BTI=<ON|OFF>: It enables BTIs. The default value is OFF.
 
 *To compile tests for tgt_tfa_fvp platform*:<br />
 ```
 cd ff-a-acs ;
 mkdir build ; cd build
-cmake ../ -G"Unix Makefiles" -DCROSS_COMPILE=<path-to-aarch64-gcc>/bin/aarch64-none-elf- -DTARGET=tgt_tfa_fvp -DPLATFORM_NS_HYPERVISOR_PRESENT=0 -DSUITE=all -DPLATFORM_FFA_V_1_1=1 -DPLATFORM_SP_EL=<0|1> -DENABLE_BTI=<ON|OFF>
+cmake ../ -G"Unix Makefiles" -DCROSS_COMPILE=<path-to-aarch64-gcc>/bin/aarch64-none-elf- -DTARGET=tgt_tfa_fvp -DPLATFORM_NS_HYPERVISOR_PRESENT=0 -DSUITE=all -DPLATFORM_FFA_V_ALL=1 -DPLATFORM_SP_EL=<0|1> -DENABLE_BTI=<ON|OFF>
 make
 ```
 **NOTE**

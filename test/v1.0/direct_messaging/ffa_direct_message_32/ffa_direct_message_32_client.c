@@ -14,7 +14,7 @@ uint32_t ffa_direct_message_32_client(uint32_t test_run_data)
     uint32_t status = VAL_SUCCESS;
     uint32_t client_logical_id = GET_CLIENT_LOGIC_ID(test_run_data);
     uint32_t server_logical_id = GET_SERVER_LOGIC_ID(test_run_data);
-#if (PLATFORM_FFA_V_1_0 != 1)
+#if (PLATFORM_FFA_V >= FFA_V_1_1)
     uint32_t recipient_1;
 #endif
 
@@ -34,7 +34,7 @@ uint32_t ffa_direct_message_32_client(uint32_t test_run_data)
     val_ffa_msg_send_direct_req_32(&req_data_32);
     if (req_data_32.fid != FFA_MSG_SEND_DIRECT_RESP_32)
     {
-#if (PLATFORM_FFA_V_1_0 != 1)
+#if (PLATFORM_FFA_V >= FFA_V_1_1)
         if  (req_data_32.fid == FFA_YIELD_32)
         {
             req_data_32.arg1 = ((uint32_t)val_get_endpoint_id(server_logical_id) << 16);
@@ -116,7 +116,7 @@ uint32_t ffa_direct_message_32_client(uint32_t test_run_data)
         goto exit;
     }
 
-#if (PLATFORM_FFA_V_1_0 != 1)
+#if (PLATFORM_FFA_V >= FFA_V_1_1)
     if (!VAL_IS_ENDPOINT_SECURE(client_logical_id))
     {
         recipient_1 = val_get_endpoint_id(SP1);

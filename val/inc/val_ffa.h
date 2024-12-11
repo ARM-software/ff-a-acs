@@ -9,10 +9,12 @@
 #define _VAL_FFA_H_
 
 #define FFA_VERSION_MAJOR 0x1
-#if (PLATFORM_FFA_V_1_0 == 1)
+#if (PLATFORM_FFA_V == FFA_V_1_0)
 #define FFA_VERSION_MINOR 0x0
-#else
+#elif (PLATFORM_FFA_V == FFA_V_1_1)
 #define FFA_VERSION_MINOR 0x1
+#else
+#define FFA_VERSION_MINOR 0x2
 #endif
 
 #define VAL_GET_MAJOR(x) ((x >> 16) & 0x7fff)
@@ -60,6 +62,7 @@
 #define FFA_MSG_SEND2_32             0x84000086
 #define FFA_MEM_PERM_GET_32          0x84000088
 #define FFA_MEM_PERM_SET_32          0x84000089
+#define FFA_CONSOLE_LOG_32           0x8400008A
 
 #define FFA_NOTIFICATION_BITMAP_CREATE   0x8400007D
 #define FFA_NOTIFICATION_BITMAP_DESTROY  0x8400007E
@@ -82,6 +85,10 @@
 #define FFA_NOTIFICATION_INFO_GET_64 0xC4000083
 #define FFA_MEM_PERM_GET_64          0xC4000088
 #define FFA_MEM_PERM_SET_64          0xC4000089
+#define FFA_CONSOLE_LOG_64           0xC400008A
+#define FFA_MSG_SEND_DIRECT_REQ2_64  0xC400008D
+#define FFA_MSG_SEND_DIRECT_RESP2_64 0xC400008E
+#define FFA_PARTITION_INFO_GET_REGS_64    0xC400008B
 
 #define SENDER_ID(x)    (x >> 16) & 0xffff
 #define RECEIVER_ID(x)  (x & 0xffff)
@@ -106,6 +113,18 @@ typedef struct {
     uint64_t arg5;
     uint64_t arg6;
     uint64_t arg7;
+    struct {
+        uint64_t arg8;
+        uint64_t arg9;
+        uint64_t arg10;
+        uint64_t arg11;
+        uint64_t arg12;
+        uint64_t arg13;
+        uint64_t arg14;
+        uint64_t arg15;
+        uint64_t arg16;
+        uint64_t arg17;
+    } ext_args;
 } ffa_args_t;
 
 typedef struct mailbox_buffers {
@@ -120,20 +139,23 @@ typedef struct ffa_partition_info {
     uint16_t exec_context;
     /** The Partition's properties, e.g. supported messaging methods */
     uint32_t properties;
-#if (PLATFORM_FFA_V_1_0 == 0)
+#if (PLATFORM_FFA_V >= FFA_V_1_1)
 	uint32_t uuid[4];
 #endif
 } ffa_partition_info_t;
 
 void val_call_conduit(ffa_args_t *args);
+void val_call_conduit_ext(ffa_args_t *args);
 void val_ffa_error(ffa_args_t *args);
 void val_ffa_success_32(ffa_args_t *args);
 void val_ffa_success_64(ffa_args_t *args);
 void val_ffa_version(ffa_args_t *args);
 void val_ffa_msg_send_direct_req_32(ffa_args_t *args);
 void val_ffa_msg_send_direct_req_64(ffa_args_t *args);
+void val_ffa_msg_send_direct_req2_64(ffa_args_t *args);
 void val_ffa_msg_send_direct_resp_32(ffa_args_t *args);
 void val_ffa_msg_send_direct_resp_64(ffa_args_t *args);
+void val_ffa_msg_send_direct_resp2_64(ffa_args_t *args);
 ffa_endpoint_id_t val_get_curr_endpoint_id(void);
 void val_ffa_id_get(ffa_args_t *args);
 void val_ffa_spm_id_get(ffa_args_t *args);
@@ -144,6 +166,7 @@ void val_ffa_rxtx_map_64(ffa_args_t *args);
 void val_ffa_msg_send(ffa_args_t *args);
 void val_ffa_msg_send2(ffa_args_t *args);
 void val_ffa_partition_info_get(ffa_args_t *args);
+void val_ffa_partition_info_get_regs(ffa_args_t *args);
 void val_ffa_features(ffa_args_t *args);
 void val_ffa_memory_reclaim(ffa_args_t *args);
 void val_ffa_msg_wait(ffa_args_t *args);
@@ -178,5 +201,6 @@ void val_ffa_mem_perm_get_64(ffa_args_t *args);
 void val_ffa_mem_perm_get_32(ffa_args_t *args);
 void val_ffa_mem_perm_set_64(ffa_args_t *args);
 void val_ffa_mem_perm_set_32(ffa_args_t *args);
-
+void val_ffa_console_log_32(ffa_args_t *args);
+void val_ffa_console_log_64(ffa_args_t *args);
 #endif /* _VAL_FFA_H_ */

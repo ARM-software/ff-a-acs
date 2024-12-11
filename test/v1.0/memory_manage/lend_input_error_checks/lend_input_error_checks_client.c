@@ -197,7 +197,7 @@ free_memory:
     return status;
 }
 
-#if (PLATFORM_FFA_V_1_0 == 1)
+#if (PLATFORM_FFA_V == FFA_V_1_0)
 static uint32_t mem_lend_mmio_check(void *tx_buf, ffa_endpoint_id_t sender, uint32_t fid)
 {
     ffa_args_t payload;
@@ -281,7 +281,7 @@ static uint32_t ffa_mem_lend_helper(uint32_t test_run_data, uint32_t fid)
         goto free_memory;
     }
 
-#if (PLATFORM_FFA_V_1_0 == 1)
+#if (PLATFORM_FFA_V == FFA_V_1_0)
     status = mem_lend_mmio_check(mb.send, sender, fid);
     if (status)
         goto rxtx_unmap;

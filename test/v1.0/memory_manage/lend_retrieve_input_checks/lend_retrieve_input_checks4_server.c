@@ -37,6 +37,7 @@ uint32_t lend_retrieve_input_checks4_server(ffa_args_t args)
         status = VAL_ERROR_POINT(2);
         goto free_memory;
     }
+    val_memset(mb.send, 0, size);
 
     pages = (uint8_t *)val_memory_alloc(size);
     if (!pages)
@@ -63,6 +64,7 @@ uint32_t lend_retrieve_input_checks4_server(ffa_args_t args)
      * and type is set to Device memory type
      * relayer must return DENIED error code
      */
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = receiver;
     mem_region_init.receiver = sender;

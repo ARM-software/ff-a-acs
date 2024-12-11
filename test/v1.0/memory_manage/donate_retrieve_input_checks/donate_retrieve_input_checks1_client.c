@@ -43,6 +43,7 @@ static uint32_t donate_retrieve_input_checks1_helper(uint32_t test_run_data, uin
         status = VAL_ERROR_POINT(2);
         goto free_memory;
     }
+    val_memset(mb.send, 0, size);
 
     pages = (uint8_t *)val_memory_alloc(size);
     if (!pages)
@@ -61,6 +62,7 @@ static uint32_t donate_retrieve_input_checks1_helper(uint32_t test_run_data, uin
     /* Check-1
      * Zero memory flag set to 1: Relayer must zero the memory region contents
      * Zero memory flag before retrieval set to 0 */
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = sender;
     mem_region_init.receiver = recipient;
@@ -111,6 +113,7 @@ static uint32_t donate_retrieve_input_checks1_helper(uint32_t test_run_data, uin
      * Zero memory flag before retrieval set to 1 */
   /* Regain the ownership back from the server */
     handle = payload.arg3;
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = recipient;
     mem_region_init.receiver = sender;

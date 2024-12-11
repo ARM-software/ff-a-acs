@@ -46,6 +46,7 @@ static uint32_t donate_input_error_checks1_helper(uint32_t test_run_data, uint32
         status = VAL_ERROR_POINT(2);
         goto free_memory;
     }
+    val_memset(mb.send, 0, size);
 
     /* Allocate 8KB page */
     pages = (uint8_t *)val_memory_alloc(size * 2);
@@ -61,6 +62,7 @@ static uint32_t donate_input_error_checks1_helper(uint32_t test_run_data, uint32
     constituents[0].address = val_mem_virt_to_phys((void *)pages);
     constituents[0].page_count = 2;
 
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = sender;
     mem_region_init.receiver = recipient;
@@ -139,6 +141,7 @@ static uint32_t donate_input_error_checks1_helper(uint32_t test_run_data, uint32
 
     /* Regain the ownership back from the server */
     handle = payload.arg3;
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = recipient;
     mem_region_init.receiver = sender;

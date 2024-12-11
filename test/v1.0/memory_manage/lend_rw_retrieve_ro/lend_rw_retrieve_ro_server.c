@@ -41,6 +41,7 @@ uint32_t lend_rw_retrieve_ro_server(ffa_args_t args)
         status = VAL_ERROR_POINT(2);
         goto free_memory;
     }
+    val_memset(mb.send, 0, size);
 
     pages = (uint8_t *)val_memory_alloc(size);
     if (!pages)
@@ -63,13 +64,14 @@ uint32_t lend_rw_retrieve_ro_server(ffa_args_t args)
 
     handle = payload.arg3;
 
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = receiver;
     mem_region_init.receiver = sender;
     mem_region_init.tag = 0;
     mem_region_init.flags = 0;
     mem_region_init.data_access = FFA_DATA_ACCESS_RO;
-#if (PLATFORM_FFA_V_1_0 == 1)
+#if (PLATFORM_FFA_V == FFA_V_1_0)
     mem_region_init.instruction_access = FFA_INSTRUCTION_ACCESS_NOT_SPECIFIED;
 #else
     mem_region_init.instruction_access = FFA_INSTRUCTION_ACCESS_NX;

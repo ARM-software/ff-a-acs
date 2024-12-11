@@ -87,9 +87,9 @@ uint32_t ffa_msg_send2_server(ffa_args_t args)
 
 #if (PLATFORM_SP_EL == 1)
     if (npi_flag == 1) {
-        LOG(DBG, "NPI inerrupt handled");
+        LOG(DBG, "NPI interrupt handled");
     } else {
-        LOG(ERROR, "NPI inerrupt not received");
+        LOG(ERROR, "NPI interrupt not received");
         status = VAL_ERROR_POINT(6);
         goto rxtx_unmap;
     }

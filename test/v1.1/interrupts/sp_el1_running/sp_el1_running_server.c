@@ -5,13 +5,13 @@
  *
  */
 #include "test_database.h"
-#define S_WD_TIMEOUT 100U
-#define WD_TIME_OUT  50U
+#define AP_REF_CLK_TIMEOUT 10000U
+#define AP_REF_CLK_WAIT    50U
 static volatile bool interrupt_triggered;
 static int wd_irq_handler(void)
 {
     interrupt_triggered = true;
-    LOG(DBG, "T-WD IRQ Handler Processed");
+    LOG(DBG, "AP REF CLK Handler Processed");
     return 0;
 }
 uint32_t sp_el1_running_server(ffa_args_t args)
@@ -37,11 +37,11 @@ uint32_t sp_el1_running_server(ffa_args_t args)
         status = VAL_ERROR_POINT(2);
         goto exit;
     }
-    val_sys_phy_timer_en(S_WD_TIMEOUT);
+    val_sys_phy_timer_en(AP_REF_CLK_TIMEOUT);
     LOG(DBG, "System Timer IRQ Enabled");
 
     /* Wait for WD interrupt */
-    val_sp_sleep(WD_TIME_OUT);
+    val_sp_sleep(AP_REF_CLK_WAIT);
 
     val_sys_phy_timer_dis(true);
     LOG(DBG, "SP Sleep Complete, IRQ Status %x", interrupt_triggered);

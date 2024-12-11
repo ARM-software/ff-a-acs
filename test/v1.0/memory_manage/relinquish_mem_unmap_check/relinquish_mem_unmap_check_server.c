@@ -76,6 +76,7 @@ static uint32_t relinquish_mem_unmap_check_server(ffa_args_t args)
         status = VAL_ERROR_POINT(2);
         goto free_memory;
     }
+    val_memset(mb.send, 0, size);
 
     pages = (uint8_t *)val_memory_alloc(size);
     if (!pages)
@@ -98,6 +99,7 @@ static uint32_t relinquish_mem_unmap_check_server(ffa_args_t args)
 
     handle = payload.arg3;
 
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = receiver;
     mem_region_init.receiver = sender;

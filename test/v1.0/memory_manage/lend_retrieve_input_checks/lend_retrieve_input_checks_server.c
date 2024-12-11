@@ -48,7 +48,7 @@ static uint32_t retrieve_zero_flag_check_for_ro_mem(ffa_memory_handle_t handle, 
     mem_region_init.flags = flags;
     mem_region_init.data_access = FFA_DATA_ACCESS_RO;
     mem_region_init.type = FFA_MEMORY_NORMAL_MEM;
-#if (PLATFORM_FFA_V_1_0 == 1)
+#if (PLATFORM_FFA_V == FFA_V_1_0)
     mem_region_init.instruction_access = FFA_INSTRUCTION_ACCESS_NOT_SPECIFIED;
     mem_region_init.cacheability = FFA_MEMORY_CACHE_NON_CACHEABLE;
 #else
@@ -166,13 +166,14 @@ uint32_t lend_retrieve_input_checks_server(ffa_args_t args)
         goto rxtx_unmap;
 
     /* Now retrieve using correct inputs */
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = receiver;
     mem_region_init.receiver = sender;
     mem_region_init.tag = 0;
     mem_region_init.flags = 0;
     mem_region_init.data_access = FFA_DATA_ACCESS_RO;
-#if (PLATFORM_FFA_V_1_0 == 1)
+#if (PLATFORM_FFA_V == FFA_V_1_0)
     mem_region_init.instruction_access = FFA_INSTRUCTION_ACCESS_NOT_SPECIFIED;
 #else
     mem_region_init.instruction_access = FFA_INSTRUCTION_ACCESS_NX;

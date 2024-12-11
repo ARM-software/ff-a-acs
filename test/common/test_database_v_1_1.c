@@ -265,6 +265,7 @@ const test_db_t test_list[] = {
     CLIENT_SERVER_TEST_FN(TESTSUITE_INTERRUPTS, vm_to_sp_managed_exit_3),
     CLIENT_SERVER_TEST_FN(TESTSUITE_INTERRUPTS, sp_to_sp_blocked),
     CLIENT_SERVER_TEST_FN(TESTSUITE_INTERRUPTS, sp_preempted_el1),
+    CLIENT_SERVER_TEST_FN(TESTSUITE_INTERRUPTS, s_int_ec_blocked),
 #endif
 #if (PLATFORM_SP_EL == 0)
     CLIENT_SERVER_TEST_FN(TESTSUITE_INTERRUPTS, sp_el0_blocked),
@@ -272,13 +273,11 @@ const test_db_t test_list[] = {
     CLIENT_SERVER_TEST_FN(TESTSUITE_INTERRUPTS, sp_waiting_el0),
     CLIENT_SERVER_TEST_FN(TESTSUITE_INTERRUPTS, sp_preempted_el0),
 #endif
-
 #ifdef ACS_FFA_UNVERIFIED
     CLIENT_SERVER_SEC_CPU_CLIENT_TEST_FN(TESTSUITE_INTERRUPTS, vm_to_up_sp_preempt),
     CLIENT_SERVER_TEST_FN(TESTSUITE_INTERRUPTS, vm_to_sp_managed_exit_4),
     CLIENT_SERVER_TEST_FN(TESTSUITE_INTERRUPTS, other_secure_int2),
     CLIENT_SERVER_TEST_FN(TESTSUITE_INTERRUPTS, other_secure_int7),
-    CLIENT_SERVER_TEST_FN(TESTSUITE_INTERRUPTS, s_int_ec_blocked),
 #endif
 #endif
 #endif

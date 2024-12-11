@@ -87,11 +87,11 @@ static uint32_t is_matching_endpoint_found(const val_endpoint_info_t *expected_e
 
     for (i = 0; i < info_get_count; i++)
     {
-        LOG(DBG, "id %x exec_context %x properties %x", info_get[i].id, info_get[i].exec_context,
-            info_get[i].properties);
 
         if (expected_ep[0].id != info_get[i].id)
             continue;
+        LOG(DBG, "id %x exec_context %x properties %x exp properties %x", info_get[i].id,
+        info_get[i].exec_context, info_get[i].properties, expected_ep[0].ep_properties);
 
         if (expected_ep[0].ec_count != info_get[i].exec_context)
         {
@@ -287,7 +287,7 @@ uint32_t ffa_partition_info_get_client(uint32_t test_run_data)
             goto unmap_rxtx;
         }
 
-        #if (PLATFORM_FFA_V_1_0 != 1)
+        #if (PLATFORM_FFA_V >= FFA_V_1_1)
         if (ffa_partition_info_helper(rx_buff, null_uuid, &ep_info[SP1],
                                        count, FFA_PARTITION_INFO_FLAG_RETCOUNT))
         {
@@ -311,7 +311,7 @@ uint32_t ffa_partition_info_get_client(uint32_t test_run_data)
             goto unmap_rxtx;
         }
 
-        #if (PLATFORM_FFA_V_1_0 != 1)
+        #if (PLATFORM_FFA_V >= FFA_V_1_1)
         if (ffa_partition_info_helper(rx_buff, null_uuid, &ep_info[EP_ID1],
                                        count, FFA_PARTITION_INFO_FLAG_RETCOUNT))
         {

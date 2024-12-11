@@ -12,7 +12,7 @@
 
     /* Properties */
     description = "Base-1";
-    ffa-version = <0x00010001>; /* 31:16 - Major, 15:0 - Minor */
+    ffa-version = <0x00010002>; /* 31:16 - Major, 15:0 - Minor */
     uuid = <0x1e67b5b4 0xe14f904a 0x13fb1fb8 0xcbdae1da>;
     id = <1>;
     auxiliary-id = <0xae>;
@@ -25,7 +25,7 @@
     entrypoint-offset = <0x00004000>;
     xlat-granule = <0>; /* 4KiB */
     boot-order = <0>;
-    messaging-method = <7>; /* Direct and Indirect messaging only */
+    messaging-method = <0x607>; /* Indirect and Direct messaging/Direct messaging-2 only */
     ns-interrupts-action = <2>; /* Non secure interrupts are signaled. */
     notification-support; /* Support receipt of notifications. */
 

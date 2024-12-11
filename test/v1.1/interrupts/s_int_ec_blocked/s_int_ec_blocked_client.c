@@ -50,6 +50,7 @@ uint32_t s_int_ec_blocked_client(uint32_t test_run_data)
         status = VAL_ERROR_POINT(2);
         goto free_memory;
     }
+    val_memset(mb.send, 0, size);
 
     pages = (uint32_t *)val_memory_alloc(size);
     if (!pages)
@@ -66,6 +67,7 @@ uint32_t s_int_ec_blocked_client(uint32_t test_run_data)
     constituents[0].address = val_mem_virt_to_phys((void *)pages);
     constituents[0].page_count = 1;
 
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = sender;
     mem_region_init.receiver = recipient;
@@ -114,17 +116,18 @@ uint32_t s_int_ec_blocked_client(uint32_t test_run_data)
     /* Wait for WD interrupt */
     sp_sleep(WD_TIME_OUT);
 
-    if (*(volatile uint32_t *)pages != IRQ_TRIGGERED)
+    if (*(volatile uint32_t *)pages == IRQ_TRIGGERED)
     {
-        LOG(ERROR, "WD interrupt not triggered");
+        LOG(ERROR, "WD interrupt should not be triggered");
         status =  VAL_ERROR_POINT(6);
         goto rxtx_unmap;
     }
     LOG(DBG, "SP Sleep Complete, IRQ Status pages %x", *(volatile uint32_t *)pages);
 
+    /* Schedule the SP using FFA_RUN */
     val_memset(&payload, 0, sizeof(ffa_args_t));
-    payload.arg1 =  ((uint32_t)sender << 16) | recipient;
-    val_ffa_msg_send_direct_req_64(&payload);
+    payload.arg1 = (uint32_t)val_get_endpoint_id(SP2) << 16;
+    val_ffa_run(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
         LOG(ERROR, "Direct request failed");

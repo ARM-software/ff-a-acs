@@ -21,7 +21,7 @@
     entrypoint-offset = <0x4000>;
     xlat-granule = <0>; /* 4KiB */
     boot-order = <1>;
-    messaging-method = <7>; /* Direct and Indirect messaging only */
+    messaging-method = <0x7>; /* Indirect and Direct messaging */
     notification-support; /* Support receipt of notifications. */
     run-time-model = <0>;
 

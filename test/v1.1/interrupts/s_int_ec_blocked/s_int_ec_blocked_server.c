@@ -8,14 +8,13 @@
 #include "test_database.h"
 
 #define IRQ_TRIGGERED 0xABCDABCD
-#define S_WD_TIMEOUT 50U
+#define REFCLK_TIMEOUT 50000U
 
 static uint32_t *ptr;
-static int wd_irq_handler(void)
+static int refclk_irq_handler(void)
 {
     *(volatile uint32_t *)ptr = (uint32_t)IRQ_TRIGGERED;
-    val_twdog_disable();
-    LOG(DBG, "T-WD IRQ Handler Processed");
+    LOG(DBG, "REF-CLK IRQ Handler Processed");
     return 0;
 }
 
@@ -50,6 +49,7 @@ uint32_t s_int_ec_blocked_server(ffa_args_t args)
         status = VAL_ERROR_POINT(2);
         goto free_memory;
     }
+    val_memset(mb.send, 0, size);
 
     /* Wait for the message. */
     val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -64,6 +64,7 @@ uint32_t s_int_ec_blocked_server(ffa_args_t args)
 
     handle = payload.arg3;
 
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = receiver;
     mem_region_init.receiver = sender;
@@ -117,37 +118,30 @@ uint32_t s_int_ec_blocked_server(ffa_args_t args)
         goto rx_release;
     }
 
-   if (val_irq_register_handler(PLATFORM_TWDOG_INTID, wd_irq_handler))
+    if (val_irq_register_handler(PALTFORM_AP_REFCLK_CNTPSIRQ1, refclk_irq_handler))
     {
-        LOG(ERROR, "WD interrupt register failed");
-        status = VAL_ERROR_POINT(6);
+        LOG(ERROR, "AP_REFCLK interrupt register failed");
+        status = VAL_ERROR_POINT(4);
         goto rxtx_unmap;
     }
 
-    val_twdog_enable(S_WD_TIMEOUT);
-    LOG(DBG, "Page Table Mapped and S-WD Enabled");
+    /* Enable System Timer Interrupt. */
+    val_sys_phy_timer_en(REFCLK_TIMEOUT);
+    LOG(DBG, "System timer enabled");
 
     /* Call FFA_YIELD to enter Blocked State */
     val_memset(&payload, 0, sizeof(ffa_args_t));
     val_ffa_yield(&payload);
-    if (payload.fid != FFA_INTERRUPT_32)
+    if (payload.fid != FFA_SUCCESS_32)
     {
-        LOG(ERROR, "FFA_INTERRUPT_32 not received fid %x", payload.fid);
+        LOG(ERROR, "FFA_SUCCESS_32 not received fid %x", payload.fid);
         status = VAL_ERROR_POINT(7);
         goto free_interrupt;
     }
 
-    val_twdog_intr_disable();
-    LOG(DBG, "S-WD Disabled, calling FFA_MSG_WAIT");
-
-    val_memset(&payload, 0, sizeof(ffa_args_t));
-    val_ffa_msg_wait(&payload);
-    if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_64)
-    {
-        LOG(ERROR, "  DIRECT_REQ_64 not received fid %x", payload.fid);
-        status = VAL_ERROR_POINT(8);
-        goto free_interrupt;
-    }
+    /* Disable System Timer Interrupt. */
+    val_sys_phy_timer_dis(true);
+    LOG(DBG, "System timer disabled");
 
     /* relinquish the memory and notify the sender. */
     ffa_mem_relinquish_init((struct ffa_mem_relinquish *)mb.send, handle, 0, sender, 0x1);
@@ -161,7 +155,7 @@ uint32_t s_int_ec_blocked_server(ffa_args_t args)
     LOG(DBG, "FFA Mem Relinquish Complete");
 
 free_interrupt:
-    if (val_irq_unregister_handler(PLATFORM_TWDOG_INTID))
+    if (val_irq_unregister_handler(PALTFORM_AP_REFCLK_CNTPSIRQ1))
     {
         LOG(ERROR, "IRQ handler unregister failed");
         status = status ? status : VAL_ERROR_POINT(10);

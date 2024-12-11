@@ -37,12 +37,13 @@ list(APPEND PLATFORM_SP_EL_LIST -1 0 1)
 list(APPEND PLATFORM_NS_HYPERVISOR_PRESENT_LIST 0 1)
 list(APPEND PLATFORM_FFA_V_1_0_LIST 0 1)
 list(APPEND PLATFORM_FFA_V_1_1_LIST 0 1)
+list(APPEND PLATFORM_FFA_V_1_2_LIST 0 1)
 list(APPEND PLATFORM_FFA_V_ALL_LIST 0 1)
 list(APPEND ENABLE_PIE_LIST ON OFF)
 list(APPEND ENABLE_BTI_LIST ON OFF)
 list(APPEND CMAKE_BUILD_TYPE_LIST Release Debug)
 list(APPEND ARM_ARCH_MAJOR_LIST 8 9)
-
+list(APPEND PLATFORM_FFA_V_MULTI_LIST 0 1)
 ###
 
 ### Command line argument check ###
@@ -158,6 +159,17 @@ else()
     message(STATUS "[ACS] : PLATFORM_FFA_V_1_1 is set to ${PLATFORM_FFA_V_1_1}")
 endif()
 
+# Check for PLATFORM_FFA_V_1_2
+if(NOT DEFINED PLATFORM_FFA_V_1_2)
+    set(PLATFORM_FFA_V_1_2 ${PLATFORM_FFA_V_1_2_DFLT} CACHE INTERNAL "Default PLATFORM_FFA_V_1_2 value" FORCE)
+        message(STATUS "[ACS] : Defaulting PLATFORM_FFA_V_1_2 to ${PLATFORM_FFA_V_1_2}")
+else()
+    if(NOT ${PLATFORM_FFA_V_1_2} IN_LIST PLATFORM_FFA_V_1_2_LIST)
+        message(FATAL_ERROR "[ACS] : Error: Unspported value for -DPLATFORM_FFA_V_1_2=, supported values are : ${PLATFORM_FFA_V_1_2_LIST}")
+    endif()
+    message(STATUS "[ACS] : PLATFORM_FFA_V_1_2 is set to ${PLATFORM_FFA_V_1_2}")
+endif()
+
 # Check for PLATFORM_FFA_V_ALL
 if(NOT DEFINED PLATFORM_FFA_V_ALL)
     set(PLATFORM_FFA_V_ALL ${PLATFORM_FFA_V_ALL_DFLT} CACHE INTERNAL "Default PLATFORM_FFA_V_ALL value" FORCE)
@@ -167,6 +179,17 @@ else()
         message(FATAL_ERROR "[ACS] : Error: Unspported value for -DPLATFORM_FFA_V_ALL=, supported values are : ${PLATFORM_FFA_V_ALL_LIST}")
     endif()
     message(STATUS "[ACS] : PLATFORM_FFA_V_ALL is set to ${PLATFORM_FFA_V_ALL}")
+endif()
+
+# Check for PLATFORM_FFA_V_MULTI
+if(NOT DEFINED PLATFORM_FFA_V_MULTI)
+    set(PLATFORM_FFA_V_MULTI ${PLATFORM_FFA_V_MULTI_DFLT} CACHE INTERNAL "Default PLATFORM_FFA_V_MULTI value" FORCE)
+        message(STATUS "[ACS] : Defaulting PLATFORM_FFA_V_MULTI to ${PLATFORM_FFA_V_MULTI}")
+else()
+    if(NOT ${PLATFORM_FFA_V_MULTI} IN_LIST PLATFORM_FFA_V_MULTI)
+        message(FATAL_ERROR "[ACS] : Error: Unspported value for -DPLATFORM_FFA_V_MULTI=, supported values are : ${PLATFORM_FFA_V_MULTI_LIST}")
+    endif()
+    message(STATUS "[ACS] : PLATFORM_FFA_V_MULTI is set to ${PLATFORM_FFA_V_MULTI}")
 endif()
 
 # Check for ARM_ARCH_MAJOR
@@ -247,6 +270,14 @@ include(${ROOT_DIR}/tools/cmake/toolchain/common.cmake)
 ###
 
 ### Add compilation macros ###
+set(FFA_V_1_0 10 CACHE INTERNAL "Default FFA_V_1_0 value" FORCE)
+set(FFA_V_1_1 11 CACHE INTERNAL "Default FFA_V_1_1 value" FORCE)
+set(FFA_V_1_2 12 CACHE INTERNAL "Default FFA_V_1_2 value" FORCE)
+set(PLATFORM_FFA_V 00 CACHE INTERNAL "Default PLATFORM_FFA_V value" FORCE)
+
+add_definitions(-DFFA_V_1_0=${FFA_V_1_0})
+add_definitions(-DFFA_V_1_1=${FFA_V_1_1})
+add_definitions(-DFFA_V_1_2=${FFA_V_1_2})
 
 # Global macro to identify the ACS test suite cmake build
 add_definitions(-DCMAKE_BUILD)
@@ -256,8 +287,32 @@ add_definitions(-DPLATFORM_SP_EL=${PLATFORM_SP_EL})
 add_definitions(-DPLATFORM_NS_HYPERVISOR_PRESENT=${PLATFORM_NS_HYPERVISOR_PRESENT})
 add_definitions(-DPLATFORM_FFA_V_1_0=${PLATFORM_FFA_V_1_0})
 add_definitions(-DPLATFORM_FFA_V_1_1=${PLATFORM_FFA_V_1_1})
-add_definitions(-DPLATFORM_FFA_V_ALL=${PLATFORM_FFA_V_ALL})
+add_definitions(-DPLATFORM_FFA_V_1_2=${PLATFORM_FFA_V_1_2})
 add_definitions(-DSUITE=${SUITE})
+
+if(${PLATFORM_FFA_V_MULTI} EQUAL 1)
+    # Set EP Specific Version Flags
+    set(SP1_FFA_V ${FFA_V_1_2})
+    set(SP2_FFA_V ${FFA_V_1_1})
+    set(SP3_FFA_V ${FFA_V_1_2})
+    set(SP4_FFA_V ${FFA_V_1_1})
+    set(VM1_FFA_V ${FFA_V_1_2})
+    set(VM2_FFA_V ${FFA_V_1_1})
+    set(VM3_FFA_V ${FFA_V_1_2})
+    add_definitions(-DPLATFORM_FFA_V_MULTI=${PLATFORM_FFA_V_MULTI})
+else()
+    add_definitions(-DPLATFORM_FFA_V_ALL=${PLATFORM_FFA_V_ALL})
+    if(${PLATFORM_FFA_V_1_0} EQUAL 1)
+        add_definitions(-DPLATFORM_FFA_V=${FFA_V_1_0})
+        message(STATUS "[ACS] : PLATFORM_FFA_V is set to ${FFA_V_1_0}")
+    elseif(${PLATFORM_FFA_V_1_1} EQUAL 1)
+        add_definitions(-DPLATFORM_FFA_V=${FFA_V_1_1})
+        message(STATUS "[ACS] : PLATFORM_FFA_V is set to ${FFA_V_1_1}")
+    else()
+        add_definitions(-DPLATFORM_FFA_V=${FFA_V_1_2})
+        message(STATUS "[ACS] : PLATFORM_FFA_V is set to ${FFA_V_1_2}")
+    endif()
+endif()
 ####
 
 ### Cmake clean target ###

@@ -21,9 +21,9 @@ static const test_data check[] = {
     {
         .major = 0,
         .minor = 0,
-#if (PLATFORM_FFA_V_1_0 == 1)
+#if (PLATFORM_FFA_V == FFA_V_1_0)
         .expected_status = ((FFA_VERSION_MAJOR << 16) | FFA_VERSION_MINOR),
-#elif (PLATFORM_FFA_V_1_1 == 1 || PLATFORM_FFA_V_ALL == 1)
+#elif (PLATFORM_FFA_V >= FFA_V_1_1)
         .expected_status = FFA_ERROR_NOT_SUPPORTED,
 #endif
     },
@@ -37,9 +37,9 @@ static const test_data check[] = {
     {
         .major = FFA_VERSION_MAJOR,
         .minor = FFA_VERSION_MINOR + 2,
-#if (PLATFORM_FFA_V_1_0 == 1)
+#if (PLATFORM_FFA_V == FFA_V_1_0)
         .expected_status = ((FFA_VERSION_MAJOR << 16) | FFA_VERSION_MINOR),
-#elif (PLATFORM_FFA_V_1_1 == 1 || PLATFORM_FFA_V_ALL == 1)
+#elif (PLATFORM_FFA_V >= FFA_V_1_1)
         .expected_status = FFA_ERROR_NOT_SUPPORTED,
 #endif
     },
@@ -47,9 +47,9 @@ static const test_data check[] = {
     {
         .major = FFA_VERSION_MAJOR + 1,
         .minor = FFA_VERSION_MINOR,
-#if (PLATFORM_FFA_V_1_0 == 1)
+#if (PLATFORM_FFA_V == FFA_V_1_0)
         .expected_status = ((FFA_VERSION_MAJOR << 16) | FFA_VERSION_MINOR),
-#elif (PLATFORM_FFA_V_1_1 == 1 || PLATFORM_FFA_V_ALL == 1)
+#elif (PLATFORM_FFA_V >= FFA_V_1_1)
         .expected_status = FFA_ERROR_NOT_SUPPORTED,
 #endif
     },

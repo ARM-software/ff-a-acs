@@ -76,6 +76,11 @@ DECLARE_TEST_FN(ffa_rxtx_map_and_unmap);
 DECLARE_TEST_FN(rxtx_exclusive_access);
 DECLARE_TEST_FN(mp_execution_contexts);
 DECLARE_TEST_FN(up_migrate_capable);
+DECLARE_TEST_FN(ffa_version_negotiation);
+DECLARE_TEST_FN(ffa_msg_wait_rx_buff_rel);
+DECLARE_TEST_FN(ffa_console_log);
+DECLARE_TEST_FN(ffa_partition_info_get_regs);
+DECLARE_TEST_FN(ffa_partition_info_get_lsp);
 #endif
 
 #if (SUITE == all || SUITE == direct_messaging)
@@ -85,6 +90,8 @@ DECLARE_TEST_FN(ffa_direct_message_error);
 DECLARE_TEST_FN(ffa_direct_message_error1);
 DECLARE_TEST_FN(ffa_direct_message_error2);
 DECLARE_TEST_FN(direct_msg_sp_to_vm);
+DECLARE_TEST_FN(ffa_run_direct_req);
+DECLARE_TEST_FN(ffa_direct_message2);
 #endif
 
 #if (SUITE == all || SUITE == indirect_messaging)
@@ -93,6 +100,7 @@ DECLARE_TEST_FN(ffa_msg_send_error);
 DECLARE_TEST_FN(ffa_run);
 DECLARE_TEST_FN(ffa_msg_send2);
 DECLARE_TEST_FN(ffa_msg_send2_sp);
+DECLARE_TEST_FN(ffa_msg_send2_uuid_check);
 #endif
 
 #if (SUITE == all || SUITE == memory_manage)
@@ -231,6 +239,11 @@ DECLARE_TEST_FN(static_mapping_dma);
 DECLARE_TEST_FN(mem_share_mmio);
 DECLARE_TEST_FN(mem_lend_mmio);
 DECLARE_TEST_FN(mem_donate_mmio);
+DECLARE_TEST_FN(mem_share_impdef);
+DECLARE_TEST_FN(mem_lend_impdef);
+DECLARE_TEST_FN(mem_donate_impdef);
+DECLARE_TEST_FN(share_multi_borrower_flag_check);
+DECLARE_TEST_FN(lend_multi_borrower_flag_check);
 #endif
 
 #if (SUITE == all || SUITE == notifications)
@@ -273,5 +286,7 @@ DECLARE_TEST_FN(vm_to_up_sp_preempt);
 DECLARE_TEST_FN(other_secure_int2);
 DECLARE_TEST_FN(other_secure_int6);
 DECLARE_TEST_FN(other_secure_int7);
+DECLARE_TEST_FN(sp_el1_int_mask);
+DECLARE_TEST_FN(sp_yield_spmc_mode);
 #endif
 #endif /* _TEST_DATABASE_H_ */

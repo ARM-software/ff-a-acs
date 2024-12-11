@@ -26,7 +26,7 @@ uint32_t ffa_version_client(uint32_t test_run_data)
         if (payload.fid != check[i].expected_status)
         {
             /* Filter Index-1: Valid non-zero input version */
-            #if (PLATFORM_FFA_V_1_1 == 1 || PLATFORM_FFA_V_ALL == 1)
+            #if (PLATFORM_FFA_V >= FFA_V_1_1)
             if (!(i == 1 && ((check[i].major == payload.fid >> 16)
                          &&  (check[i].minor <= (payload.fid & 0xFFFF)))))
             #endif

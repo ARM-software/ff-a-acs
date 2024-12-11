@@ -20,13 +20,14 @@ static uint32_t mem_donate_back_to_sender(ffa_memory_handle_t handle, uint32_t f
     const uint32_t constituents_count = sizeof(constituents) /
                 sizeof(struct ffa_memory_region_constituent);
 
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = sender;
     mem_region_init.receiver = receiver;
     mem_region_init.tag = tag;
     mem_region_init.flags = 0;
     mem_region_init.data_access = FFA_DATA_ACCESS_RW;
-#if (PLATFORM_FFA_V_1_0 == 1)
+#if (PLATFORM_FFA_V == FFA_V_1_0)
     mem_region_init.instruction_access = FFA_INSTRUCTION_ACCESS_NOT_SPECIFIED;
 #else
     mem_region_init.instruction_access = FFA_INSTRUCTION_ACCESS_NX;
@@ -66,6 +67,7 @@ static uint32_t mem_donate_back_to_sender(ffa_memory_handle_t handle, uint32_t f
     constituents[0].page_count = 1;
 
     /* Give up ownership back to the sender */
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = receiver;
     mem_region_init.receiver = sender;

@@ -40,6 +40,7 @@ static uint32_t ffa_mem_donate_helper(uint32_t test_run_data, uint32_t fid)
         status = VAL_ERROR_POINT(2);
         goto free_memory;
     }
+    val_memset(mb.send, 0, size);
 
     val_select_server_fn_direct(test_run_data, fid, 0, 0, 0);
 
@@ -50,6 +51,7 @@ static uint32_t ffa_mem_donate_helper(uint32_t test_run_data, uint32_t fid)
 
     constituents[0].page_count = 1;
 
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = sender;
     mem_region_init.receiver = recipient;
@@ -96,6 +98,7 @@ static uint32_t ffa_mem_donate_helper(uint32_t test_run_data, uint32_t fid)
 
     /* Regain the ownership back from the server */
     handle = payload.arg3;
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = recipient;
     mem_region_init.receiver = sender;

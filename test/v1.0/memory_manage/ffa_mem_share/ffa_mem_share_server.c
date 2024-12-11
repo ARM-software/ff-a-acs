@@ -30,6 +30,7 @@ static uint32_t borrower_to_lend_memory(ffa_endpoint_id_t recipient, mb_buf_t mb
     constituents[0].address = val_mem_virt_to_phys((void *)pages);
     constituents[0].page_count = 1;
 
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = sender;
     mem_region_init.receiver = recipient;
@@ -103,6 +104,8 @@ static uint32_t borrower_to_donate_memory(ffa_endpoint_id_t recipient, mb_buf_t 
     constituents[0].address = val_mem_virt_to_phys((void *)pages);
     constituents[0].page_count = 1;
 
+    val_memset(&mem_region_init, 0, sizeof(mem_region_init));
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = sender;
     mem_region_init.receiver = recipient;
@@ -154,7 +157,7 @@ uint32_t ffa_mem_share_server(ffa_args_t args)
     ffa_memory_access_permissions_t permissions;
     ffa_memory_region_flags_t flags;
     struct ffa_memory_region *memory_region;
-#if (PLATFORM_FFA_V_1_1 == 1 || PLATFORM_FFA_V_ALL == 1)
+#if (PLATFORM_FFA_V >= FFA_V_1_1)
     uint32_t mem_attributes = 0;
 #endif
     struct ffa_composite_memory_region *composite;
@@ -200,6 +203,7 @@ uint32_t ffa_mem_share_server(ffa_args_t args)
 
     handle = payload.arg3;
 
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = receiver;
     mem_region_init.receiver = sender;
@@ -241,7 +245,7 @@ uint32_t ffa_mem_share_server(ffa_args_t args)
     memory_region = (struct ffa_memory_region *)mb.recv;
     composite = ffa_memory_region_get_composite(memory_region, 0);
 
-#if (PLATFORM_FFA_V_1_1 == 1 || PLATFORM_FFA_V_ALL == 1)
+#if (PLATFORM_FFA_V >= FFA_V_1_1)
     /* Memory security state check: NS_BIT[6] */
     mem_attributes = memory_region->attributes;
     if (!VAL_IS_ENDPOINT_SECURE(val_get_endpoint_logical_id(receiver)))

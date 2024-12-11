@@ -19,7 +19,7 @@ static uint32_t ffa_feature_query(uint32_t fid, char *str)
 
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 = fid;
-#if (PLATFORM_FFA_V_1_1 == 1 || PLATFORM_FFA_V_ALL == 1)
+#if (PLATFORM_FFA_V >= FFA_V_1_1)
     if (fid == FFA_MEM_RETRIEVE_REQ_32 || fid == FFA_MEM_RETRIEVE_REQ_64)
     {
         payload.arg2 = 0x2;
@@ -30,15 +30,15 @@ static uint32_t ffa_feature_query(uint32_t fid, char *str)
 
     if (payload.fid == FFA_ERROR_32 && (payload.arg2 == FFA_ERROR_NOT_SUPPORTED))
     {
-        LOG(DBG, " %s -> feature not supported", str);
+        LOG(DBG, "%s -> feature not supported", str);
     }
     else if (payload.fid == FFA_SUCCESS_32 || payload.fid == FFA_SUCCESS_64)
     {
-        LOG(DBG, " %s -> feature supported", str);
+        LOG(DBG, "%s -> feature supported", str);
     }
     else
     {
-        LOG(ERROR, " %s -Invalid return code received, fid=%x, err=%x",
+        LOG(ERROR, "%s -Invalid return code received, fid=%x, err=%x",
             str, payload.fid, payload.arg2);
         return VAL_ERROR_POINT(1);
     }
@@ -118,6 +118,7 @@ static uint32_t ffa_feature_query(uint32_t fid, char *str)
                 break;
             }
 
+#if PLATFORM_FFA_V < FFA_V_1_2
             /* Output w2[31:2] and w3 are reserved(MBZ) */
             data = VAL_EXTRACT_BITS(payload.arg2, 2, 31);
             if (data)
@@ -126,6 +127,20 @@ static uint32_t ffa_feature_query(uint32_t fid, char *str)
                 status = VAL_ERROR_POINT(6);
                 break;
             }
+#else
+            /* Output w2[15:2] and w3 are reserved(MBZ) */
+            data = VAL_EXTRACT_BITS(payload.arg2, 2, 15);
+            if (data)
+            {
+                LOG(ERROR, "w2[15:2] must be zero");
+                status = VAL_ERROR_POINT(6);
+                break;
+            }
+            /* Check RXTX_MAP Maximum buffer size w2[31:16] no of pages,
+               zero size means no limit specified */
+            data = VAL_EXTRACT_BITS(payload.arg2, 16, 31);
+            LOG(DBG, "RXTX_MAP Maximum buffer size w2[31:16] %x", data);
+#endif
             /* Check output w3-w7 reserved(MBZ) */
             output_reserve_count = 5;
             if (val_reserve_param_check(payload, output_reserve_count))
@@ -139,10 +154,13 @@ static uint32_t ffa_feature_query(uint32_t fid, char *str)
         case FFA_MSG_POLL_32:
         case FFA_YIELD_32:
         case FFA_MSG_SEND_32:
+        case FFA_MSG_SEND2_32:
         case FFA_MSG_SEND_DIRECT_REQ_32:
         case FFA_MSG_SEND_DIRECT_RESP_32:
         case FFA_MSG_SEND_DIRECT_REQ_64:
         case FFA_MSG_SEND_DIRECT_RESP_64:
+        case FFA_MSG_SEND_DIRECT_REQ2_64:
+        case FFA_MSG_SEND_DIRECT_RESP2_64:
         case FFA_MEM_RETRIEVE_RESP_32:
         case FFA_MEM_RELINQUISH_32:
         case FFA_MEM_RECLAIM_32:
@@ -214,7 +232,7 @@ static uint32_t ffa_feature_query(uint32_t fid, char *str)
             LOG(DBG, "Outstanding retrievals count %d", data);
 
             /* Output w2[31:1] and w3[31:8] are reserved(MBZ) */
-#if (PLATFORM_FFA_V_1_0 == 1)
+#if (PLATFORM_FFA_V == FFA_V_1_0)
             data = VAL_EXTRACT_BITS(payload.arg2, 1, 31);
 #else
             data = VAL_EXTRACT_BITS(payload.arg2, 3, 31);
@@ -350,16 +368,15 @@ uint32_t ffa_features_client(uint32_t test_run_data)
 
     val_reprogram_watchdog();
 
+#if PLATFORM_FFA_V == FFA_V_1_0
     status_1 = ffa_feature_query(FFA_MSG_SEND_32, "FFA_MSG_SEND_32");
     status_2 = ffa_feature_query(FFA_MSG_POLL_32, "FFA_MSG_POLL_32");
-    status_3 = ffa_feature_query(FFA_YIELD_32, "FFA_YIELD_32");
-
     /* Cross check with manifest field value. Following must be
      * supported if indirect messaging is supported */
     if ((messaging_type & FFA_INDIRECT_MESSAGE_SUPPORT) &&
             (val_get_curr_endpoint_id() != HYPERVISOR_ID))
     {
-        if (status_1 || status_2 || status_3)
+        if (status_1 || status_2)
         {
             LOG(ERROR, "Invalid return code for indirect messaging ABIs");
             return VAL_ERROR_POINT(17);
@@ -367,12 +384,36 @@ uint32_t ffa_features_client(uint32_t test_run_data)
     }
     else
     {
-        if (!status_1 || !status_2 || !status_3)
+        if (!status_1 || !status_2)
         {
             LOG(ERROR, "Invalid return code for indirect messaging ABIs");
             return VAL_ERROR_POINT(18);
         }
     }
+#else
+    /* Check Only if Indirect Messaging is Supported by the End Point */
+    if ((messaging_type & FFA_INDIRECT_MESSAGE_SUPPORT))
+    {
+        status_1 = ffa_feature_query(FFA_MSG_SEND2_32, "FFA_MSG_SEND2_32");
+        if (status_1)
+        {
+            LOG(ERROR, "Invalid return code for indirect messaging ABIs");
+            return VAL_ERROR_POINT(17);
+
+        }
+    }
+
+    if (VAL_IS_ENDPOINT_SECURE(client_logical_id))
+    {
+        status_2 = ffa_feature_query(FFA_YIELD_32, "FFA_YIELD_32");
+        if (status_2)
+        {
+            LOG(ERROR, "Invalid return code for FFA_YIELD_32 ABI");
+            return VAL_ERROR_POINT(17);
+
+        }
+    }
+#endif
 
     val_reprogram_watchdog();
 
@@ -426,6 +467,47 @@ uint32_t ffa_features_client(uint32_t test_run_data)
         return VAL_ERROR_POINT(23);
     }
 
+
+    status_2 = ffa_feature_query(FFA_MSG_SEND_DIRECT_REQ2_64, "FFA_MSG_SEND_DIRECT_REQ2_64");
+    status_3 = ffa_feature_query(FFA_MSG_SEND_DIRECT_RESP2_64, "FFA_MSG_SEND_DIRECT_RESP2_64");
+    /* Cross check with manifest field value. Following must be
+     * supported if direct request is supported */
+    if (messaging_type & FFA_DIRECT_REQUEST2_SEND)
+    {
+        if (status_2)
+        {
+            LOG(ERROR, "Invalid return code for direct messaging 2 ABIs");
+            return VAL_ERROR_POINT(24);
+        }
+    }
+    else
+    {
+        if (!status_2)
+        {
+            LOG(ERROR, "Invalid return code for direct messaging 2 ABIs");
+            return VAL_ERROR_POINT(25);
+        }
+    }
+
+    /* Cross check with manifest field value. Following must be
+     * supported if direct respond is supported */
+    if (messaging_type & FFA_RECEIPT_DIRECT_REQUEST2_SUPPORT)
+    {
+        if (status_3)
+        {
+            LOG(ERROR, "Invalid return code for direct messaging 2 ABIs");
+            return VAL_ERROR_POINT(26);
+        }
+    }
+    else
+    {
+        if (!status_3)
+        {
+            LOG(ERROR, "Invalid return code for direct messaging 2 ABIs");
+            return VAL_ERROR_POINT(27);
+        }
+    }
+
     val_reprogram_watchdog();
 
     LOG(DBG, "VAL Watchdog Reprogram Complete");
@@ -436,7 +518,7 @@ uint32_t ffa_features_client(uint32_t test_run_data)
     val_ffa_features(&payload);
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_NOT_SUPPORTED))
     {
-        return VAL_ERROR_POINT(24);
+        return VAL_ERROR_POINT(28);
     }
 
     /* FFA_NORMAL_WORLD_RESUME_32 must be not supported at instances
@@ -447,13 +529,13 @@ uint32_t ffa_features_client(uint32_t test_run_data)
     val_ffa_features(&payload);
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_NOT_SUPPORTED))
     {
-        return VAL_ERROR_POINT(25);
+        return VAL_ERROR_POINT(29);
     }
 
     /* Check output w4-w7 reserved(MBZ) */
     output_reserve_count = 4;
     if (val_reserve_param_check(payload, output_reserve_count))
-        return VAL_ERROR_POINT(26);
+        return VAL_ERROR_POINT(30);
 
     (void)test_run_data;
     return VAL_SUCCESS;

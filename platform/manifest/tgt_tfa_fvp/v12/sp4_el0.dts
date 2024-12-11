@@ -12,7 +12,7 @@
 
     /* Properties */
     description = "Base-1";
-    ffa-version = <0x00010001>; /* 31:16 - Major, 15:0 - Minor */
+    ffa-version = <0x00010002>; /* 31:16 - Major, 15:0 - Minor */
     uuid = <0x2658cda4 0xcf6713e1 0x49cd10f9 0x31ef6813>;
     auxiliary-id = <0xae>;
     execution-ctx-count = <1>;
@@ -22,7 +22,7 @@
     entrypoint-offset = <0x4000>;
     xlat-granule = <0>; /* 4KiB */
     boot-order = <3>;
-    messaging-method = <3>; /* Direct messaging only */
+    messaging-method = <0x603>; /* Direct messaging/Direct messaging-2 only */
     ns-interrupts-action = <0>; /* Non secure interrupts are queued. */
 
     /* Boot protocol */

@@ -132,6 +132,7 @@ static uint32_t sp4_func(ffa_args_t args)
 
     handle = payload.arg3;
 
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = receiver_1;
     mem_region_init.receiver = sender;

@@ -66,6 +66,7 @@ static uint32_t sp_el0_server_interrupt(ffa_args_t args)
         status = VAL_ERROR_POINT(2);
         goto free_memory;
     }
+    val_memset(mb.send, 0, size);
 
     pages = (uint32_t *)val_memory_alloc(size);
     if (!pages)
@@ -92,6 +93,7 @@ static uint32_t sp_el0_server_interrupt(ffa_args_t args)
     constituents[0].address = val_mem_virt_to_phys((void *)pages);
     constituents[0].page_count = 1;
 
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = sender;
     mem_region_init.receiver = receiver_1;
@@ -260,6 +262,7 @@ static uint32_t sp_el0_server_wait(ffa_args_t args)
         status = VAL_ERROR_POINT(2);
         goto free_memory;
     }
+    val_memset(mb.send, 0, size);
 
     /* Wait for the message. */
     val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -274,6 +277,7 @@ static uint32_t sp_el0_server_wait(ffa_args_t args)
 
     handle = payload.arg3;
 
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = receiver;
     mem_region_init.receiver = sender;

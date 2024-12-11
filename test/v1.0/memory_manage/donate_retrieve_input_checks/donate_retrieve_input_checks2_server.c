@@ -45,6 +45,7 @@ uint32_t donate_retrieve_input_checks2_server(ffa_args_t args)
         status = VAL_ERROR_POINT(2);
         goto free_memory;
     }
+    val_memset(mb.send, 0, size);
 
     pages = (uint8_t *)val_memory_alloc(size);
     if (!pages)
@@ -71,6 +72,7 @@ uint32_t donate_retrieve_input_checks2_server(ffa_args_t args)
      * This must fail as lender hasn't set
      * the zero memory flag for DONATE ABI
      */
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = receiver;
     mem_region_init.receiver = sender;
@@ -119,6 +121,7 @@ uint32_t donate_retrieve_input_checks2_server(ffa_args_t args)
      * This must pass as lender hasn't set
      * the zero memory flag for DONATE ABI
      */
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = receiver;
     mem_region_init.receiver = sender;
@@ -202,6 +205,7 @@ mem_donate:
     constituents[0].address = composite->constituents[0].address;
     constituents[0].page_count = 1;
 
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = sender;
     mem_region_init.receiver = receiver;

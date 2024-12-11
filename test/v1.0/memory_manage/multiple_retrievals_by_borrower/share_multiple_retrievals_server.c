@@ -43,6 +43,7 @@ uint32_t share_multiple_retrievals_server(ffa_args_t args)
         status = VAL_ERROR_POINT(2);
         goto free_memory;
     }
+    val_memset(mb.send, 0, size);
 
     pages = (uint8_t *)val_memory_alloc(size);
     if (!pages)
@@ -69,7 +70,7 @@ uint32_t share_multiple_retrievals_server(ffa_args_t args)
     else
         payload.arg1 = FFA_MEM_RETRIEVE_REQ_32;
 
-#if (PLATFORM_FFA_V_1_1 == 1 || PLATFORM_FFA_V_ALL == 1)
+#if (PLATFORM_FFA_V >= FFA_V_1_1)
     payload.arg2 = 0x2;
 #endif
 
@@ -85,7 +86,7 @@ uint32_t share_multiple_retrievals_server(ffa_args_t args)
     if (payload.fid == FFA_SUCCESS_32 || payload.fid == FFA_SUCCESS_64)
     {
        /* Check for Outstanding retrievals field [7:0] */
-#if (PLATFORM_FFA_V_1_1 == 1 || PLATFORM_FFA_V_ALL == 1)
+#if (PLATFORM_FFA_V >= FFA_V_1_1)
        outstanding_retrieve_count = VAL_EXTRACT_BITS(payload.arg3, 0, 7);
 #else
        outstanding_retrieve_count = VAL_EXTRACT_BITS(payload.arg1, 0, 7);
@@ -96,6 +97,7 @@ uint32_t share_multiple_retrievals_server(ffa_args_t args)
 
     handle = payload.arg3;
 
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = receiver;
     mem_region_init.receiver = sender;

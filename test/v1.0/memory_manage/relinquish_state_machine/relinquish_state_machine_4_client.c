@@ -26,7 +26,7 @@ static uint32_t ffa_mem_lend_helper(uint32_t test_run_data, uint32_t fid)
     struct ffa_memory_region_constituent constituents[1];
     const uint32_t constituents_count = sizeof(constituents) /
                 sizeof(struct ffa_memory_region_constituent);
-#if ((PLATFORM_FFA_V_ALL == 1) || (PLATFORM_FFA_V_1_1 == 1))
+#if (PLATFORM_FFA_V >= FFA_V_1_1)
     uint32_t borrower_id_list = 0;
 #endif
 
@@ -58,6 +58,7 @@ static uint32_t ffa_mem_lend_helper(uint32_t test_run_data, uint32_t fid)
         status = VAL_ERROR_POINT(2);
         goto free_memory;
     }
+    val_memset(mb.send, 0, size);
 
     pages = (uint8_t *)val_memory_alloc(size);
     if (!pages)
@@ -72,6 +73,7 @@ static uint32_t ffa_mem_lend_helper(uint32_t test_run_data, uint32_t fid)
     constituents[0].address = val_mem_virt_to_phys((void *)pages);
     constituents[0].page_count = 1;
 
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = sender;
     mem_region_init.receiver = recipient;
@@ -118,8 +120,7 @@ static uint32_t ffa_mem_lend_helper(uint32_t test_run_data, uint32_t fid)
     }
     LOG(DBG, "Mem Lend Complete");
 
-
-#if (PLATFORM_FFA_V_1_0 == 1)
+#if (PLATFORM_FFA_V == FFA_V_1_0)
     val_select_server_fn_direct(test_run_data, fid, 0, 0, 0);
     val_select_server_fn_direct(test_run_data_1, fid, 0, 0, 0);
 #else

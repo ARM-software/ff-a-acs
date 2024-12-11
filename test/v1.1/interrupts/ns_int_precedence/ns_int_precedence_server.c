@@ -46,6 +46,7 @@ static uint32_t sp3_entry_func(ffa_args_t args)
         status = VAL_ERROR_POINT(2);
         goto free_memory;
     }
+    val_memset(mb.send, 0, size);
 
     test_run_data = TEST_RUN_DATA(GET_TEST_NUM((uint32_t)test_run_data),
       (uint32_t)sender, (uint32_t)receiver_1, GET_TEST_TYPE((uint32_t)test_run_data));
@@ -65,6 +66,7 @@ static uint32_t sp3_entry_func(ffa_args_t args)
 
     /* Retrieve memory for tracking NS-Int Status */
     handle = payload.arg3;
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = receiver;
     mem_region_init.receiver = sender;

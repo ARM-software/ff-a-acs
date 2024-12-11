@@ -86,7 +86,7 @@ uint32_t ffa_direct_message_64_server(ffa_args_t args)
      * while processing the direct request. */
     val_memset(&payload, 0, sizeof(ffa_args_t));
     val_ffa_yield(&payload);
-#if (PLATFORM_FFA_V_1_0 == 1)
+#if (PLATFORM_FFA_V == FFA_V_1_0)
     if (payload.fid != FFA_ERROR_32)
     {
         LOG(ERROR, "Call to FFA_YIELD must fail while processing direct msg");
@@ -99,7 +99,7 @@ uint32_t ffa_direct_message_64_server(ffa_args_t args)
         goto exit;
     }
 
-#if (PLATFORM_FFA_V_1_0 == 1)
+#if (PLATFORM_FFA_V == FFA_V_1_0)
     val_memset(&payload, 0, sizeof(ffa_args_t));
     val_ffa_msg_poll(&payload);
     if (payload.fid != FFA_ERROR_32)

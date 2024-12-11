@@ -42,10 +42,12 @@ static uint32_t lend_input_error_checks4_helper(uint32_t test_run_data, uint32_t
         status = VAL_ERROR_POINT(2);
         goto free_memory;
     }
+    val_memset(mb.send, 0, size);
 
     constituents[0].address = (void *)PLATFORM_MEM_READ_ONLY_BASE;
     constituents[0].page_count = 1;
 
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = sender;
     mem_region_init.receiver = recipient;

@@ -22,7 +22,7 @@
     entrypoint-offset = <0x00004000>;
     xlat-granule = <0>; /* 4KiB */
     boot-order = <0>;
-    messaging-method = <7>; /* Direct and Indirect messaging */
+    messaging-method = <0x7>; /* Indirect and Direct messaging */
     notification-support; /* Support receipt of notifications. */
     ns-interrupts-action = <2>; /* Non secure interrupts are signaled. */
 

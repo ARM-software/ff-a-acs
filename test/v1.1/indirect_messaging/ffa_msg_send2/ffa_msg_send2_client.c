@@ -62,7 +62,7 @@ uint32_t ffa_msg_send2_client(uint32_t test_run_data)
         status = VAL_ERROR_POINT(2);
         goto exit;
     }
-    LOG(DBG, "Interrupt Registeration Done SRI ID %x", sri_id);
+    LOG(DBG, "Interrupt Registration Done SRI ID %x", sri_id);
 #endif
 
     mb.send = val_memory_alloc(size);
@@ -90,7 +90,7 @@ uint32_t ffa_msg_send2_client(uint32_t test_run_data)
 
     partition_message_header = (ffa_partition_rxtx_header_t *)mb.send;
     partition_message_header->flags = 0;
-    partition_message_header->reserved = 0;
+    partition_message_header->reserved_0 = 0;
     partition_message_header->offset = sizeof(ffa_partition_rxtx_header_t);
     partition_message_header->size = 32;
 

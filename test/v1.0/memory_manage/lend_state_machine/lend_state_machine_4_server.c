@@ -19,7 +19,7 @@ uint32_t lend_state_machine_4_server(ffa_args_t args)
     mem_region_init_t mem_region_init;
     ffa_memory_handle_t handle;
     uint32_t msg_size;
-#if ((PLATFORM_FFA_V_ALL == 1) || (PLATFORM_FFA_V_1_1 == 1))
+#if (PLATFORM_FFA_V >= FFA_V_1_1)
     uint32_t borrower_list = 0;
     uint16_t borrower_1 = 0;
     uint16_t borrower_2 = 0;
@@ -41,6 +41,7 @@ uint32_t lend_state_machine_4_server(ffa_args_t args)
         status = VAL_ERROR_POINT(2);
         goto free_memory;
     }
+    val_memset(mb.send, 0, size);
 
 
     /* Wait for the message. */
@@ -56,6 +57,7 @@ uint32_t lend_state_machine_4_server(ffa_args_t args)
 
     handle = payload.arg3;
 
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = receiver;
     mem_region_init.receiver = sender;
@@ -68,7 +70,7 @@ uint32_t lend_state_machine_4_server(ffa_args_t args)
     mem_region_init.multi_share = true;
     mem_region_init.receiver_count = 2;
 
-#if (PLATFORM_FFA_V_1_1 == 1 || PLATFORM_FFA_V_ALL == 1)
+#if (PLATFORM_FFA_V >= FFA_V_1_1)
     borrower_list = (uint32_t)args.arg5;
     borrower_1 = (uint16_t)(borrower_list & 0xFFFF);
     borrower_2 = (uint16_t)(borrower_list >> 16 & 0xFFFF);

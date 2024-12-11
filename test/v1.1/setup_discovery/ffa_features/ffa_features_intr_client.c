@@ -54,14 +54,20 @@ uint32_t ffa_features_intr_client(uint32_t test_run_data)
         }
 #endif
 
-        val_memset(&payload, 0, sizeof(ffa_args_t));
-        payload.arg1 = FFA_FEATURE_MEI;
-        val_ffa_features(&payload);
+#if (PLATFORM_SP_EL == 0)
+        if (payload.fid != FFA_ERROR_32 || payload.arg2 != FFA_ERROR_NOT_SUPPORTED)
+        {
+            LOG(ERROR, "FFA_Features Must Fail to retrieve MEI err %x", payload.arg2);
+            return VAL_ERROR_POINT(2);
+        }
+#else
         if (payload.fid == FFA_ERROR_32)
         {
             LOG(ERROR, "Failed to retrieve MEI err %x", payload.arg2);
             return VAL_ERROR_POINT(3);
         }
+#endif
+
     }
 
     /* Unused argument */

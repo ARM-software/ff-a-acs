@@ -40,7 +40,7 @@ static uint32_t retrieve_zero_flag_check(ffa_memory_handle_t handle, uint32_t fi
     mem_region_init.tag = 0;
     mem_region_init.flags = flags;
     mem_region_init.data_access = FFA_DATA_ACCESS_RW;
-#if (PLATFORM_FFA_V_1_0 == 1)
+#if (PLATFORM_FFA_V == FFA_V_1_0)
     mem_region_init.instruction_access = FFA_INSTRUCTION_ACCESS_NOT_SPECIFIED;
 #else
     mem_region_init.instruction_access = FFA_INSTRUCTION_ACCESS_NX;
@@ -102,7 +102,7 @@ static uint32_t retrieve_with_invalid_mem_transaction_type_check(ffa_memory_hand
     mem_region_init.flags = (FFA_MEMORY_REGION_TRANSACTION_TYPE_DONATE <<
                                 FFA_MEMORY_REGION_TRANSACTION_TYPE_MASK);
     mem_region_init.data_access = FFA_DATA_ACCESS_RW;
-#if (PLATFORM_FFA_V_1_0 == 1)
+#if (PLATFORM_FFA_V == FFA_V_1_0)
     mem_region_init.instruction_access = FFA_INSTRUCTION_ACCESS_NOT_SPECIFIED;
 #else
     mem_region_init.instruction_access = FFA_INSTRUCTION_ACCESS_NX;
@@ -220,6 +220,7 @@ uint32_t lend_retrieve_input_checks2_server(ffa_args_t args)
         goto rxtx_unmap;
 
     /* Now retrieve using correct inputs */
+    val_memset(&mem_region_init, 0x0, sizeof(mem_region_init));
     mem_region_init.memory_region = mb.send;
     mem_region_init.sender = receiver;
     mem_region_init.receiver = sender;
@@ -227,7 +228,7 @@ uint32_t lend_retrieve_input_checks2_server(ffa_args_t args)
     mem_region_init.flags = 0;
     mem_region_init.data_access = FFA_DATA_ACCESS_RW;
     mem_region_init.type = FFA_MEMORY_NORMAL_MEM;
-#if (PLATFORM_FFA_V_1_0 == 1)
+#if (PLATFORM_FFA_V == FFA_V_1_0)
     mem_region_init.instruction_access = FFA_INSTRUCTION_ACCESS_NOT_SPECIFIED;
 #else
     mem_region_init.instruction_access = FFA_INSTRUCTION_ACCESS_NX;
