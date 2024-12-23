@@ -73,10 +73,6 @@ FVP_Base_RevC-2xAEMv8A -C pctl.startup=0.0.0.0 -C cluster0.NUM_CORES=4 -C cluste
 - share_ro_retrieve_rw_64_vmvm
 - share_ro_retrieve_rw_32_vmvm
 
-## List of failed tests
-
-- sp_preempted_el0
-
 ## List of unverified tests
 
 - lend_retrieve_with_address_range

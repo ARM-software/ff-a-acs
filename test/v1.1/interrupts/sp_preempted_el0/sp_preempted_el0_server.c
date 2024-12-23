@@ -170,11 +170,11 @@ uint32_t sp_preempted_el0_server(ffa_args_t args)
     val_twdog_intr_disable();
 
     val_memset(&payload, 0, sizeof(ffa_args_t));
-    val_ffa_msg_wait(&payload);
 #if (PLATFORM_FFA_V >= FFA_V_1_2)
     /* Prevent RX Buffer Release*/
     payload.arg2 = 0x1;
 #endif
+    val_ffa_msg_wait(&payload);
     if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_32)
     {
         LOG(ERROR, "DIRECT_REQ_32 not received fid %x", payload.fid);
