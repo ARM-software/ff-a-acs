@@ -138,6 +138,7 @@ static uint32_t ffa_partition_info_helper(const uint32_t uuid[4],
     ffa_partition_info_t *info;
     uint32_t i;
 
+    val_memset(&payload, 0, sizeof(ffa_args_t));
     payload = ffa_partition_info_get_regs(uuid);
     if (payload.fid == FFA_ERROR_32)
     {
