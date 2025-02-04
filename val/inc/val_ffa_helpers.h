@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -208,7 +208,7 @@ struct ffa_memory_region_attributes {
     uint32_t sender_receiver;
     /* Size of message in buffer. */
     uint32_t size;
-#if INDIRECT_MESSAGE_UUID_SUPPORT
+#if (PLATFORM_FFA_V >= FFA_V_1_2)
     uint32_t reserved_1;
     uint32_t uuid[4];
 #endif

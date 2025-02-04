@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2024-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -102,7 +102,7 @@ uint32_t ffa_msg_send2_uuid_check_client(uint32_t test_run_data)
     partition_message_header->offset = sizeof(ffa_partition_rxtx_header_t);
     partition_message_header->sender_receiver = (uint32_t)(receiver | (sender << 16));
     partition_message_header->size = 32;
-#if INDIRECT_MESSAGE_UUID_SUPPORT
+#if (PLATFORM_FFA_V >= FFA_V_1_2)
     partition_message_header->reserved_1 = 0;
 #endif
 
@@ -110,7 +110,7 @@ uint32_t ffa_msg_send2_uuid_check_client(uint32_t test_run_data)
     val_memset(pages, 0xab, 32);
 
     /* Invalid UUID */
-#if INDIRECT_MESSAGE_UUID_SUPPORT
+#if (PLATFORM_FFA_V >= FFA_V_1_2)
     partition_message_header->uuid[0] = 0xA;
     partition_message_header->uuid[1] = 0xB;
     partition_message_header->uuid[2] = 0xC;
@@ -129,7 +129,7 @@ uint32_t ffa_msg_send2_uuid_check_client(uint32_t test_run_data)
     }
 
     /* Send with valid ID and UUID */
-#if INDIRECT_MESSAGE_UUID_SUPPORT
+#if (PLATFORM_FFA_V >= FFA_V_1_2)
     partition_message_header->uuid[0] = ep_info[server_logical_id].uuid[0];
     partition_message_header->uuid[1] = ep_info[server_logical_id].uuid[1];
     partition_message_header->uuid[2] = ep_info[server_logical_id].uuid[2];
