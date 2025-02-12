@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -143,6 +143,7 @@ void *val_mem_virt_to_phys(void *va)
 **/
 uint32_t val_mem_map_pgt(memory_region_descriptor_t *mem_desc)
 {
+    (void)mem_desc;
     return VAL_SUCCESS;
 }
 #endif

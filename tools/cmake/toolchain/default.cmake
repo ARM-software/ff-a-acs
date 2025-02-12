@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+# Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
@@ -19,5 +19,6 @@ set(TARGET_DFLT tgt_tfa_fvp)
 set(SUITE_DFLT all)
 set(ENABLE_PIE_DFLT ON)
 set(ENABLE_BTI_DFLT OFF)
+set(TARGET_LINUX_DFLT 0)
 set(CMAKE_BUILD_TYPE_DFLT Release)
 set(PLATFORM_FFA_V_MULTI_DFLT 0)

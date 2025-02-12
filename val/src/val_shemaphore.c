@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -20,6 +20,7 @@ void val_init_spinlock(s_lock_t *lock)
 #ifndef TARGET_LINUX
     pal_init_spinlock(lock);
 #endif
+    (void)lock;
 }
 
 void val_spin_lock(s_lock_t *lock)
@@ -27,6 +28,7 @@ void val_spin_lock(s_lock_t *lock)
 #ifndef TARGET_LINUX
     pal_spin_lock(lock);
 #endif
+    (void)lock;
 }
 
 void val_spin_unlock(s_lock_t *lock)
@@ -34,6 +36,7 @@ void val_spin_unlock(s_lock_t *lock)
 #ifndef TARGET_LINUX
     pal_spin_unlock(lock);
 #endif
+    (void)lock;
 }
 
 static void send_event_common(event_t *event, unsigned int inc)
@@ -47,8 +50,10 @@ static void send_event_common(event_t *event, unsigned int inc)
      * Make sure the cnt increment is observable by all CPUs
      * before the event is sent.
      */
+#ifndef TARGET_LINUX
     dsbsy();
     sev();
+#endif
 }
 
 void val_send_event(event_t *event)
@@ -77,10 +82,14 @@ void val_wait_for_event(event_t *event)
     while (!event_received) {
 
         val_dataCacheInvalidateVA((uint64_t)&event->cnt);
+#ifndef TARGET_LINUX
         dsbsy();
+#endif
         /* Wait for someone to send an event */
         if (!event->cnt) {
+#ifndef TARGET_LINUX
             wfe();
+#endif
         } else {
             val_spin_lock(&event->lock);
 

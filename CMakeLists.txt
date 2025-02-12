@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+# Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
@@ -41,6 +41,7 @@ list(APPEND PLATFORM_FFA_V_1_2_LIST 0 1)
 list(APPEND PLATFORM_FFA_V_ALL_LIST 0 1)
 list(APPEND ENABLE_PIE_LIST ON OFF)
 list(APPEND ENABLE_BTI_LIST ON OFF)
+list(APPEND TARGET_LINUX_LIST 0 1)
 list(APPEND CMAKE_BUILD_TYPE_LIST Release Debug)
 list(APPEND ARM_ARCH_MAJOR_LIST 8 9)
 list(APPEND PLATFORM_FFA_V_MULTI_LIST 0 1)
@@ -231,6 +232,17 @@ else()
         message(FATAL_ERROR "[ACS] : Error: Unspported value for -DENABLE_BTI=, supported values are : ${ENABLE_BTI_LIST}")
     endif()
     message(STATUS "[ACS] : ENABLE_BTI is set to ${ENABLE_BTI}")
+endif()
+
+# Check for TARGET_LINUX
+if(NOT DEFINED TARGET_LINUX)
+    set(TARGET_LINUX ${TARGET_LINUX_DFLT} CACHE INTERNAL "Default TARGET_LINUX value" FORCE)
+        message(STATUS "[ACS] : Defaulting TARGET_LINUX to ${TARGET_LINUX}")
+else()
+    if(NOT ${TARGET_LINUX} IN_LIST TARGET_LINUX_LIST)
+        message(FATAL_ERROR "[ACS] : Error: Unspported value for -DTARGET_LINUX=, supported values are : ${TARGET_LINUX_LIST}")
+    endif()
+    message(STATUS "[ACS] : TARGET_LINUX is set to ${TARGET_LINUX}")
 endif()
 
 if(DEFINED SUITE_TEST_RANGE)

@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+# Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
@@ -10,6 +10,10 @@ project(sp1 LANGUAGES C ASM)
 set(EXE_NAME "${PROJECT_NAME}")
 
 add_definitions(-DSP1_COMPILE)
+
+if(${TARGET_LINUX} STREQUAL 1)
+add_definitions(-DTARGET_LINUX_ID="1")
+endif()
 
 set(VAL_LIB ${EXE_NAME}_val_lib)
 set(PAL_LIB ${EXE_NAME}_pal_lib)

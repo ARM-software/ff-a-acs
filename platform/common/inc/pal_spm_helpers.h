@@ -1,7 +1,8 @@
 /*
- * Copyright (c) 2022, Arm Limited. All rights reserved.
+ * Copyright (c) 2022-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
+ *
  */
 
 #ifndef SPMC_H
@@ -12,6 +13,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#ifndef TARGET_LINUX
 /*
  * SMC calls take a function identifier and up to 7 arguments.
  * Additionally, few SMC calls that originate from EL2 leverage the seventh
@@ -57,11 +59,14 @@ typedef smc_ret_values hvc_ret_values;
 
 hvc_ret_values pal_hvc(const hvc_args *args);
 
+#endif
+
 /* Should match with IDs defined in SPM/Hafnium */
 #define SPM_INTERRUPT_ENABLE            (0xFF03)
 #define SPM_INTERRUPT_GET               (0xFF04)
 #define SPM_INTERRUPT_DEACTIVATE    (0xFF08)
 #define SPM_DEBUG_LOG                   (0xBD000000)
+
 
 /*
  * Hypervisor Calls Wrappers

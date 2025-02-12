@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -397,6 +397,7 @@ void val_wait_for_test_fn_req(void)
 
     val_memset(&payload, 0, sizeof(ffa_args_t));
 
+    LOG(ALWAYS, "Enter Wait State, Partition ID %x", val_get_curr_endpoint_logical_id());
     /* Receive the test_num and client_fn/server_fn to run
      * OR reciever service id for nvm and wd functionality
      */
@@ -546,7 +547,8 @@ uint32_t val_execute_test(
         }
         else
         {
-            LOG(ERROR, "Invalid fid received, fid=0x%x", payload.fid);
+            LOG(ERROR, "Invalid fid received, fid=0x%x arg1=0x%x arg2=0x%x", \
+                payload.fid,  payload.arg1, payload.arg2);
             status = VAL_ERROR;
             goto exit;
         }

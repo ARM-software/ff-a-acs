@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -58,7 +58,7 @@ typedef handler_irq_t spurious_desc;
  */
 typedef struct {
     handler_irq_t handler;
-} __aligned(CACHE_WRITEBACK_GRANULE) irq_handler_banked_t;
+}  __attribute__((aligned(CACHE_WRITEBACK_GRANULE))) irq_handler_banked_t;
 
 /** IRQ/FIQ pin used for signaling a virtual interrupt. */
 enum interrupt_pin {

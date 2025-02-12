@@ -1,11 +1,13 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
  */
 
+#include "val.h"
 #include "val_endpoint_info.h"
+#include "pal_config_def.h"
 
 static val_endpoint_info_t endpoint_info_table[] = {
     {"", 0, 0, 0, 0, 0, {0} },
@@ -66,7 +68,11 @@ static val_endpoint_info_t endpoint_info_table[] = {
 #if (PLATFORM_NS_HYPERVISOR_PRESENT == 1)
         PLATFORM_VM1_ID,
 #else
+#ifdef TARGET_LINUX_ID
+        0x1,
+#else
         0x0,
+#endif
 #endif
         VAL_TG0_4K,
         EL1_64,
@@ -162,7 +168,7 @@ ffa_endpoint_id_t val_get_curr_endpoint_logical_id(void)
         logical_id++;
     }
 
-    VAL_PANIC("\tError: Couldn't find correct logical_id.\n");
+    LOG(ERROR, "\tError: Couldn't find correct logical_id. %x\n", val_get_curr_endpoint_id());
     return logical_id;
 }
 

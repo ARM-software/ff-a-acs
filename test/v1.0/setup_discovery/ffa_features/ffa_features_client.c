@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -311,9 +311,12 @@ uint32_t ffa_features_client(uint32_t test_run_data)
     if (status_1)
         return status_1;
 
-    status_1 = ffa_feature_query(FFA_MSG_WAIT_32, "FFA_MSG_WAIT_32");
-    if (status_1)
-        return status_1;
+    if (VAL_IS_ENDPOINT_SECURE(client_logical_id))
+    {
+        status_1 = ffa_feature_query(FFA_MSG_WAIT_32, "FFA_MSG_WAIT_32");
+        if (status_1)
+            return status_1;
+    }
 
     status_1 = ffa_feature_query(FFA_RUN_32, "FFA_RUN_32");
     if (status_1)

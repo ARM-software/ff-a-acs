@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -18,9 +18,9 @@
 #include "pal_misc_asm.h"
 #include "pal_irq.h"
 #include "pal_shemaphore.h"
+#include "pal_arch_helpers.h"
 #ifndef TARGET_LINUX
 #include <pal_sp805_watchdog.h>
-#include "pal_arch_helpers.h"
 #endif
 
 /**
@@ -181,6 +181,14 @@ uint32_t pal_smmu_device_configure(uint32_t stream_id, uint64_t source, uint64_t
 **/
 void pal_irq_setup(void);
 
+#ifdef TARGET_LINUX
+/**
+ * @brief       - Forward SMC Call to Kernel FF-A Driver.
+ * @param       - FFA args.
+ * @return      - Void.
+**/
+void pal_linux_call_conduit(void *args);
+#endif
 
 uint64_t pal_sleep(uint32_t ms);
 void pal_twdog_intr_enable(void);

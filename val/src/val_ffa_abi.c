@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -36,7 +36,11 @@ static ffa_args_t ffa_smccc(uint64_t fid, uint64_t arg1, uint64_t arg2,
     args.ext_args.arg15 = arg15;
     args.ext_args.arg16 = arg16;
     args.ext_args.arg17 = arg17;
+#ifndef TARGET_LINUX
     val_call_conduit(&args);
+#else
+    pal_linux_call_conduit((void *) &args);
+#endif
     return args;
 }
 
@@ -597,7 +601,21 @@ static void ffa_run(ffa_args_t *args)
 **/
 void val_ffa_run(ffa_args_t *args)
 {
+#ifdef TARGET_LINUX
+    ffa_args_t  payload;
+#endif
+
     ffa_run(args);
+
+#ifdef TARGET_LINUX
+    while (args->fid == FFA_INTERRUPT_32)
+    {
+        val_memset(&payload, 0, sizeof(ffa_args_t));
+        payload.arg1 = args->arg1;
+        ffa_run(&payload);
+        *args = payload;
+    }
+#endif
 }
 
 static void ffa_msg_poll(ffa_args_t *args)

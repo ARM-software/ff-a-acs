@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -9,9 +9,7 @@
 #define _VAL_H_
 
 #include "pal_interfaces.h"
-#ifndef TARGET_LINUX
 #include "pal_spm_helpers.h"
-#endif
 #include "val_def.h"
 
 /* Various test status codes, Max value = 0xff */

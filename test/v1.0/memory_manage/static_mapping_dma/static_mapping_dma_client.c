@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -78,11 +78,13 @@ static uint32_t ffa_mem_share_helper(uint32_t test_run_data, uint32_t fid)
     val_memset((void *)PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION, 0xab, size);
     val_memset((void *)PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION_INVALID, 0xea, size);
 
+#ifndef TARGET_LINUX
     /* Initiate the DMA transactions to
      * memory regions using device upstream of SMMU
      */
     flush_dcache_range(PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION, size*2);
     flush_dcache_range(PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION_INVALID, size*2);
+#endif
 
     if (VAL_IS_ENDPOINT_SECURE(val_get_endpoint_logical_id(sender)))
     {

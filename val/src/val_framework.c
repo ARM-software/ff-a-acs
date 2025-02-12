@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -7,6 +7,11 @@
 
 #include "val_framework.h"
 #include "val_interfaces.h"
+
+#ifdef TARGET_LINUX
+#define SKIP_NVM_PROGRAMMING
+#define SKIP_WD_PROGRAMMING
+#endif
 
 #if (PLATFORM_SP_EL == -1)
 #define SKIP_WD_PROGRAMMING

@@ -14,7 +14,7 @@
 #define ACS_MAJOR_VERSION   0
 #define ACS_MINOR_VERSION   9
 
-#define IMAGE_SIZE        0x100000
+#define IMAGE_SIZE        0x200000
 
 #define STACK_SIZE          0x1000
 #define SCTLR_I_BIT         (1 << 12)
