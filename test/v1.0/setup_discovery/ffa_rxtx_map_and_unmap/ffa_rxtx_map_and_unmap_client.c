@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -34,8 +34,8 @@ static uint32_t test_rxtx_map_unaligned_buffers(void)
     uint64_t size = PAGE_SIZE_4K;
     uint32_t status = VAL_SUCCESS;
 
-    tx_buff = val_memory_alloc(size);
-    rx_buff = val_memory_alloc(size);
+    tx_buff = val_aligned_alloc(PAGE_SIZE_4K, size);
+    rx_buff = val_aligned_alloc(PAGE_SIZE_4K, size);
     if (rx_buff == NULL || tx_buff == NULL)
     {
         LOG(ERROR, "Failed to allocate RxTx buffer");
@@ -71,7 +71,7 @@ static uint32_t test_rxtx_map_unaligned_buffers(void)
     }
 
 free_memory1:
-    if (val_memory_free(rx_buff, size) || val_memory_free(tx_buff, size))
+    if (val_free(rx_buff) || val_free(tx_buff))
     {
         LOG(ERROR, "val_memory_free failed");
         status = status ? status : VAL_ERROR_POINT(5);
@@ -87,8 +87,8 @@ static uint32_t test_rxtx_map_invalid_buffer_size(void)
     uint64_t size = PAGE_SIZE_4K, alignment_boundary;
     uint32_t status = VAL_SUCCESS;
 
-    tx_buff = val_memory_alloc(size);
-    rx_buff = val_memory_alloc(size);
+    tx_buff = val_aligned_alloc(PAGE_SIZE_4K, size);
+    rx_buff = val_aligned_alloc(PAGE_SIZE_4K, size);
     if (rx_buff == NULL || tx_buff == NULL)
     {
         LOG(ERROR, "Failed to allocate RxTx buffer");
@@ -135,7 +135,7 @@ static uint32_t test_rxtx_map_invalid_buffer_size(void)
     }
 
 free_memory2:
-    if (val_memory_free(rx_buff, size) || val_memory_free(tx_buff, size))
+    if (val_free(rx_buff) || val_free(tx_buff))
     {
         LOG(ERROR, "val_memory_free failed");
         status = status ? status : VAL_ERROR_POINT(9);
@@ -151,8 +151,8 @@ static uint32_t test_rxtx_map_denied(void)
     uint64_t size = PAGE_SIZE_4K;
     uint32_t status = VAL_SUCCESS;
 
-    tx_buff = val_memory_alloc(size);
-    rx_buff = val_memory_alloc(size);
+    tx_buff = val_aligned_alloc(PAGE_SIZE_4K, size);
+    rx_buff = val_aligned_alloc(PAGE_SIZE_4K, size);
     if (rx_buff == NULL || tx_buff == NULL)
     {
         LOG(ERROR, "Failed to allocate RxTx buffer");
@@ -189,7 +189,7 @@ static uint32_t test_rxtx_map_denied(void)
     }
 
 free_memory3:
-    if (val_memory_free(rx_buff, size) || val_memory_free(tx_buff, size))
+    if (val_free(rx_buff) || val_free(tx_buff))
     {
         LOG(ERROR, "val_memory_free failed");
         status = status ? status : VAL_ERROR_POINT(14);

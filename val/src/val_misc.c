@@ -9,28 +9,6 @@
 #include "val_interfaces.h"
 
 /**
- * @brief - Allocates requested buffer size in bytes in a contiguous memory.
- *
- * @param  size - allocation size in bytes
- * @return - Returns pointer to allocated memory/NULL if it fails.
-**/
-void *val_memory_alloc(size_t size)
-{
-    return pal_memory_alloc(size);
-}
-
-/**
- * @brief - Free the allocated memory.
- *
- * @param address - Buffer the base address of the memory range to be freed.
- * @return - Returns success/error status code.
-**/
-uint32_t val_memory_free(void *address, size_t size)
-{
-    return pal_memory_free(address, size);
-}
-
-/**
   @brief  Compare the two input buffer content
   @param  src   - Source buffer to be compared
   @dest   dest  - Destination buffer to be compared
@@ -123,6 +101,61 @@ int val_strcmp(char *str1, char *str2)
         return 0;
     else
         return -1;
+}
+
+/**
+ * @brief Copies the string pointed to by src (including the null terminator)
+ *        to the buffer pointed to by dest.
+ *
+ * @param dest Pointer to the destination buffer.
+ * @param src  Pointer to the null-terminated source string.
+ * @return Pointer to the destination string dest.
+ */
+char *val_strcpy(char *dest, const char *src)
+{
+    char *ret = dest;
+
+    while ((*dest++ = *src++));
+
+    return ret;
+}
+
+/**
+ * @brief Safely copies memory from source to destination, handling overlap.
+ *
+ * This function copies `n` bytes from the memory area pointed to by `src` to
+ * the memory area pointed to by `dest`. It ensures correct behavior even when
+ * the source and destination regions overlap, mimicking the behavior of the
+ * standard `memmove` function.
+ *
+ * If `dest` is before `src`, it performs a forward copy.
+ * If `dest` is after or overlaps `src`, it performs a backward copy to prevent
+ * data corruption.
+ *
+ * @param dest Pointer to the destination memory area.
+ * @param src  Pointer to the source memory area.
+ * @param n    Number of bytes to copy.
+ *
+ * @return Pointer to the destination memory area (`dest`).
+ */
+void *val_memmove(void *dest, const void *src, size_t n)
+{
+    uint8_t *d = (uint8_t *)dest;
+    const uint8_t *s = (const uint8_t *)src;
+
+    if (d == s || n == 0)
+        return dest;
+
+    if (d < s) {
+        // Safe to copy forward
+        for (size_t i = 0; i < n; i++)
+            d[i] = s[i];
+    } else {
+        // Safe to copy backward
+        for (size_t i = n; i-- > 0;)
+            d[i] = s[i];
+    }
+    return dest;
 }
 
 /**

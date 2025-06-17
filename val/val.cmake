@@ -20,7 +20,9 @@ set(VAL_SRC ${ROOT_DIR}/val/src/val_main.c
             ${ROOT_DIR}/val/src/aarch64/val_sysreg.S
             ${ROOT_DIR}/val/src/aarch64/val_syscalls.S
             ${ROOT_DIR}/val/src/val_irq.c
-            ${ROOT_DIR}/val/src/val_wd.c)
+            ${ROOT_DIR}/val/src/val_wd.c
+            ${ROOT_DIR}/val/src/val_malloc.c
+            ${FFA_GEN_OUTPUT_DIR}/val_endpoints.c)
 
 if(NOT DEFINED VM_TARGET_LINUX_APP)
     list(APPEND VAL_SRC
@@ -42,6 +44,7 @@ add_library(${VAL_LIB} STATIC ${VAL_SRC})
 set(MY_INCLUDE_DIRS
     ${CMAKE_CURRENT_BINARY_DIR}
     ${ROOT_DIR}/val/inc/
+    ${FFA_GEN_OUTPUT_DIR}/
     ${ROOT_DIR}/platform/common/inc/
     ${ROOT_DIR}/platform/pal_baremetal/${TARGET}/inc/)
 

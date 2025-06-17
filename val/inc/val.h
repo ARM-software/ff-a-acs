@@ -72,6 +72,7 @@ typedef enum {
 #define NVM_READ_SERVICE   0xFFBB
 #define WD_ENABLE_SERVICE  0xFFCC
 #define WD_DISABLE_SERVICE 0xFFDD
+#define EP_INFO_SYNC_SERVICE 0xFFEE
 
 /* Test state macros */
 #define TEST_START                 0x01

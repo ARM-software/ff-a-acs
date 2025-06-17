@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -127,8 +127,10 @@ uint32_t ffa_direct_message_32_server(ffa_args_t args)
         goto exit;
     }
 exit:
-    resp_data_32.arg1 = ((uint32_t)receiver << 16) | sender;
-    val_ffa_msg_send_direct_resp_32(&resp_data_32);
+    val_memset(&payload, 0, sizeof(ffa_args_t));
+    val_memcpy(&payload, &resp_data_32, sizeof(ffa_args_t));
+    payload.arg1 = ((uint32_t)receiver << 16) | sender;
+    val_ffa_msg_send_direct_resp_32(&payload);
 
     (void)req_data_32;
     return status;

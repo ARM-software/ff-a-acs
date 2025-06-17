@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -37,8 +37,9 @@ static uint32_t ffa_mem_share_helper(uint32_t test_run_data, uint32_t fid)
         recipient_1 = val_get_endpoint_id(SP3);
     }
 
-    mb.send = val_memory_alloc(size);
-    mb.recv = val_memory_alloc(size);
+    mb.send = val_aligned_alloc(PAGE_SIZE_4K, size);
+    mb.recv = val_aligned_alloc(PAGE_SIZE_4K, size);
+
     if (mb.send == NULL || mb.recv == NULL)
     {
         LOG(ERROR, "Failed to allocate RxTx buffer");
@@ -56,7 +57,7 @@ static uint32_t ffa_mem_share_helper(uint32_t test_run_data, uint32_t fid)
     val_memset(mb.send, 0, size);
 
     /* Allocate 8k page */
-    pages = (uint8_t *)val_memory_alloc(size * 2);
+    pages = (uint8_t *)val_aligned_alloc(PAGE_SIZE_4K, size * 2);
     if (!pages)
     {
         LOG(ERROR, "Memory allocation failed");
@@ -184,15 +185,15 @@ rxtx_unmap:
     }
 
 free_memory:
-    if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
+    if (val_free(mb.recv) || val_free(mb.send))
     {
         LOG(ERROR, "free_rxtx_buffers failed");
         status = status ? status : VAL_ERROR_POINT(9);
     }
 
-    if (val_memory_free(pages, size * 2))
+    if (val_free(pages))
     {
-        LOG(ERROR, "val_mem_free failed");
+        LOG(ERROR, "val_free failed");
         status = status ? status : VAL_ERROR_POINT(10);
     }
 

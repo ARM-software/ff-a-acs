@@ -17,7 +17,7 @@
 #include "pal_kernel_helpers.h"
 
 #define DEV_ENTRY   "/dev/ffa-acs"
-#define POOL_SIZE   0x1000 * 5
+#define POOL_SIZE  (512 * 1024)
 #define RXTX_SIZE   0x1000
 
 static void *mem_pool_virt;

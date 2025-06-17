@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2024-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -18,7 +18,7 @@
     execution-ctx-count = <1>;
     exception-level = <1>; /* S-EL0 */
     execution-state = <0>; /* AARCH64 */
-    load-address = <0x7200000>;
+    load-address = <0x7400000>;
     entrypoint-offset = <0x4000>;
     xlat-granule = <0>; /* 4KiB */
     boot-order = <2>;

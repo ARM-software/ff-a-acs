@@ -149,6 +149,12 @@ uint32_t pal_power_on_cpu(uint64_t mpid);
 uint32_t pal_power_off_cpu(void);
 
 /**
+ *   @brief  Retrieves the base address of the heap buffer.
+ *   @return Pointer to the heap buffer.
+ */
+void *pal_get_heap_buffer(void);
+
+/**
  *   @brief    - Terminates the simulation at the end of all tests completion.
  *   @param    - void
  *   @return   - SUCCESS(0)/FAILURE
@@ -189,6 +195,12 @@ void pal_irq_setup(void);
 **/
 void pal_linux_call_conduit(void *args);
 #endif
+/**
+ *   @brief    - get current sp/vm id
+ *   @param    - Void
+ *   @return   - FFA ID
+**/
+uint32_t pal_get_current_ep_id(void);
 
 uint64_t pal_sleep(uint32_t ms);
 void pal_twdog_intr_enable(void);

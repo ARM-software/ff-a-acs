@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -235,38 +235,158 @@ tt_l2_base_5:
 tt_l2_base_6:
   .fill 16384
 
-   .align 12
- // Allocate space for 4 contiguous L3 tables
-  .global tt_l3_base_1
+  .align 12
+ // Allocate space for 4 contiguous L2 tables
+  .global tt_l2_base_7
+tt_l2_base_7:
+  .fill 16384
+
+  .align 12
+ // Allocate space for 4 contiguous L2 tables
+  .global tt_l2_base_8
+tt_l2_base_8:
+  .fill 16384
+
+  .align 12
+ // Allocate space for 4 contiguous L2 tables
+  .global tt_l2_base_9
+tt_l2_base_9:
+  .fill 16384
+
+  .align 12
+ // Allocate space for 4 contiguous L2 tables
+  .global tt_l2_base_10
+tt_l2_base_10:
+  .fill 16384
+
+  .align 12
+ // Allocate space for 4 contiguous L2 tables
+  .global tt_l2_base_11
+tt_l2_base_11:
+  .fill 16384
+
+  .align 12
+ // Allocate space for 4 contiguous L2 tables
+  .global tt_l2_base_12
+tt_l2_base_12:
+  .fill 16384
+
+    .align 12
+    .global tt_l3_base_1
 tt_l3_base_1:
-  .fill 16384
+    .fill 16384
 
-  .align 12
-// Allocate space for 4 contiguous L3 tables
-  .global tt_l3_base_2
+    .align 12
+    .global tt_l3_base_2
 tt_l3_base_2:
-  .fill 16384
+    .fill 16384
 
-  .align 12
-// Allocate space for 4 contiguous L3 tables
-  .global tt_l3_base_3
+    .align 12
+    .global tt_l3_base_3
 tt_l3_base_3:
-  .fill 16384
+    .fill 16384
 
     .align 12
-// Allocate space for 4 contiguous L3 tables
-  .global tt_l3_base_4
+    .global tt_l3_base_4
 tt_l3_base_4:
-  .fill 16384
+    .fill 16384
 
     .align 12
-// Allocate space for 4 contiguous L3 tables
-  .global tt_l3_base_5
+    .global tt_l3_base_5
 tt_l3_base_5:
-  .fill 16384
+    .fill 16384
 
     .align 12
-// Allocate space for 4 contiguous L3 tables
-  .global tt_l3_base_6
+    .global tt_l3_base_6
 tt_l3_base_6:
-  .fill 16384
+    .fill 16384
+
+    .align 12
+    .global tt_l3_base_7
+tt_l3_base_7:
+    .fill 16384
+
+    .align 12
+    .global tt_l3_base_8
+tt_l3_base_8:
+    .fill 16384
+
+    .align 12
+    .global tt_l3_base_9
+tt_l3_base_9:
+    .fill 16384
+
+    .align 12
+    .global tt_l3_base_10
+tt_l3_base_10:
+    .fill 16384
+
+    .align 12
+    .global tt_l3_base_11
+tt_l3_base_11:
+    .fill 16384
+
+    .align 12
+    .global tt_l3_base_12
+tt_l3_base_12:
+    .fill 16384
+
+    .align 12
+    .global tt_l3_base_13
+tt_l3_base_13:
+    .fill 16384
+
+    .align 12
+    .global tt_l3_base_14
+tt_l3_base_14:
+    .fill 16384
+
+    .align 12
+    .global tt_l3_base_15
+tt_l3_base_15:
+    .fill 16384
+
+    .align 12
+    .global tt_l3_base_16
+tt_l3_base_16:
+    .fill 16384
+
+    .align 12
+    .global tt_l3_base_17
+tt_l3_base_17:
+    .fill 16384
+
+    .align 12
+    .global tt_l3_base_18
+tt_l3_base_18:
+    .fill 16384
+
+    .align 12
+    .global tt_l3_base_19
+tt_l3_base_19:
+    .fill 16384
+
+    .align 12
+    .global tt_l3_base_20
+tt_l3_base_20:
+    .fill 16384
+
+    .align 12
+    .global tt_l3_base_21
+tt_l3_base_21:
+    .fill 16384
+
+    .align 12
+    .global tt_l3_base_22
+tt_l3_base_22:
+    .fill 16384
+
+    .align 12
+    .global tt_l3_base_23
+tt_l3_base_23:
+    .fill 16384
+
+    .align 12
+    .global tt_l3_base_24
+tt_l3_base_24:
+    .fill 16384

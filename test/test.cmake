@@ -32,6 +32,8 @@ endif()
 
 if(${TARGET_LINUX} STREQUAL 1)
     list(APPEND TEST_SRC ${ROOT_DIR}/test/common/test_database_v_1_2_linux.c)
+elseif(${XEN_SUPPORT} STREQUAL 1)
+    list(APPEND TEST_SRC ${ROOT_DIR}/test/common/test_database_v_1_2_xen.c)
 else()
     if((${PLATFORM_FFA_V_ALL} EQUAL 1) OR (${PLATFORM_FFA_V_1_2} EQUAL 1))
         list(APPEND TEST_SRC ${ROOT_DIR}/test/common/test_database_v_1_2.c)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2022-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -7,6 +7,30 @@
 
 #include <pal_arch_helpers.h>
 #include <pal_spm_helpers.h>
+
+/*******************************************************************************
+ * Secure Monitor Calls Wrappers
+ ******************************************************************************/
+ smc_ret_values asm_smc64(uint32_t fid,
+    u_register_t arg1,
+    u_register_t arg2,
+    u_register_t arg3,
+    u_register_t arg4,
+    u_register_t arg5,
+    u_register_t arg6,
+    u_register_t arg7);
+
+smc_ret_values pal_smc(const smc_args *args)
+{
+return asm_smc64(args->fid,
+    args->arg1,
+    args->arg2,
+    args->arg3,
+    args->arg4,
+    args->arg5,
+    args->arg6,
+    args->arg7);
+}
 
 /*******************************************************************************
  * Hypervisor Calls Wrappers

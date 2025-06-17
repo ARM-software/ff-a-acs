@@ -1,0 +1,61 @@
+From 2d764981fad1c1ccb37498adc431d3c9a9a69c1d Mon Sep 17 00:00:00 2001
+Message-Id: <2d764981fad1c1ccb37498adc431d3c9a9a69c1d.1707389451.git.bertrand.marquis@arm.com>
+From: Bertrand Marquis <bertrand.marquis@arm.com>
+Date: Thu, 8 Feb 2024 10:00:10 +0000
+Subject: [PATCH 1/3] package/qemu: add configuration option for xen
+
+Add a qemu configuration parameter to enable xen support.
+The option is passing the "--enable-xen" to configure and selects
+the xen tools build to have the required headers.
+
+Signed-off-by: Bertrand Marquis <bertrand.marquis@arm.com>
+---
+ package/qemu/Config.in | 7 +++++++
+ package/qemu/qemu.mk   | 8 +++++++-
+ 2 files changed, 14 insertions(+), 1 deletion(-)
+
+diff --git a/package/qemu/Config.in b/package/qemu/Config.in
+index 8d53ced300f7..ae2e090ca58f 100644
+--- a/package/qemu/Config.in
++++ b/package/qemu/Config.in
+@@ -374,4 +374,11 @@ config BR2_PACKAGE_QEMU_GUEST_AGENT
+ 	  communicates with the host over a virtio-serial channel
+ 	  named "org.qemu.guest_agent.0".
+ 
++config BR2_PACKAGE_QEMU_XEN
++	bool "Enable xen support"
++	depends on BR2_PACKAGE_XEN_TOOLS
++	help
++	  Say 'y' here to include support to use qemu in dom0 on
++	  top of Xen to driver dom0 or guests.
++
+ endif # BR2_PACKAGE_QEMU
+diff --git a/package/qemu/qemu.mk b/package/qemu/qemu.mk
+index ef406dc8e9b5..a7b11d9738f4 100644
+--- a/package/qemu/qemu.mk
++++ b/package/qemu/qemu.mk
+@@ -279,6 +279,13 @@ else
+ QEMU_OPTS += --disable-install-blobs
+ endif
+ 
++ifeq ($(BR2_PACKAGE_QEMU_XEN),y)
++QEMU_OPTS += --enable-xen
++QEMU_DEPENDENCIES += xen
++else
++QEMU_OPTS += --disable-xen
++endif
++
+ # Override CPP, as it expects to be able to call it like it'd
+ # call the compiler.
+ define QEMU_CONFIGURE_CMDS
+@@ -330,7 +337,6 @@ define QEMU_CONFIGURE_CMDS
+ 			--disable-vhost-user-blk-server \
+ 			--disable-virtfs \
+ 			--disable-whpx \
+-			--disable-xen \
+ 			--enable-attr \
+ 			--enable-kvm \
+ 			--enable-vhost-net \
+-- 
+2.25.1
+

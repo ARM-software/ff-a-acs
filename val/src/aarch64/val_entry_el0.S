@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2024-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -48,9 +48,10 @@ stacks_end:
 
 val_entry:
 
-    /* Setup the stack pointer. */
-    adr    x0, stacks_end
-    mov    sp, x0
+    /* Setup the stack pointer to call C entry */
+    adrp    x0, stacks_end
+    add     x0, x0, :lo12:stacks_end
+    mov     sp, x0
 
     /* RODATA+DATA+BSS marked RW so relocations can succeed. */
     ffa_mem_perm_set __RODATA_START__ __BSS_END__ 5

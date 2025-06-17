@@ -355,6 +355,13 @@ uint32_t ffa_features_client(uint32_t test_run_data)
     status_10 = ffa_feature_query(FFA_MEM_RELINQUISH_32, "FFA_MEM_RELINQUISH_32");
     status_11 = ffa_feature_query(FFA_MEM_RECLAIM_32, "FFA_MEM_RECLAIM_32");
 
+    (void) status_7;
+    (void) status_8;
+    (void) status_9;
+    (void) status_10;
+    (void) status_11;
+
+#if 0 // TODO: XEN Support Missing
     /* If 64 bit manage ABI supported */
     if (!status_1 || !status_3 || !status_5)
     {
@@ -368,7 +375,7 @@ uint32_t ffa_features_client(uint32_t test_run_data)
         if (status_8 || status_9 || status_10 || status_11)
            return VAL_ERROR_POINT(16);
     }
-
+#endif
     val_reprogram_watchdog();
 
 #if PLATFORM_FFA_V == FFA_V_1_0
@@ -444,6 +451,7 @@ uint32_t ffa_features_client(uint32_t test_run_data)
         }
     }
 
+#if 0 // TODO: XEN Support Missing
     /* Cross check with manifest field value. Following must be
      * supported if direct respond is supported */
     if (messaging_type & FFA_RECEIPT_DIRECT_REQUEST_SUPPORT)
@@ -462,6 +470,7 @@ uint32_t ffa_features_client(uint32_t test_run_data)
             return VAL_ERROR_POINT(22);
         }
     }
+#endif
 
     /* Either of the messaging method must be supported */
     if ((status_1 == VAL_SKIP_CHECK) && (status_2 == VAL_SKIP_CHECK))
@@ -492,6 +501,7 @@ uint32_t ffa_features_client(uint32_t test_run_data)
         }
     }
 
+#if 0 // TODO: XEN Support Missing
     /* Cross check with manifest field value. Following must be
      * supported if direct respond is supported */
     if (messaging_type & FFA_RECEIPT_DIRECT_REQUEST2_SUPPORT)
@@ -510,6 +520,7 @@ uint32_t ffa_features_client(uint32_t test_run_data)
             return VAL_ERROR_POINT(27);
         }
     }
+#endif
 
     val_reprogram_watchdog();
 

@@ -35,6 +35,7 @@ list(APPEND VERBOSE_LIST 1 2 3 4 5)
 list(APPEND PLATFORM_SPMC_EL_LIST 1 2 3)
 list(APPEND PLATFORM_SP_EL_LIST -1 0 1)
 list(APPEND PLATFORM_NS_HYPERVISOR_PRESENT_LIST 0 1)
+list(APPEND PLATFORM_NS_HYP_MULTI_VM_LIST 0 1)
 list(APPEND PLATFORM_FFA_V_1_0_LIST 0 1)
 list(APPEND PLATFORM_FFA_V_1_1_LIST 0 1)
 list(APPEND PLATFORM_FFA_V_1_2_LIST 0 1)
@@ -45,6 +46,8 @@ list(APPEND TARGET_LINUX_LIST 0 1)
 list(APPEND CMAKE_BUILD_TYPE_LIST Release Debug)
 list(APPEND ARM_ARCH_MAJOR_LIST 8 9)
 list(APPEND PLATFORM_FFA_V_MULTI_LIST 0 1)
+list(APPEND XEN_SUPPORT_LIST 0 1)
+
 ###
 
 ### Command line argument check ###
@@ -136,6 +139,17 @@ else()
         message(FATAL_ERROR "[ACS] : Error: Unspported value for -DPLATFORM_NS_HYPERVISOR_PRESENT=, supported values are : ${PLATFORM_NS_HYPERVISOR_PRESENT_LIST}")
     endif()
     message(STATUS "[ACS] : PLATFORM_NS_HYPERVISOR_PRESENT is set to ${PLATFORM_NS_HYPERVISOR_PRESENT}")
+endif()
+
+# Check for PLATFORM_NS_HYP_MULTI_VM
+if(NOT DEFINED PLATFORM_NS_HYP_MULTI_VM)
+    set(PLATFORM_NS_HYP_MULTI_VM ${PLATFORM_NS_HYP_MULTI_VM_DFLT} CACHE INTERNAL "Default PLATFORM_NS_HYP_MULTI_VM value" FORCE)
+        message(STATUS "[ACS] : Defaulting PLATFORM_NS_HYP_MULTI_VM to ${PLATFORM_NS_HYP_MULTI_VM}")
+else()
+    if(NOT ${PLATFORM_NS_HYP_MULTI_VM} IN_LIST PLATFORM_NS_HYP_MULTI_VM_LIST)
+        message(FATAL_ERROR "[ACS] : Error: Unspported value for -DPLATFORM_NS_HYP_MULTI_VM=, supported values are : ${PLATFORM_NS_HYP_MULTI_VM_LIST}")
+    endif()
+    message(STATUS "[ACS] : PLATFORM_NS_HYP_MULTI_VM is set to ${PLATFORM_NS_HYP_MULTI_VM}")
 endif()
 
 # Check for PLATFORM_FFA_V_1_0
@@ -245,6 +259,20 @@ else()
     message(STATUS "[ACS] : TARGET_LINUX is set to ${TARGET_LINUX}")
 endif()
 
+# Check for XEN_SUPPORT
+if(NOT DEFINED XEN_SUPPORT)
+    set(XEN_SUPPORT ${XEN_SUPPORT_DFLT} CACHE INTERNAL "Default XEN_SUPPORT value" FORCE)
+        message(STATUS "[ACS] : Defaulting XEN_SUPPORT to ${XEN_SUPPORT}")
+else()
+    if(NOT ${XEN_SUPPORT} IN_LIST XEN_SUPPORT_LIST)
+        message(FATAL_ERROR "[ACS] : Error: Unspported value for -DXEN_SUPPORT=, supported values are : ${XEN_SUPPORT_LIST}")
+    endif()
+    message(STATUS "[ACS] : XEN_SUPPORT is set to ${XEN_SUPPORT}")
+    if(${XEN_SUPPORT} EQUAL "1")
+        add_definitions(-DXEN_SUPPORT)
+    endif()
+endif()
+
 if(DEFINED SUITE_TEST_RANGE)
     if(DEFINED SUITE)
         #set(SUITE ${SUITE_DFLT} CACHE INTERNAL "Defaulting suite to ${SUITE}" FORCE)
@@ -297,6 +325,7 @@ add_definitions(-DVERBOSITY=${VERBOSE})
 add_definitions(-DPLATFORM_SPMC_EL=${PLATFORM_SPMC_EL})
 add_definitions(-DPLATFORM_SP_EL=${PLATFORM_SP_EL})
 add_definitions(-DPLATFORM_NS_HYPERVISOR_PRESENT=${PLATFORM_NS_HYPERVISOR_PRESENT})
+add_definitions(-DPLATFORM_NS_HYP_MULTI_VM=${PLATFORM_NS_HYP_MULTI_VM})
 add_definitions(-DPLATFORM_FFA_V_1_0=${PLATFORM_FFA_V_1_0})
 add_definitions(-DPLATFORM_FFA_V_1_1=${PLATFORM_FFA_V_1_1})
 add_definitions(-DPLATFORM_FFA_V_1_2=${PLATFORM_FFA_V_1_2})
@@ -339,6 +368,32 @@ foreach(clean_item ${CLEAN_LIST})
 endforeach()
 ###
 
+set(MANIFEST_PATHS ${ROOT_DIR}/platform/manifest/tgt_tfa_fvp/v12/)
+
+# Ensure Python is available
+find_program(PYTHON_EXECUTABLE python3)
+
+if(NOT PYTHON_EXECUTABLE)
+    message(FATAL_ERROR "Python3 is required but was not found on your system.")
+endif()
+
+# Define and create output directory
+set(FFA_GEN_OUTPUT_DIR "${CMAKE_BINARY_DIR}/generated")
+file(MAKE_DIRECTORY "${FFA_GEN_OUTPUT_DIR}")
+
+# Run Python script at configure time
+execute_process(
+    COMMAND ${PYTHON_EXECUTABLE}
+            ${ROOT_DIR}/tools/python/ffa_endpoints.py
+            ${MANIFEST_PATHS} ${PLATFORM_SP_EL} ${FFA_GEN_OUTPUT_DIR}
+    RESULT_VARIABLE gen_result
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+)
+
+if(NOT gen_result EQUAL 0)
+    message(FATAL_ERROR "Failed to generate FFA endpoints.")
+endif()
+
 if(NOT(${PLATFORM_SP_EL} STREQUAL -1))
 add_subdirectory(${ROOT_DIR}/tools/cmake/endpoints/sp1)
 add_subdirectory(${ROOT_DIR}/tools/cmake/endpoints/sp2)
@@ -346,11 +401,12 @@ add_subdirectory(${ROOT_DIR}/tools/cmake/endpoints/sp3)
 add_subdirectory(${ROOT_DIR}/tools/cmake/endpoints/sp4)
 endif()
 add_subdirectory(${ROOT_DIR}/tools/cmake/endpoints/vm1)
-if(${PLATFORM_NS_HYPERVISOR_PRESENT} STREQUAL 1)
+
+if(${PLATFORM_NS_HYP_MULTI_VM} STREQUAL 1)
 add_subdirectory(${ROOT_DIR}/tools/cmake/endpoints/vm2)
 add_subdirectory(${ROOT_DIR}/tools/cmake/endpoints/vm3)
-else()
-   if(${PLATFORM_SP_EL} STREQUAL -1)
-        message(FATAL_ERROR "[ACS] : Invalid combination PLATFORM_NS_HYPERVISOR_PRESENT=0 and PLATFORM_SP_EL=-1")
-   endif()
+endif()
+
+if((${PLATFORM_NS_HYPERVISOR_PRESENT} STREQUAL 1) AND (${PLATFORM_SP_EL} STREQUAL -1))
+    message(FATAL_ERROR "[ACS] : Invalid combination PLATFORM_NS_HYPERVISOR_PRESENT=0 and PLATFORM_SP_EL=-1")
 endif()

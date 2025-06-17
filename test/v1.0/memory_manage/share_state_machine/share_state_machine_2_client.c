@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -31,6 +31,12 @@ static uint32_t ffa_mem_share_helper(uint32_t test_run_data, uint32_t fid)
                 sizeof(struct ffa_memory_region_constituent);
     uint32_t status_32, status_64;
 
+    if (!(val_is_partition_valid(val_get_endpoint_logical_id(recipient)) &&
+          val_is_partition_valid(val_get_endpoint_logical_id(recipient_1))))
+    {
+        return VAL_SKIP_CHECK;
+    }
+
     status_64 = val_is_ffa_feature_supported(FFA_MEM_LEND_64);
     status_32 = val_is_ffa_feature_supported(FFA_MEM_LEND_32);
     if (status_64 && status_32)
@@ -39,8 +45,8 @@ static uint32_t ffa_mem_share_helper(uint32_t test_run_data, uint32_t fid)
         return VAL_SKIP_CHECK;
     }
 
-    mb.send = val_memory_alloc(size);
-    mb.recv = val_memory_alloc(size);
+    mb.send = val_aligned_alloc(PAGE_SIZE_4K, size);
+    mb.recv = val_aligned_alloc(PAGE_SIZE_4K, size);
     if (mb.send == NULL || mb.recv == NULL)
     {
         LOG(ERROR, "Failed to allocate RxTx buffer");
@@ -57,7 +63,7 @@ static uint32_t ffa_mem_share_helper(uint32_t test_run_data, uint32_t fid)
     }
     val_memset(mb.send, 0, size);
 
-    pages = (uint8_t *)val_memory_alloc(size);
+    pages = (uint8_t *)val_aligned_alloc(PAGE_SIZE_4K, size);
     if (!pages)
     {
         LOG(ERROR, "Memory allocation failed");
@@ -143,15 +149,15 @@ rxtx_unmap:
     }
 
 free_memory:
-    if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
+    if (val_free(mb.recv) || val_free(mb.send))
     {
         LOG(ERROR, "free_rxtx_buffers failed");
         status = status ? status : VAL_ERROR_POINT(9);
     }
 
-    if (val_memory_free(pages, size))
+    if (val_free(pages))
     {
-        LOG(ERROR, "val_mem_free failed");
+        LOG(ERROR, "val_free failed");
         status = status ? status : VAL_ERROR_POINT(10);
     }
 

@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+# Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
@@ -18,6 +18,7 @@ set(PAL_SRC
     ${ROOT_DIR}/platform/pal_baremetal/${TARGET}/src/pal_vcpu_setup.c
     ${ROOT_DIR}/platform/pal_baremetal/${TARGET}/src/pal_irq.c
     ${ROOT_DIR}/platform/driver/src/pal_pl011_uart.c
+    ${ROOT_DIR}/platform/driver/src/pal_ffa_console_log.c
     ${ROOT_DIR}/platform/driver/src/pal_log.c
     ${ROOT_DIR}/platform/driver/src/pal_sp805_watchdog.c
     ${ROOT_DIR}/platform/driver/src/pal_ap_refclk_timer.c
@@ -30,6 +31,14 @@ set(PAL_SRC
     ${ROOT_DIR}/platform/driver/src/gic/platform.S
     ${ROOT_DIR}/platform/driver/src/pal_smmuv3_testengine.c
 )
+
+if(${XEN_SUPPORT} EQUAL "1")
+    list(APPEND PAL_SRC
+        ${ROOT_DIR}/platform/common/src/xen/hypercall.S
+        ${ROOT_DIR}/platform/driver/src/pal_xen_pvconsole.c
+        ${ROOT_DIR}/platform/driver/src/pal_xen_console.c
+    )
+endif()
 
 # Create PAL library
 add_library(${PAL_LIB} STATIC ${PAL_SRC})

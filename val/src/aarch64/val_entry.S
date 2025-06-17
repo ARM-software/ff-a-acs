@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -18,7 +18,7 @@
 /* Provision one stack per Execution Context (or vCPU) */
 .section .bss.stacks
     .balign 64
-    .fill   4096
+    .fill   131072
 stacks_end:
 
     .section .text.val_entry, "ax"
@@ -51,8 +51,21 @@ exit_loop_\op:
 .endm
 
 val_entry:
+    b _start
+    .long   0                       /* Executable code */
+    .quad   0x0                     /* Image load offset from start of RAM */
+    .quad   __BSS_END__ - _start    /* Effective Image size */
+    .quad   0xe                     /* little endian, 4K page */
+    .quad   0                       /* reserved */
+    .quad   0                       /* reserved */
+    .quad   0                       /* reserved */
+    .byte   0x41                    /* Magic number, "ARM\x64" */
+    .byte   0x52
+    .byte   0x4d
+    .byte   0x64
+    .long   0                       /* reserved */
 
-
+_start:
    /* Install vector table */
     adr     x0, vector_table
 #if defined(VM1_COMPILE) && (PLATFORM_NS_HYPERVISOR_PRESENT == 0)
@@ -117,19 +130,26 @@ pie_fixup:
     bl    fix_symbol_table
 
     /* Setup the stack pointer to call C entry */
-    adr    x0, stacks_end
+    adrp   x0, stacks_end
+    add    x0, x0, :lo12:stacks_end
     mov    sp, x0
 
-   /* Clear BSS */
-   adr x2, val_image_load_offset
-   ldr x2, [x2]
-   adr x0, bss_start_addr
-   ldr x0, [x0]
-   add x0, x0, x2
-   adr x1, bss_end_addr
-   ldr x1, [x1]
-   add x1, x1, x2
-   sub x1, x1, x0
+    /* Clear BSS */
+    adrp   x2, val_image_load_offset
+    add    x2, x2, :lo12:val_image_load_offset
+    ldr    x2, [x2]
+
+    adrp   x0, bss_start_addr
+    add    x0, x0, :lo12:bss_start_addr
+    ldr    x0, [x0]
+    add    x0, x0, x2
+
+    adrp   x1, bss_end_addr
+    add    x1, x1, :lo12:bss_end_addr
+    ldr    x1, [x1]
+    add    x1, x1, x2
+
+    sub    x1, x1, x0
 2:
    stp xzr, xzr, [x0]
    add x0, x0, #16
