@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -144,7 +144,7 @@ static uint32_t ffa_partition_info_helper(void *rx_buff, const uint32_t uuid[4],
     payload = ffa_partition_info_get(uuid, flags);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "ffa_partition_info_get failed");
+        LOG(ERROR, "ffa_partition_info_get failed %x", uuid[0]);
         return VAL_ERROR_POINT(5);
     }
 
@@ -157,28 +157,15 @@ static uint32_t ffa_partition_info_helper(void *rx_buff, const uint32_t uuid[4],
         goto rx_release;
     }
 
-    if (uuid[0] || uuid[1] || uuid[2] || uuid[3])
-    {
-        if (payload.arg2 != expected_count)
-        {
-            LOG(ERROR, "Count mismatched, expected=%x, actual=%x",
-                     expected_count, payload.arg2);
-            status = VAL_ERROR_POINT(7);
-            goto rx_release;
-        }
-    }
-    else
-    {
-        if (payload.arg2 < expected_count)
-        {
-            LOG(ERROR, "Count mismatched, expected=%x < actual=%x",
-                     expected_count, payload.arg2);
-            status = VAL_ERROR_POINT(8);
-            goto rx_release;
-        }
-    }
+    LOG(DBG, "Count %x flags %x", payload.arg2, flags);
 
-    LOG(DBG, "Count%x flags %x", payload.arg2, flags);
+    if (payload.arg2 < expected_count)
+    {
+        LOG(ERROR, "Count mismatched, expected >=%x, actual=%x",
+                 expected_count, payload.arg2);
+        status = VAL_ERROR_POINT(7);
+        goto rx_release;
+    }
 
     if (flags == FFA_PARTITION_INFO_FLAG_RETDESC)
     {
@@ -225,8 +212,8 @@ uint32_t ffa_partition_info_get_client(uint32_t test_run_data)
     uint64_t size = PAGE_SIZE_4K;
     uint16_t count;
 
-    tx_buff = val_memory_alloc(size);
-    rx_buff = val_memory_alloc(size);
+    tx_buff = val_aligned_alloc(PAGE_SIZE_4K, size);
+    rx_buff = val_aligned_alloc(PAGE_SIZE_4K, size);
     if (rx_buff == NULL || tx_buff == NULL)
     {
         LOG(ERROR, "Failed to allocate RxTx buffer");
@@ -253,73 +240,57 @@ uint32_t ffa_partition_info_get_client(uint32_t test_run_data)
     /* Endpoint can request information for a subset of partitions in the
      * system by specifying the non-Nil UUID.
      */
-    if (ffa_partition_info_helper(rx_buff, ep_info[EP_ID1].uuid, &ep_info[EP_ID1],
-                                   1, FFA_PARTITION_INFO_FLAG_RETDESC))
+
+    if (val_is_partition_valid(EP_ID1))
     {
-        status = VAL_ERROR_POINT(15);
-        goto unmap_rxtx;
+        if (ffa_partition_info_helper(rx_buff, ep_info[EP_ID1].uuid, &ep_info[EP_ID1],
+                                       1, FFA_PARTITION_INFO_FLAG_RETDESC))
+        {
+            status = VAL_ERROR_POINT(15);
+            goto unmap_rxtx;
+        }
     }
 
-    if (ffa_partition_info_helper(rx_buff, ep_info[EP_ID2].uuid, &ep_info[EP_ID2],
-                                   1, FFA_PARTITION_INFO_FLAG_RETDESC))
+    if (val_is_partition_valid(EP_ID2))
     {
-        status = VAL_ERROR_POINT(16);
-        goto unmap_rxtx;
+        if (ffa_partition_info_helper(rx_buff, ep_info[EP_ID2].uuid, &ep_info[EP_ID2],
+                                       1, FFA_PARTITION_INFO_FLAG_RETDESC))
+        {
+            status = VAL_ERROR_POINT(16);
+            goto unmap_rxtx;
+        }
     }
 
-    if (ffa_partition_info_helper(rx_buff, ep_info[EP_ID3].uuid, &ep_info[EP_ID3],
-                                   1, FFA_PARTITION_INFO_FLAG_RETDESC))
+    if (val_is_partition_valid(EP_ID3))
     {
-        status = VAL_ERROR_POINT(17);
-        goto unmap_rxtx;
+        if (ffa_partition_info_helper(rx_buff, ep_info[EP_ID3].uuid, &ep_info[EP_ID3],
+                                       1, FFA_PARTITION_INFO_FLAG_RETDESC))
+        {
+            status = VAL_ERROR_POINT(17);
+            goto unmap_rxtx;
+        }
     }
 
     /* Endpoint can request information for all partitions in the system
      * including the caller by specifying the Nil UUID.
      */
-    if (VAL_IS_ENDPOINT_SECURE(val_get_curr_endpoint_logical_id()))
+    count = (uint16_t)val_get_secure_partition_count();
+
+    if (ffa_partition_info_helper(rx_buff, null_uuid, &ep_info[EP_ID1],
+                                    count, FFA_PARTITION_INFO_FLAG_RETDESC))
     {
-        count = VAL_S_EP_COUNT;
-        if (ffa_partition_info_helper(rx_buff, null_uuid, &ep_info[SP1],
-                                       count, FFA_PARTITION_INFO_FLAG_RETDESC))
-        {
-            status = VAL_ERROR_POINT(18);
-            goto unmap_rxtx;
-        }
-
-        #if (PLATFORM_FFA_V >= FFA_V_1_1)
-        if (ffa_partition_info_helper(rx_buff, null_uuid, &ep_info[SP1],
-                                       count, FFA_PARTITION_INFO_FLAG_RETCOUNT))
-        {
-            status = VAL_ERROR_POINT(19);
-            goto unmap_rxtx;
-        }
-        #endif
+        status = VAL_ERROR_POINT(20);
+        goto unmap_rxtx;
     }
-    else
+
+    #if (PLATFORM_FFA_V >= FFA_V_1_1)
+    if (ffa_partition_info_helper(rx_buff, null_uuid, &ep_info[EP_ID1],
+                                    count, FFA_PARTITION_INFO_FLAG_RETCOUNT))
     {
-        /* Expect VM info only when NS-hyp is present */
-        if (VAL_NS_EP_COUNT > 0x1)
-            count = VAL_TOTAL_EP_COUNT;
-        else
-            count = VAL_S_EP_COUNT;
-
-        if (ffa_partition_info_helper(rx_buff, null_uuid, &ep_info[EP_ID1],
-                                       count, FFA_PARTITION_INFO_FLAG_RETDESC))
-        {
-            status = VAL_ERROR_POINT(20);
-            goto unmap_rxtx;
-        }
-
-        #if (PLATFORM_FFA_V >= FFA_V_1_1)
-        if (ffa_partition_info_helper(rx_buff, null_uuid, &ep_info[EP_ID1],
-                                       count, FFA_PARTITION_INFO_FLAG_RETCOUNT))
-        {
-            status = VAL_ERROR_POINT(21);
-            goto unmap_rxtx;
-        }
-        #endif
+        status = VAL_ERROR_POINT(21);
+        goto unmap_rxtx;
     }
+    #endif
 
     if (ffa_partition_info_wrong_test())
     {
@@ -335,7 +306,7 @@ unmap_rxtx:
     }
 
 free_memory:
-    if (val_memory_free(rx_buff, size) || val_memory_free(tx_buff, size))
+    if (val_free(rx_buff) || val_free(tx_buff))
     {
         LOG(ERROR, "val_memory_free failed");
         status = status ? status : VAL_ERROR_POINT(24);

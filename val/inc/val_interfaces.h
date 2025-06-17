@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -10,6 +10,7 @@
 
 #include "val_misc.h"
 #include "val_framework.h"
+#include "val_malloc.h"
 #include "val_test_dispatch.h"
 #include "val_ffa.h"
 #include "val_memory.h"

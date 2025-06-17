@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2024-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -16,6 +16,8 @@
 
 static val_endpoint_info_t lsp_info = {
         "SP1",
+        .is_valid    = VAL_PARTITION_PRESENT,
+        .is_secure   =   VAL_PARTITION_SECURE,
         SPMD_LP_PARTITION_ID,
         VAL_TG0_4K,
         EL1_64,

@@ -34,28 +34,28 @@
 			debug_name = "ff-a-acs SP1";
 			load_address = <0x7000000>;
 			vcpu_count = <8>;
-			mem_size = <1048576>;
+			mem_size = <2097152>;
 		};
 		vm2 {
 			is_ffa_partition;
 			debug_name = "ff-a-acs SP2";
-			load_address = <0x7100000>;
+			load_address = <0x7200000>;
 			vcpu_count = <8>;
-			mem_size = <1048576>;
+			mem_size = <2097152>;
 		};
 		vm3 {
 			is_ffa_partition;
 			debug_name = "ff-a-acs SP3";
-			load_address = <0x7200000>;
+			load_address = <0x7400000>;
 			vcpu_count = <1>;
-			mem_size = <1048576>;
+			mem_size = <2097152>;
 		};
 		vm4 {
 			is_ffa_partition;
 			debug_name = "ff-a-acs SP4";
-			load_address = <0x7300000>;
+			load_address = <0x7600000>;
 			vcpu_count = <1>;
-			mem_size = <1048576>;
+			mem_size = <2097152>;
 		};
 	};
 

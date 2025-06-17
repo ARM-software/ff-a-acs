@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+# Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
@@ -15,7 +15,7 @@ set(GNUARM_OBJCOPY "${CROSS_COMPILE}objcopy" CACHE FILEPATH "The GNUARM objcopy"
 set(GNUARM_OBJDUMP "${CROSS_COMPILE}objdump" CACHE FILEPATH "The GNUARM objdump" FORCE)
 
 if(${ENABLE_PIE})
-    set(LINKER_PIE_SWITCH "-pie --no-dynamic-linker")
+    set(LINKER_PIE_SWITCH "-pie" "--no-dynamic-linker")
 else()
     set(LINKER_PIE_SWITCH "")
 endif()
@@ -26,7 +26,7 @@ else()
     set(LINKER_DEBUG_OPTIONS "")
 endif()
 
-set(GNUARM_LINKER_FLAGS "--fatal-warnings  ${LINKER_PIE_SWITCH} ${LINKER_DEBUG_OPTIONS} -O1 --gc-sections --build-id=none")
+set(GNUARM_LINKER_FLAGS "--fatal-warnings"  ${LINKER_PIE_SWITCH} ${LINKER_DEBUG_OPTIONS} "-O1" "--gc-sections" "--build-id=none")
 set(GNUARM_OBJDUMP_FLAGS    "-dSx")
 set(GNUARM_OBJCOPY_FLAGS    "-Obinary")
 
@@ -41,9 +41,16 @@ function (create_executable EXE_NAME)
     add_custom_target(Process-linker-script-${EXE_NAME} ALL DEPENDS Process-linker-script--${EXE_NAME})
 
     # Link the objects
-    add_custom_command(OUTPUT ${EXE_NAME}.elf
-                    COMMAND ${GNUARM_LINKER} ${CMAKE_LINKER_FLAGS} -T ${SCATTER_OUTPUT_FILE} -o ${EXE_NAME}.elf ${VAL_LIB}.a ${PAL_LIB}.a ${TEST_LIB}.a ${VAL_LIB}.a ${PAL_LIB}.a ${PAL_OBJ_LIST}
-                    DEPENDS Process-linker-script-${EXE_NAME})
+    add_custom_command(
+    OUTPUT ${EXE_NAME}.elf
+    COMMAND ${GNUARM_LINKER} ${CMAKE_LINKER_FLAGS} ${GNUARM_LINKER_FLAGS}
+            -T ${SCATTER_OUTPUT_FILE}
+            -o ${EXE_NAME}.elf
+            --start-group
+                ${PAL_LIB}.a ${VAL_LIB}.a ${TEST_LIB}.a
+            --end-group
+            ${PAL_OBJ_LIST}
+    DEPENDS Process-linker-script-${EXE_NAME})
     add_custom_target(${EXE_NAME}_elf ALL DEPENDS ${EXE_NAME}.elf)
 
     # Create the dump info

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2024-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -26,8 +26,8 @@ uint32_t vm_to_up_sp_preempt_server(ffa_args_t args)
     uint32_t msg_size;
     memory_region_descriptor_t mem_desc;
 
-    mb.send = val_memory_alloc(size);
-    mb.recv = val_memory_alloc(size);
+    mb.send = val_aligned_alloc(PAGE_SIZE_4K, size);
+    mb.recv = val_aligned_alloc(PAGE_SIZE_4K, size);
     if (mb.send == NULL || mb.recv == NULL)
     {
         LOG(ERROR, "Failed to allocate RxTx buffer");
@@ -154,7 +154,7 @@ rxtx_unmap:
     }
 
 free_memory:
-    if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
+    if (val_free(mb.recv) || val_free(mb.send))
     {
         LOG(ERROR, "free_rxtx_buffers failed");
         status = status ? status : VAL_ERROR_POINT(11);

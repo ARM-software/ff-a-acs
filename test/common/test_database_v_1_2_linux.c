@@ -22,6 +22,7 @@ const test_db_t test_list[] = {
     {0, "", NULL, NULL, NULL, NULL, NULL},
 
 #if (SUITE == all || SUITE == setup_discovery)
+    /* FFA_V_1_0 */
     CLIENT_TEST_FN_ONLY(TESTSUITE_SETUP_DISCOVERY, ffa_version),
     CLIENT_TEST_FN_ONLY(TESTSUITE_SETUP_DISCOVERY, ffa_features),
     CLIENT_TEST_FN_ONLY(TESTSUITE_SETUP_DISCOVERY, ffa_id_get),
@@ -32,13 +33,35 @@ const test_db_t test_list[] = {
 #endif
 
 #if (SUITE == all || SUITE == direct_messaging)
+    /* FFA_V_1_0 */
     CLIENT_SERVER_TEST_FN(TESTSUITE_DIRECT_MESSAGING, ffa_direct_message_32),
     CLIENT_SERVER_TEST_FN(TESTSUITE_DIRECT_MESSAGING, ffa_direct_message_64),
+
+    /* FFA_V_1_2 */
     CLIENT_SERVER_TEST_FN(TESTSUITE_DIRECT_MESSAGING, ffa_direct_message2),
 #endif
 
 #if (SUITE == all || SUITE == memory_manage)
+    /* FFA_V_1_0 */
+    CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, share_invalid_handle_tag),
+    CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, share_state_machine_5),
+    CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, share_rw_retrieve_ro),
+    CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, share_retrieve_align_hint_check),
+    CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, share_relinquish_input_checks),
+    CLIENT_TEST_FN_ONLY(TESTSUITE_MEMORY_MANAGE, share_state_machine_2),
+    CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, share_state_machine_3),
+    CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, share_multiple_retrievals),
+
+    /* FFA_V_1_1 */
+    CLIENT_TEST_FN_ONLY(TESTSUITE_MEMORY_MANAGE, ffa_mem_perm_set),
+    CLIENT_TEST_FN_ONLY(TESTSUITE_MEMORY_MANAGE, ffa_mem_perm_get),
+
     CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, ffa_mem_share),
+#endif
+#ifdef ACS_FFA_UNVERIFIED
+    CLIENT_TEST_FN_ONLY(TESTSUITE_MEMORY_MANAGE, share_input_error_checks),
+    CLIENT_TEST_FN_ONLY(TESTSUITE_MEMORY_MANAGE, share_input_error_checks1),
+    CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, mem_security_state_ns_bit),
 #endif
     {0, "", NULL, NULL, NULL, NULL, NULL},
 };

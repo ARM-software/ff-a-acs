@@ -124,7 +124,7 @@ void val_ffa_version(ffa_args_t *args)
 
 static void ffa_msg_send_direct_req2(ffa_args_t *args)
 {
-#ifdef TARGET_LINUX
+#if (TARGET_LINUX == 1) || (PLATFORM_NS_HYPERVISOR_PRESENT == 1)
     ffa_args_t  payload;
 #endif
 
@@ -135,7 +135,7 @@ static void ffa_msg_send_direct_req2(ffa_args_t *args)
                         args->ext_args.arg14, args->ext_args.arg15, args->ext_args.arg16,
                         args->ext_args.arg17);
 
-#ifdef TARGET_LINUX
+#if (TARGET_LINUX == 1) || (PLATFORM_NS_HYPERVISOR_PRESENT == 1)
     while (args->fid == FFA_INTERRUPT_32)
     {
         val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -161,7 +161,7 @@ void val_ffa_msg_send_direct_req2_64(ffa_args_t *args)
 
 static void ffa_msg_send_direct_req(ffa_args_t *args, bool arch64)
 {
-#ifdef TARGET_LINUX
+#if (TARGET_LINUX == 1) || (PLATFORM_NS_HYPERVISOR_PRESENT == 1)
     ffa_args_t  payload;
 #endif
 
@@ -178,7 +178,7 @@ static void ffa_msg_send_direct_req(ffa_args_t *args, bool arch64)
                           args->arg7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     }
 
-#ifdef TARGET_LINUX
+#if (TARGET_LINUX == 1) || (PLATFORM_NS_HYPERVISOR_PRESENT == 1)
     while (args->fid == FFA_INTERRUPT_32)
     {
         val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -601,13 +601,13 @@ static void ffa_run(ffa_args_t *args)
 **/
 void val_ffa_run(ffa_args_t *args)
 {
-#ifdef TARGET_LINUX
+#if (TARGET_LINUX == 1) || (PLATFORM_NS_HYPERVISOR_PRESENT == 1)
     ffa_args_t  payload;
 #endif
 
     ffa_run(args);
 
-#ifdef TARGET_LINUX
+#if (TARGET_LINUX == 1) || (PLATFORM_NS_HYPERVISOR_PRESENT == 1)
     while (args->fid == FFA_INTERRUPT_32)
     {
         val_memset(&payload, 0, sizeof(ffa_args_t));

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -33,8 +33,8 @@ uint32_t ffa_direct_message_error1_client(uint32_t test_run_data)
     uint32_t i;
     uint32_t status = VAL_SUCCESS;
 
-    tx_buff = val_memory_alloc(size);
-    rx_buff = val_memory_alloc(size);
+    tx_buff = val_aligned_alloc(PAGE_SIZE_4K, size);
+    rx_buff = val_aligned_alloc(PAGE_SIZE_4K, size);
     if (rx_buff == NULL || tx_buff == NULL)
     {
         LOG(ERROR, "Failed to allocate RxTx buffer");
@@ -133,7 +133,7 @@ rx_release:
     }
 
 free_memory:
-    if (val_memory_free(rx_buff, size) || val_memory_free(tx_buff, size))
+    if (val_free(rx_buff) || val_free(tx_buff))
     {
         LOG(ERROR, "val_memory_free failed");
         status = status ? status : VAL_ERROR_POINT(8);

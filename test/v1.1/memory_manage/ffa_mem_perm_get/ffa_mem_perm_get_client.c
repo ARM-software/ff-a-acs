@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2024-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -15,7 +15,7 @@ uint32_t ffa_mem_perm_get_client(uint32_t test_run_data)
     ffa_endpoint_id_t curr_ep_logical_id;
     uint8_t *pages = NULL;
 
-    pages = (uint8_t *)val_memory_alloc(size);
+    pages = (uint8_t *)val_aligned_alloc(PAGE_SIZE_4K, size);
     if (!pages)
     {
         LOG(ERROR, "Memory allocation failed");
@@ -50,9 +50,9 @@ uint32_t ffa_mem_perm_get_client(uint32_t test_run_data)
     }
 
 free_memory:
-   if (val_memory_free(pages, size))
+   if (val_free(pages))
     {
-        LOG(ERROR, "val_mem_free failed");
+        LOG(ERROR, "val_free failed");
         status = status ? status : VAL_ERROR_POINT(4);
     }
 

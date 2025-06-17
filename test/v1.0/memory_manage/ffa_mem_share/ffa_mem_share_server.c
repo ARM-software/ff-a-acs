@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -60,8 +60,6 @@ static uint32_t borrower_to_lend_memory(ffa_endpoint_id_t recipient, mb_buf_t mb
         LOG(DBG, "FFA_MEM_LEND error check complete");
         return VAL_SUCCESS;
     }
-
-    LOG(ERROR, "FFA_MEM_LEND request must fail with DENIED err %x", payload.arg2);
 
     if (payload.fid == FFA_SUCCESS_32 || payload.fid == FFA_SUCCESS_64)
     {
@@ -165,8 +163,8 @@ uint32_t ffa_mem_share_server(ffa_args_t args)
     uint32_t msg_size;
     memory_region_descriptor_t mem_desc;
 
-    mb.send = val_memory_alloc(size);
-    mb.recv = val_memory_alloc(size);
+    mb.send = val_aligned_alloc(PAGE_SIZE_4K, size);
+    mb.recv = val_aligned_alloc(PAGE_SIZE_4K, size);
     if (mb.send == NULL || mb.recv == NULL)
     {
         LOG(ERROR, "Failed to allocate RxTx buffer");
@@ -182,7 +180,7 @@ uint32_t ffa_mem_share_server(ffa_args_t args)
         goto free_memory;
     }
 
-    pages = (uint8_t *)val_memory_alloc(size);
+    pages = (uint8_t *)val_aligned_alloc(PAGE_SIZE_4K, size);
     if (!pages)
     {
         LOG(ERROR, "Memory allocation failed");
@@ -364,18 +362,21 @@ uint32_t ffa_mem_share_server(ffa_args_t args)
         recipient_1 = val_get_endpoint_id(SP3);
     }
 
-    /* Check that borrower can't lend memory to others */
-    status = borrower_to_lend_memory(recipient_1, mb, ptr);
-    if (status)
+    if (val_is_partition_valid(val_get_endpoint_logical_id(recipient_1)))
     {
-        status = VAL_ERROR_POINT(16);
-        goto relinquish_mem;
-    }
+        /* Check that borrower can't lend memory to others */
+        status = borrower_to_lend_memory(recipient_1, mb, ptr);
+        if (status)
+        {
+            status = VAL_ERROR_POINT(16);
+            goto relinquish_mem;
+        }
 
-    /* Check that borrower can't donate memory to others */
-    status = borrower_to_donate_memory(recipient_1, mb, ptr);
-    if (status)
-        status = VAL_ERROR_POINT(17);
+        /* Check that borrower can't donate memory to others */
+        status = borrower_to_donate_memory(recipient_1, mb, ptr);
+        if (status)
+            status = VAL_ERROR_POINT(17);
+    }
 
     LOG(DBG, "Data region modified and error check complete, relinquish memory");
 
@@ -406,15 +407,15 @@ rxtx_unmap:
     }
 
 free_memory:
-    if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
+    if (val_free(mb.recv) || val_free(mb.send))
     {
         LOG(ERROR, "free_rxtx_buffers failed");
         status = status ? status : VAL_ERROR_POINT(21);
     }
 
-    if (val_memory_free(pages, size))
+    if (val_free(pages))
     {
-        LOG(ERROR, "val_mem_free failed");
+        LOG(ERROR, "val_free failed");
         status = status ? status : VAL_ERROR_POINT(22);
     }
 

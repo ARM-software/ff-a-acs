@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2024-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -11,6 +11,10 @@
 #include <pal_interfaces.h>
 #include <pal_arch_helpers.h>
 #include <pal_pl011_uart.h>
+#if defined(VM1_COMPILE) && defined(XEN_SUPPORT)
+#include <pal_xen_pvconsole.h>
+#endif
+#include <pal_ffa_console_log.h>
 #include <pal_log.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -18,9 +22,11 @@
 #if (defined(SP1_COMPILE) || defined(SP2_COMPILE) || defined(VM2_COMPILE) ||\
      defined(SP3_COMPILE) || defined(SP4_COMPILE) || defined(VM3_COMPILE))
 /* Use hyp log system call for sp2, sp3, sp4, vm2 and vm3 */
-#define pal_uart_putc(x) pal_uart_putc_hypcall((char)x)
+#define pal_uart_putc(x) driver_ffa_console_log_putc((char)x)
+#elif defined(VM1_COMPILE) && defined(XEN_SUPPORT)
+#define pal_uart_putc(x) driver_xen_pvconsole_putc((char)x)
 #else
-/* Use platform uart for vm1 & sp1 */
+/* Use platform uart for vm1 & sp1(el3 spmc) */
 #define pal_uart_putc(x) driver_uart_pl011_putc(x)
 #endif
 

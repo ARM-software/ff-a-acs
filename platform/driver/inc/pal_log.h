@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2024-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -22,6 +22,12 @@ typedef enum {
 #define PRINT_VM_ID()                                                                         \
     do {                                                                                      \
            pal_printf(19, "[0000 %d]", pal_get_cpuid(read_mpidr_el1() & MPID_MASK));          \
+    } while (0);
+#elif ((PLATFORM_SPMC_EL == 3) || (defined(VM1_COMPILE)))
+#define PRINT_VM_ID()                                                                         \
+    do {                                                                                      \
+           pal_printf(19, "[000%d %d]",                                                       \
+               pal_get_current_ep_id() , pal_get_cpuid(read_mpidr_el1() & MPID_MASK));        \
     } while (0);
 #else
 #define PRINT_VM_ID()                                                                         \

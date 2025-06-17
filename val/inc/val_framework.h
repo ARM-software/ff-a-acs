@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -10,6 +10,7 @@
 
 #include "val.h"
 #include "val_misc.h"
+#include "val_ffa.h"
 
 void val_main(void);
 uint32_t val_report_status(uint32_t test_num);
@@ -27,6 +28,10 @@ void val_reset_reboot_flag(void);
 void val_reprogram_watchdog(void);
 uint32_t val_smmu_device_configure(uint32_t stream_id, uint64_t source, uint64_t dest,
                                      uint64_t size, bool secure);
+uint32_t val_check_ep_compile_status(uint32_t client_logical_id, uint32_t server_logical_id);
+void val_send_sync_ep_info(void);
+void val_sync_ep_info_service(ffa_args_t *args);
+void val_ep_info_relayer_sync(void);
 
 #endif /* _VAL_FRAMEWORK_H_ */
 

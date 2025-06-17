@@ -1,0 +1,321 @@
+From 80cbd9c92d65565b6171f01fa55c043d71605412 Mon Sep 17 00:00:00 2001
+Message-Id: <80cbd9c92d65565b6171f01fa55c043d71605412.1707389451.git.bertrand.marquis@arm.com>
+In-Reply-To: <2d764981fad1c1ccb37498adc431d3c9a9a69c1d.1707389451.git.bertrand.marquis@arm.com>
+References: <2d764981fad1c1ccb37498adc431d3c9a9a69c1d.1707389451.git.bertrand.marquis@arm.com>
+From: Bertrand Marquis <bertrand.marquis@arm.com>
+Date: Thu, 8 Feb 2024 10:05:01 +0000
+Subject: [PATCH 3/3] package/xen: Bump xen version to 4.18.0
+
+Bump Xen version to the latest stable version 4.18.0
+Remove patches not required anymore with this version.
+Add dependencies required by the new tools (bash, prlimit in util-linux)
+Bump the hash for this version
+---
+ ...de-linux-limits.h-for-XATTR_SIZE_MAX.patch | 43 ---------
+ .../0002-Fix-build-with-64-bits-time_t.patch  | 95 -------------------
+ ...-libs-light-fix-tv_sec-printf-format.patch | 63 ------------
+ ...libs-light-fix-tv_sec-fprintf-format.patch | 30 ------
+ package/xen/Config.in                         |  4 +
+ package/xen/xen.hash                          |  2 +-
+ package/xen/xen.mk                            |  2 +-
+ 7 files changed, 6 insertions(+), 233 deletions(-)
+ delete mode 100644 package/xen/0001-9pfs-include-linux-limits.h-for-XATTR_SIZE_MAX.patch
+ delete mode 100644 package/xen/0002-Fix-build-with-64-bits-time_t.patch
+ delete mode 100644 package/xen/0003-libs-light-fix-tv_sec-printf-format.patch
+ delete mode 100644 package/xen/0004-libs-light-fix-tv_sec-fprintf-format.patch
+
+diff --git a/package/xen/0001-9pfs-include-linux-limits.h-for-XATTR_SIZE_MAX.patch b/package/xen/0001-9pfs-include-linux-limits.h-for-XATTR_SIZE_MAX.patch
+deleted file mode 100644
+index b681b941f7e3..000000000000
+--- a/package/xen/0001-9pfs-include-linux-limits.h-for-XATTR_SIZE_MAX.patch
++++ /dev/null
+@@ -1,43 +0,0 @@
+-Message-Id: <07010a2ad79559c412949f0005dbe3cb03d8416e.1498504812.git.ps@pks.im>
+-From: Patrick Steinhardt <ps@pks.im>
+-Date: Mon, 26 Jun 2017 21:20:45 +0200
+-Subject: [PATCH] 9pfs: include <linux/limits.h> for XATTR_SIZE_MAX
+-
+-The function `v9fs_xattrcreate` makes use of the define `XATTR_SIZE_MAX`
+-to reject attempts of creating xattrs with an invalid size, which is
+-defined in <linux/limits.h>. On glibc-based systems, this header is
+-indirectly included via <limits.h>, <bits/posix1_lim.h>,
+-<bitts/local_lim.h>, but on other platforms this is not guaranteed due
+-to not being part of the POSIX standard. One examples are systems based
+-on musl libc, which do not include the <linux/limits.h> indirectly,
+-which leads to `XATTR_SIZE_MAX` being undefined.
+-
+-Fix this error by directly include <linux/limits.h>. As the 9P fs code
+-is being Linux-based either way, we can simply do so without breaking
+-other platforms. This enables building 9pfs on musl-based systems.
+-
+-Signed-off-by: Patrick Steinhardt <ps@pks.im>
+-[ Changes by AF
+- - Apply to the QEMU tree inside of Xen
+-]
+-Signed-off-by: Alistair Francis <alistair.francis@xilinx.com>
+----
+-Upstream Status: Pending review and acceptance
+-
+- tools/qemu-xen/hw/9pfs/9p.c | 1 +
+- 1 file changed, 1 insertion(+)
+-
+-diff --git a/tools/qemu-xen/hw/9pfs/9p.c b/tools/qemu-xen/hw/9pfs/9p.c
+-index 96d2683348..48cd558e96 100644
+---- a/tools/qemu-xen/hw/9pfs/9p.c
+-+++ b/tools/qemu-xen/hw/9pfs/9p.c
+-@@ -13,6 +13,7 @@
+- 
+- #include "qemu/osdep.h"
+- #include <glib/gprintf.h>
+-+#include <linux/limits.h>
+- #include "hw/virtio/virtio.h"
+- #include "qapi/error.h"
+- #include "qemu/error-report.h"
+--- 
+-2.13.2
+diff --git a/package/xen/0002-Fix-build-with-64-bits-time_t.patch b/package/xen/0002-Fix-build-with-64-bits-time_t.patch
+deleted file mode 100644
+index 8559aece2d34..000000000000
+--- a/package/xen/0002-Fix-build-with-64-bits-time_t.patch
++++ /dev/null
+@@ -1,95 +0,0 @@
+-From f7a6df5f5bf3acc219352a1b25573ae2082d7e42 Mon Sep 17 00:00:00 2001
+-From: Fabrice Fontaine <fontaine.fabrice@gmail.com>
+-Date: Thu, 3 Dec 2020 20:58:19 +0100
+-Subject: [PATCH] Fix build with 64 bits time_t
+-
+-time element is deprecated on new input_event structure in kernel's
+-input.h [1]
+-
+-This will avoid the following build failure:
+-
+-hw/input/virtio-input-host.c: In function 'virtio_input_host_handle_status':
+-hw/input/virtio-input-host.c:198:28: error: 'struct input_event' has no member named 'time'
+-  198 |     if (gettimeofday(&evdev.time, NULL)) {
+-      |                            ^
+-
+-Fixes:
+- - http://autobuild.buildroot.org/results/a538167e288c14208d557cd45446df86d3d599d5
+- - http://autobuild.buildroot.org/results/efd4474fb4b6c0ce0ab3838ce130429c51e43bbb
+-
+-[1] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit?id=152194fe9c3f
+-
+-Signed-off-by: Fabrice Fontaine <fontaine.fabrice@gmail.com>
+-Message-Id: <20201203195819.583626-1-fontaine.fabrice@gmail.com>
+-Fixes: https://gitlab.com/qemu-project/qemu/-/issues/246
+-Reviewed-by: Michael S. Tsirkin <mst@redhat.com>
+-Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+-
+-[Retrieved (and updated for qemu-xen) from:
+-https://github.com/qemu/qemu/commit/f7a6df5f5bf3acc219352a1b25573ae2082d7e42]
+-Signed-off-by: Fabrice Fontaine <fontaine.fabrice@gmail.com>
+----
+- contrib/vhost-user-input/main.c | 8 ++++++--
+- hw/input/virtio-input-host.c    | 5 ++++-
+- 2 files changed, 10 insertions(+), 3 deletions(-)
+-
+-diff --git a/tools/qemu-xen/contrib/vhost-user-input/main.c b/tools/qemu-xen/contrib/vhost-user-input/main.c
+-index c15d18c33f0c..081230da548a 100644
+---- a/tools/qemu-xen/contrib/vhost-user-input/main.c
+-+++ b/tools/qemu-xen/contrib/vhost-user-input/main.c
+-@@ -6,13 +6,14 @@
+- #include "qemu/osdep.h"
+- 
+- #include <glib.h>
+--#include <linux/input.h>
+-+#include <sys/ioctl.h>
+- 
+- #include "qemu/iov.h"
+- #include "qemu/bswap.h"
+- #include "qemu/sockets.h"
+- #include "contrib/libvhost-user/libvhost-user.h"
+- #include "contrib/libvhost-user/libvhost-user-glib.h"
+-+#include "standard-headers/linux/input.h"
+- #include "standard-headers/linux/virtio_input.h"
+- #include "qapi/error.h"
+- 
+-@@ -113,13 +114,16 @@ vi_evdev_watch(VuDev *dev, int condition, void *data)
+- static void vi_handle_status(VuInput *vi, virtio_input_event *event)
+- {
+-     struct input_event evdev;
+-+    struct timeval tval;
+-     int rc;
+- 
+--    if (gettimeofday(&evdev.time, NULL)) {
+-+    if (gettimeofday(&tval, NULL)) {
+-         perror("vi_handle_status: gettimeofday");
+-         return;
+-     }
+- 
+-+    evdev.input_event_sec = tval.tv_sec;
+-+    evdev.input_event_usec = tval.tv_usec;
+-     evdev.type = le16toh(event->type);
+-     evdev.code = le16toh(event->code);
+-     evdev.value = le32toh(event->value);
+-diff --git a/tools/qemu-xen/hw/input/virtio-input-host.c b/tools/qemu-xen/hw/input/virtio-input-host.c
+-index 85daf73f1a80..137efba57b0f 100644
+---- a/tools/qemu-xen/hw/input/virtio-input-host.c
+-+++ b/tools/qemu-xen/hw/input/virtio-input-host.c
+-@@ -193,13 +193,16 @@ static void virtio_input_host_handle_status(VirtIOInput *vinput,
+- {
+-     VirtIOInputHost *vih = VIRTIO_INPUT_HOST(vinput);
+-     struct input_event evdev;
+-+    struct timeval tval;
+-     int rc;
+- 
+--    if (gettimeofday(&evdev.time, NULL)) {
+-+    if (gettimeofday(&tval, NULL)) {
+-         perror("virtio_input_host_handle_status: gettimeofday");
+-         return;
+-     }
+- 
+-+    evdev.input_event_sec = tval.tv_sec;
+-+    evdev.input_event_usec = tval.tv_usec;
+-     evdev.type = le16_to_cpu(event->type);
+-     evdev.code = le16_to_cpu(event->code);
+-     evdev.value = le32_to_cpu(event->value);
+diff --git a/package/xen/0003-libs-light-fix-tv_sec-printf-format.patch b/package/xen/0003-libs-light-fix-tv_sec-printf-format.patch
+deleted file mode 100644
+index fffc8d730799..000000000000
+--- a/package/xen/0003-libs-light-fix-tv_sec-printf-format.patch
++++ /dev/null
+@@ -1,63 +0,0 @@
+-From a8ac01aa3e3ea5e6a9a1620aa8fa7e9da3458120 Mon Sep 17 00:00:00 2001
+-From: Manuel Bouyer <bouyer@netbsd.org>
+-Date: Tue, 26 Jan 2021 23:47:55 +0100
+-Subject: [PATCH] libs/light: fix tv_sec printf format
+-MIME-Version: 1.0
+-Content-Type: text/plain; charset=UTF-8
+-Content-Transfer-Encoding: 8bit
+-
+-Don't assume tv_sec is a unsigned long, it is 64 bits on NetBSD 32 bits.
+-Use %jd and cast to (intmax_t) instead
+-
+-Signed-off-by: Manuel Bouyer <bouyer@netbsd.org>
+-Reviewed-by: Roger Pau Monné <roger.pau@citrix.com>
+-[Retrieved (and backported) from:
+-https://gitlab.com/xen-project/xen/-/commit/a8ac01aa3e3ea5e6a9a1620aa8fa7e9da3458120]
+-Signed-off-by: Fabrice Fontaine <fontaine.fabrice@gmail.com>
+----
+- tools/libs/light/libxl_create.c | 8 ++++----
+- 1 file changed, 4 insertions(+), 4 deletions(-)
+-
+-diff --git a/tools/libxl/libxl_create.c b/tools/libxl/libxl_create.c
+-index 8616113e72..9848d65f36 100644
+---- a/tools/libxl/libxl_create.c
+-+++ b/tools/libxl/libxl_create.c
+-@@ -496,7 +496,7 @@ int libxl__domain_build(libxl__gc *gc,
+-         vments[2] = "image/ostype";
+-         vments[3] = "hvm";
+-         vments[4] = "start_time";
+--        vments[5] = GCSPRINTF("%lu.%02d", start_time.tv_sec,(int)start_time.tv_usec/10000);
+-+        vments[5] = GCSPRINTF("%jd.%02d", (intmax_t)start_time.tv_sec,(int)start_time.tv_usec/10000);
+- 
+-         localents = libxl__calloc(gc, 13, sizeof(char *));
+-         i = 0;
+-@@ -535,7 +535,7 @@ int libxl__domain_build(libxl__gc *gc,
+-         vments[i++] = "image/kernel";
+-         vments[i++] = (char *) state->pv_kernel.path;
+-         vments[i++] = "start_time";
+--        vments[i++] = GCSPRINTF("%lu.%02d", start_time.tv_sec,(int)start_time.tv_usec/10000);
+-+        vments[i++] = GCSPRINTF("%jd.%02d", (intmax_t)start_time.tv_sec,(int)start_time.tv_usec/10000);
+-         if (state->pv_ramdisk.path) {
+-             vments[i++] = "image/ramdisk";
+-             vments[i++] = (char *) state->pv_ramdisk.path;
+-@@ -1502,7 +1502,7 @@ static void domcreate_stream_done(libxl__egc *egc,
+-         vments[2] = "image/ostype";
+-         vments[3] = "hvm";
+-         vments[4] = "start_time";
+--        vments[5] = GCSPRINTF("%lu.%02d", start_time.tv_sec,(int)start_time.tv_usec/10000);
+-+        vments[5] = GCSPRINTF("%jd.%02d", (intmax_t)start_time.tv_sec,(int)start_time.tv_usec/10000);
+-         break;
+-     case LIBXL_DOMAIN_TYPE_PV:
+-         vments = libxl__calloc(gc, 11, sizeof(char *));
+-@@ -1512,7 +1512,7 @@ static void domcreate_stream_done(libxl__egc *egc,
+-         vments[i++] = "image/kernel";
+-         vments[i++] = (char *) state->pv_kernel.path;
+-         vments[i++] = "start_time";
+--        vments[i++] = GCSPRINTF("%lu.%02d", start_time.tv_sec,(int)start_time.tv_usec/10000);
+-+        vments[i++] = GCSPRINTF("%jd.%02d", (intmax_t)start_time.tv_sec,(int)start_time.tv_usec/10000);
+-         if (state->pv_ramdisk.path) {
+-             vments[i++] = "image/ramdisk";
+-             vments[i++] = (char *) state->pv_ramdisk.path;
+--- 
+-GitLab
+-
+diff --git a/package/xen/0004-libs-light-fix-tv_sec-fprintf-format.patch b/package/xen/0004-libs-light-fix-tv_sec-fprintf-format.patch
+deleted file mode 100644
+index d677dce4fcdb..000000000000
+--- a/package/xen/0004-libs-light-fix-tv_sec-fprintf-format.patch
++++ /dev/null
+@@ -1,30 +0,0 @@
+-From 4881285bcfd8f2e2c913c6e9f011b1e90652f414 Mon Sep 17 00:00:00 2001
+-From: Fabrice Fontaine <fontaine.fabrice@gmail.com>
+-Date: Sat, 28 Aug 2021 11:00:07 +0200
+-Subject: [PATCH] libs/light: fix tv_sec fprintf format
+-
+-Don't assume tv_sec is a unsigned long, it is 64 bits on NetBSD 32 bits.
+-Use %jd and cast to (intmax_t) instead
+-
+-Signed-off-by: Fabrice Fontaine <fontaine.fabrice@gmail.com>
+-[Upstream status: sent to xen-devel@lists.xenproject.org]
+----
+- tools/libs/light/libxl_domain.c | 2 +-
+- 1 file changed, 1 insertion(+), 1 deletion(-)
+-
+-diff --git a/tools/libxl/libxl_domain.c b/tools/libxl/libxl_domain.c
+-index c00c36c928..51a6127552 100644
+---- a/tools/libxl/libxl_domain.c
+-+++ b/tools/libxl/libxl_domain.c
+-@@ -1444,7 +1444,7 @@ static int libxl__mark_domid_recent(libxl__gc *gc, uint32_t domid)
+-         }
+-     }
+- 
+--    r = fprintf(nf, "%lu %u\n", ctxt.ts.tv_sec, domid);
+-+    r = fprintf(nf, "%jd %u\n", (intmax_t)ctxt.ts.tv_sec, domid);
+-     if (r < 0) {
+-         LOGED(ERROR, domid, "failed to write to '%s'", new);
+-         goto out;
+--- 
+-2.32.0
+-
+diff --git a/package/xen/Config.in b/package/xen/Config.in
+index 2843c3370fcc..3f15443b0b69 100644
+--- a/package/xen/Config.in
++++ b/package/xen/Config.in
+@@ -33,6 +33,10 @@ config BR2_PACKAGE_XEN_TOOLS
+ 	select BR2_PACKAGE_UTIL_LINUX_LIBUUID
+ 	select BR2_PACKAGE_YAJL
+ 	select BR2_PACKAGE_ARGP_STANDALONE if !BR2_TOOLCHAIN_USES_GLIBC
++	select BR2_PACKAGE_UTIL_LINUX_BINARIES
++	select BR2_PACKAGE_BUSYBOX_SHOW_OTHERS if BR2_PACKAGE_BUSYBOX
++	select BR2_PACKAGE_BASH
++	select BR2_SYSTEM_BIN_SH_BASH
+ 	help
+ 	  The Xen tools can be accessed by the xl command.
+ 
+diff --git a/package/xen/xen.hash b/package/xen/xen.hash
+index d2350ac51574..bd8746030f27 100644
+--- a/package/xen/xen.hash
++++ b/package/xen/xen.hash
+@@ -1,3 +1,3 @@
+ # Locally computed
+-sha256  7917681bc6e744789815131fcf7799e6b83a0d45b5801ac654322b037ce472f8  xen-4.14.6.tar.gz
++sha256  d5c9f729fa9fa34ea89ac7a0c810f01dc0a62f937777bfd2dd23a075c75c5f0e xen-4.18.0.tar.gz
+ sha256  ecca9538e9d3f7e3c2bff827502f4495e2ef9e22c451298696ea08886b176c2c  COPYING
+diff --git a/package/xen/xen.mk b/package/xen/xen.mk
+index a2e7fef78994..93d37867d41e 100644
+--- a/package/xen/xen.mk
++++ b/package/xen/xen.mk
+@@ -4,7 +4,7 @@
+ #
+ ################################################################################
+ 
+-XEN_VERSION = 4.14.6
++XEN_VERSION = 4.18.0
+ XEN_SITE = https://downloads.xenproject.org/release/xen/$(XEN_VERSION)
+ XEN_SELINUX_MODULES = systemd udev xen
+ XEN_LICENSE = GPL-2.0
+-- 
+2.25.1
+

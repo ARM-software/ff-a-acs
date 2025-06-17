@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -21,6 +21,28 @@ __attribute__ ((aligned (4096))) uint8_t val_stack[STACK_SIZE];
 void val_main(void)
 {
 
+#if ((PLATFORM_NS_HYPERVISOR_PRESENT == 1) && (defined(VM1_COMPILE)))
+    ffa_args_t payload;
+    payload.arg1 = (FFA_VERSION_MAJOR << 16) | FFA_VERSION_MINOR;
+    val_ffa_version(&payload);
+    if (payload.fid == FFA_ERROR_NOT_SUPPORTED)
+    {
+        LOG(ERROR, "FFA Version Negotiation Failed fid %x arg2 %x", payload.fid, payload.arg2);
+        VAL_PANIC("Terminating ACS Run");
+    }
+
+    LOG(ALWAYS, "Negotiate FF-A Version %x", (FFA_VERSION_MAJOR << 16) | FFA_VERSION_MINOR);
+#endif
+
+#if ((defined(TARGET_LINUX) || (PLATFORM_NS_HYPERVISOR_PRESENT == 1)) && (defined(VM1_COMPILE)))
+    val_endpoint_info_t *info_ptr = (val_endpoint_info_t *)val_get_endpoint_info();
+    ffa_endpoint_id_t id;
+
+    /* Update Primary VM1 ID as per hypervisor info */
+    id = val_get_curr_endpoint_id();
+    info_ptr[VM1].id = id;
+#endif
+
 #ifndef TARGET_LINUX
     /* Configure and enable Stage-1 MMU */
     if (val_setup_mmu())
@@ -32,7 +54,7 @@ void val_main(void)
     /* Ready to run test regression */
     if (val_get_curr_endpoint_logical_id() == VM1)
     {
-#ifndef TARGET_LINUX
+#if !defined(TARGET_LINUX) && (PLATFORM_NS_HYPERVISOR_PRESENT == 0)
         write_hcr_el2((1 << 27)); //TGE=1
 #endif
         val_irq_setup();
