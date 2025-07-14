@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -25,7 +25,7 @@ uint32_t ffa_run_client(uint32_t test_run_data)
 
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
     {
-        LOG(ERROR, "Invalid endpoint id or vCPU id check failed, %x %x",
+        LOG(ERROR, "Invalid endpoint id or vCPU id check failed, %x %x\n",
            payload.arg2, payload.fid);
         status = VAL_ERROR_POINT(1);
     }
@@ -37,7 +37,7 @@ uint32_t ffa_run_client(uint32_t test_run_data)
     val_ffa_run(&payload);
     if (payload.fid != FFA_ERROR_32)
     {
-        LOG(ERROR, "Reserved register mbz check failed, err %x", payload.arg2);
+        LOG(ERROR, "Reserved register mbz check failed, err %x\n", payload.arg2);
         status = VAL_ERROR_POINT(2);
     }
 

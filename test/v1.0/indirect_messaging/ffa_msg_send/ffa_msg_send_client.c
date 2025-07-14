@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -28,7 +28,7 @@ uint32_t ffa_msg_send_client(uint32_t test_run_data)
 
     if (val_is_ffa_feature_supported(FFA_MSG_SEND_32))
     {
-        LOG(TEST, "FFA_MSG_SEND_32 not supported, skipping the test");
+        LOG(TEST, "FFA_MSG_SEND_32 not supported, skipping the test\n");
         return VAL_SKIP_CHECK;
     }
 
@@ -38,7 +38,7 @@ uint32_t ffa_msg_send_client(uint32_t test_run_data)
     mb.recv = val_memory_alloc(size);
     if (mb.send == NULL || mb.recv == NULL)
     {
-        LOG(ERROR, "Failed to allocate RxTx buffer");
+        LOG(ERROR, "Failed to allocate RxTx buffer\n");
         status = VAL_ERROR_POINT(1);
         goto free_memory;
     }
@@ -46,7 +46,7 @@ uint32_t ffa_msg_send_client(uint32_t test_run_data)
     /* Map TX and RX buffers */
     if (val_rxtx_map_64((uint64_t)mb.send, (uint64_t)mb.recv, (size/PAGE_SIZE_4K)))
     {
-        LOG(ERROR, "RxTx Map failed");
+        LOG(ERROR, "RxTx Map failed\n");
         status = VAL_ERROR_POINT(2);
         goto free_memory;
     }
@@ -87,7 +87,7 @@ retry_send:
         {
             /* If reciever rx buffer is not available, retry send after some time */
             delay();
-            LOG(DBG, "Busy Retry Send");
+            LOG(DBG, "Busy Retry Send\n");
             goto retry_send;
         }
 
@@ -95,7 +95,7 @@ retry_send:
         {
             if (payload.fid != FFA_SUCCESS_64)
             {
-                LOG(ERROR, "FFA_MSG_SEND failed err %x", payload.arg2);
+                LOG(ERROR, "FFA_MSG_SEND failed err %x\n", payload.arg2);
                 status = VAL_ERROR_POINT(4);
             }
         }
@@ -103,21 +103,21 @@ retry_send:
         /* Return value for reserved registers - MBZ */
         if (val_reserve_param_check(payload, output_reserve_count))
         {
-            LOG(ERROR, "Received non-zero value for reserved registers");
+            LOG(ERROR, "Received non-zero value for reserved registers\n");
             return VAL_ERROR_POINT(5);
         }
     }
 
     if (val_rxtx_unmap(val_get_endpoint_id(client_logical_id)))
     {
-        LOG(ERROR, "RXTX_UNMAP failed");
+        LOG(ERROR, "RXTX_UNMAP failed\n");
         status = status ? status : VAL_ERROR_POINT(6);
     }
 
 free_memory:
     if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
     {
-        LOG(ERROR, "free_rxtx_buffers failed");
+        LOG(ERROR, "free_rxtx_buffers failed\n");
         status = status ? status : VAL_ERROR_POINT(7);
     }
 

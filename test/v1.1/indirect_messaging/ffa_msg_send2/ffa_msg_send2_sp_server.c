@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2024-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -13,7 +13,7 @@ static volatile uint32_t npi_flag;
 static int npi_irq_handler(void)
 {
     npi_flag = 1;
-    LOG(DBG, "NPI IRQ Handler Processed");
+    LOG(DBG, "NPI IRQ Handler Processed\n");
     return 0;
 }
 #endif
@@ -34,7 +34,7 @@ static uint32_t ffa_msg_send2_sp_tx(ffa_args_t args)
 
     if (val_is_ffa_feature_supported(FFA_MSG_SEND2_32))
     {
-        LOG(ERROR, "FFA_MSG_SEND2_32 not supported, skipping the test");
+        LOG(ERROR, "FFA_MSG_SEND2_32 not supported, skipping the test\n");
         return VAL_SKIP_CHECK;
     }
 
@@ -42,7 +42,7 @@ static uint32_t ffa_msg_send2_sp_tx(ffa_args_t args)
     mb.recv = val_memory_alloc(size);
     if (mb.send == NULL || mb.recv == NULL)
     {
-        LOG(ERROR, "Failed to allocate RxTx buffer");
+        LOG(ERROR, "Failed to allocate RxTx buffer\n");
         status = VAL_ERROR_POINT(1);
         goto free_memory;
     }
@@ -50,7 +50,7 @@ static uint32_t ffa_msg_send2_sp_tx(ffa_args_t args)
     /* Map TX and RX buffers */
     if (val_rxtx_map_64((uint64_t)mb.send, (uint64_t)mb.recv, (uint32_t)(size/PAGE_SIZE_4K)))
     {
-        LOG(ERROR, "RxTx Map failed");
+        LOG(ERROR, "RxTx Map failed\n");
         status = VAL_ERROR_POINT(2);
         goto free_memory;
     }
@@ -61,7 +61,7 @@ static uint32_t ffa_msg_send2_sp_tx(ffa_args_t args)
     payload = val_resp_client_fn_direct((uint32_t)args.arg3, 0, 0, 0, 0, 0);
     if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_64)
     {
-        LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x",
+        LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x\n",
                   payload.fid, payload.arg2);
         status =  VAL_ERROR_POINT(3);
         goto rxtx_unmap;
@@ -84,7 +84,7 @@ static uint32_t ffa_msg_send2_sp_tx(ffa_args_t args)
     val_ffa_msg_send2(&payload);
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
     {
-        LOG(ERROR, "Msg 2 request must return error for same sender and receiver id %x",
+        LOG(ERROR, "Msg 2 request must return error for same sender and receiver id %x\n",
         payload.arg2);
         status = VAL_ERROR_POINT(4);
         goto rxtx_unmap;
@@ -98,7 +98,7 @@ static uint32_t ffa_msg_send2_sp_tx(ffa_args_t args)
     val_ffa_msg_send2(&payload);
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
     {
-        LOG(ERROR, "Msg 2 request must return error for invalid ID%x",
+        LOG(ERROR, "Msg 2 request must return error for invalid ID%x\n",
         payload.arg2);
         status = VAL_ERROR_POINT(5);
         goto rxtx_unmap;
@@ -113,7 +113,7 @@ static uint32_t ffa_msg_send2_sp_tx(ffa_args_t args)
     val_ffa_msg_send2(&payload);
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_DENIED))
     {
-        LOG(ERROR, "Msg 2 request must return error for SP no support %x",
+        LOG(ERROR, "Msg 2 request must return error for SP no support %x\n",
         payload.arg2);
         status = VAL_ERROR_POINT(6);
         goto rxtx_unmap;
@@ -128,7 +128,7 @@ static uint32_t ffa_msg_send2_sp_tx(ffa_args_t args)
     val_ffa_msg_send2(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "FFA Message Send 2 request failed err %x", payload.arg2);
+        LOG(ERROR, "FFA Message Send 2 request failed err %x\n", payload.arg2);
         status = VAL_ERROR_POINT(7);
         goto rxtx_unmap;
     }
@@ -140,7 +140,7 @@ static uint32_t ffa_msg_send2_sp_tx(ffa_args_t args)
     val_ffa_msg_send2(&payload);
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_BUSY))
     {
-        LOG(ERROR, "Msg 2 request must return error for rx buffer busy %x",
+        LOG(ERROR, "Msg 2 request must return error for rx buffer busy %x\n",
         payload.arg2);
         status = VAL_ERROR_POINT(8);
         goto rxtx_unmap;
@@ -152,21 +152,21 @@ static uint32_t ffa_msg_send2_sp_tx(ffa_args_t args)
     val_ffa_msg_send_direct_resp_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "Direct response failed err %x", payload.arg2);
+        LOG(ERROR, "Direct response failed err %x\n", payload.arg2);
         status = status ? status : VAL_ERROR_POINT(9);
     }
 
 rxtx_unmap:
     if (val_rxtx_unmap(sender))
     {
-        LOG(ERROR, "RXTX_UNMAP failed");
+        LOG(ERROR, "RXTX_UNMAP failed\n");
         status = status ? status : VAL_ERROR_POINT(10);
     }
 
 free_memory:
     if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
     {
-        LOG(ERROR, "free_rxtx_buffers failed");
+        LOG(ERROR, "free_rxtx_buffers failed\n");
         status = status ? status : VAL_ERROR_POINT(11);
     }
 
@@ -175,7 +175,7 @@ free_memory:
     val_ffa_msg_send_direct_resp_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "Direct response failed err %x", payload.arg2);
+        LOG(ERROR, "Direct response failed err %x\n", payload.arg2);
         status = status ? status : VAL_ERROR_POINT(12);
     }
 
@@ -204,7 +204,7 @@ static uint32_t ffa_msg_send2_sp_rx(ffa_args_t args)
     mb.recv = val_memory_alloc(size);
     if (mb.send == NULL || mb.recv == NULL)
     {
-        LOG(ERROR, "Failed to allocate RxTx buffer");
+        LOG(ERROR, "Failed to allocate RxTx buffer\n");
         status = VAL_ERROR_POINT(13);
         goto free_memory;
     }
@@ -212,7 +212,7 @@ static uint32_t ffa_msg_send2_sp_rx(ffa_args_t args)
     /* Map TX and RX buffers */
     if (val_rxtx_map_64((uint64_t)mb.send, (uint64_t)mb.recv, (uint32_t)(size/PAGE_SIZE_4K)))
     {
-        LOG(ERROR, "RxTx Map failed");
+        LOG(ERROR, "RxTx Map failed\n");
         status = VAL_ERROR_POINT(14);
         goto free_memory;
     }
@@ -223,7 +223,7 @@ static uint32_t ffa_msg_send2_sp_rx(ffa_args_t args)
     val_ffa_features(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "Failed to retrieve NPI err %x", payload.arg2);
+        LOG(ERROR, "Failed to retrieve NPI err %x\n", payload.arg2);
         status = VAL_ERROR_POINT(15);
         goto free_memory;
     }
@@ -231,11 +231,11 @@ static uint32_t ffa_msg_send2_sp_rx(ffa_args_t args)
     npi_id = ffa_feature_intid(payload);
     if (val_irq_register_handler(npi_id, npi_irq_handler))
     {
-        LOG(ERROR, "NPI interrupt register failed");
+        LOG(ERROR, "NPI interrupt register failed\n");
         status = VAL_ERROR_POINT(16);
         goto free_memory;
     }
-    LOG(DBG, "NPI interrupt registered ID %x", npi_id);
+    LOG(DBG, "NPI interrupt registered ID %x\n", npi_id);
     val_secure_intr_enable(npi_id, INTERRUPT_TYPE_FIQ);
 #endif
 
@@ -244,7 +244,7 @@ static uint32_t ffa_msg_send2_sp_rx(ffa_args_t args)
     payload = val_resp_client_fn_direct((uint32_t)args.arg3, 0, 0, 0, 0, 0);
     if (payload.fid != FFA_RUN_32)
     {
-        LOG(ERROR, "FFA RUN not received?, fid=0x%x, err 0x%x",
+        LOG(ERROR, "FFA RUN not received?, fid=0x%x, err 0x%x\n",
                   payload.fid, payload.arg2);
         status =  VAL_ERROR_POINT(17);
         goto rxtx_unmap;
@@ -252,9 +252,9 @@ static uint32_t ffa_msg_send2_sp_rx(ffa_args_t args)
 
 #if (PLATFORM_SP_EL == 1)
     if (npi_flag == 1) {
-        LOG(DBG, "NPI interrupt handled");
+        LOG(DBG, "NPI interrupt handled\n");
     } else {
-        LOG(DBG, "NPI interrupt not received");
+        LOG(DBG, "NPI interrupt not received\n");
         status = VAL_ERROR_POINT(18);
         goto rxtx_unmap;
     }
@@ -268,7 +268,7 @@ static uint32_t ffa_msg_send2_sp_rx(ffa_args_t args)
     val_ffa_notification_get(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "Failed notification get err %x", payload.arg2);
+        LOG(ERROR, "Failed notification get err %x\n", payload.arg2);
         status = VAL_ERROR_POINT(19);
         goto rxtx_unmap;
     }
@@ -279,7 +279,7 @@ static uint32_t ffa_msg_send2_sp_rx(ffa_args_t args)
 
     if (notifications_bitmap != (uint32_t)payload.arg6)
     {
-        LOG(ERROR, "Not received expected notification err w6 %x w7 %x ",
+        LOG(ERROR, "Not received expected notification err w6 %x w7 %x \n",
            payload.arg6, payload.arg7);
         status = VAL_ERROR_POINT(20);
     }
@@ -293,7 +293,7 @@ static uint32_t ffa_msg_send2_sp_rx(ffa_args_t args)
     {
         if (pages[i] != 0xab)
         {
-            LOG(ERROR, "Region data mismatch after retrieve %x", pages[i]);
+            LOG(ERROR, "Region data mismatch after retrieve %x\n", pages[i]);
             status = VAL_ERROR_POINT(21);
             goto rxtx_unmap;
         }
@@ -301,7 +301,7 @@ static uint32_t ffa_msg_send2_sp_rx(ffa_args_t args)
 
     if (val_rx_release())
     {
-        LOG(ERROR, "val_rx_release failed");
+        LOG(ERROR, "val_rx_release failed\n");
         status = status ? status : VAL_ERROR_POINT(22);
     }
 
@@ -310,7 +310,7 @@ static uint32_t ffa_msg_send2_sp_rx(ffa_args_t args)
       val_ffa_msg_wait(&payload);
       if (payload.fid == FFA_ERROR_32)
       {
-          LOG(ERROR, "Call to FFA_YIELD must not fail %x ", payload.fid);
+          LOG(ERROR, "Call to FFA_YIELD must not fail %x \n", payload.fid);
           status = VAL_ERROR_POINT(23);
           goto rxtx_unmap;
       }
@@ -319,21 +319,21 @@ rxtx_unmap:
 #if (PLATFORM_SP_EL == 1)
     if (val_irq_unregister_handler(npi_id))
     {
-        LOG(ERROR, "IRQ handler unregister failed");
+        LOG(ERROR, "IRQ handler unregister failed\n");
         status = status ? status : VAL_ERROR_POINT(24);
     }
 #endif
 
     if (val_rxtx_unmap(sender))
     {
-        LOG(ERROR, "RXTX_UNMAP failed");
+        LOG(ERROR, "RXTX_UNMAP failed\n");
         status = status ? status : VAL_ERROR_POINT(25);
     }
 
 free_memory:
     if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
     {
-        LOG(ERROR, "free_rxtx_buffers failed");
+        LOG(ERROR, "free_rxtx_buffers failed\n");
         status = status ? status : VAL_ERROR_POINT(26);
     }
 
@@ -342,7 +342,7 @@ free_memory:
     val_ffa_msg_send_direct_resp_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "Direct response failed err %x", payload.arg2);
+        LOG(ERROR, "Direct response failed err %x\n", payload.arg2);
         status = status ? status : VAL_ERROR_POINT(27);
     }
 

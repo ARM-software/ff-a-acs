@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2024-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -17,16 +17,16 @@ static uint32_t ffa_feature_query(uint32_t fid, char *str)
 
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(DBG, "%s -> feature not supported", str);
+        LOG(DBG, "%s -> feature not supported\n", str);
         return VAL_ERROR_POINT(1);
     } else if (payload.fid == FFA_SUCCESS_32 || payload.fid == FFA_SUCCESS_64)
     {
-        LOG(DBG, "%s -> feature supported", str);
+        LOG(DBG, "%s -> feature supported\n", str);
         return VAL_SUCCESS;
     }
     else
     {
-        LOG(ERROR, "%s-Invalid return code received, fid=%x, err=%x", str,
+        LOG(ERROR, "%s-Invalid return code received, fid=%x, err=%x\n", str,
             payload.fid, payload.arg2);
         return VAL_ERROR_POINT(2);
     }

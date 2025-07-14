@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -25,7 +25,7 @@ uint32_t lend_retrieve_input_checks4_server(ffa_args_t args)
     mb.recv = val_memory_alloc(size);
     if (mb.send == NULL || mb.recv == NULL)
     {
-        LOG(ERROR, "Failed to allocate RxTx buffer");
+        LOG(ERROR, "Failed to allocate RxTx buffer\n");
         status = VAL_ERROR_POINT(1);
         goto free_memory;
     }
@@ -33,7 +33,7 @@ uint32_t lend_retrieve_input_checks4_server(ffa_args_t args)
     /* Map TX and RX buffers */
     if (val_rxtx_map_64((uint64_t)mb.send, (uint64_t)mb.recv, (uint32_t)(size/PAGE_SIZE_4K)))
     {
-        LOG(ERROR, "RxTx Map failed");
+        LOG(ERROR, "RxTx Map failed\n");
         status = VAL_ERROR_POINT(2);
         goto free_memory;
     }
@@ -42,7 +42,7 @@ uint32_t lend_retrieve_input_checks4_server(ffa_args_t args)
     pages = (uint8_t *)val_memory_alloc(size);
     if (!pages)
     {
-        LOG(ERROR, "Memory allocation failed");
+        LOG(ERROR, "Memory allocation failed\n");
         status = VAL_ERROR_POINT(3);
         goto rxtx_unmap;
     }
@@ -52,7 +52,7 @@ uint32_t lend_retrieve_input_checks4_server(ffa_args_t args)
     payload = val_resp_client_fn_direct((uint32_t)args.arg3, 0, 0, 0, 0, 0);
     if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_64)
     {
-        LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x",
+        LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x\n",
                   payload.fid, payload.arg2);
         status =  VAL_ERROR_POINT(4);
         goto rxtx_unmap;
@@ -96,7 +96,7 @@ uint32_t lend_retrieve_input_checks4_server(ffa_args_t args)
 
     if (payload.fid != FFA_ERROR_32 || payload.arg2 != FFA_ERROR_DENIED)
     {
-        LOG(ERROR, "Mem retrieve request must failed with DENIED err %x and fid=%x",
+        LOG(ERROR, "Mem retrieve request must failed with DENIED err %x and fid=%x\n",
            payload.arg2, payload.fid);
         status =  VAL_ERROR_POINT(5);
         if (payload.fid == FFA_MEM_RETRIEVE_RESP_32)
@@ -107,43 +107,43 @@ uint32_t lend_retrieve_input_checks4_server(ffa_args_t args)
             val_ffa_mem_relinquish(&payload);
             if (payload.fid == FFA_ERROR_32)
             {
-                LOG(ERROR, "Mem relinquish failed err %x", payload.arg2);
+                LOG(ERROR, "Mem relinquish failed err %x\n", payload.arg2);
             }
             if (val_rx_release())
             {
-                LOG(ERROR, "val_rx_release failed");
+                LOG(ERROR, "val_rx_release failed\n");
             }
         }
         goto rxtx_unmap;
     }
-    LOG(DBG, "Mem Retrieve Check for Invalid Instruction Access Complete");
+    LOG(DBG, "Mem Retrieve Check for Invalid Instruction Access Complete\n");
 
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 =  ((uint32_t)sender << 16) | receiver;
     val_ffa_msg_send_direct_resp_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "Direct response failed err %x", payload.arg2);
+        LOG(ERROR, "Direct response failed err %x\n", payload.arg2);
         status = VAL_ERROR_POINT(6);
     }
 
 rxtx_unmap:
     if (val_rxtx_unmap(sender))
     {
-        LOG(ERROR, "RXTX_UNMAP failed");
+        LOG(ERROR, "RXTX_UNMAP failed\n");
         status = status ? status : VAL_ERROR_POINT(7);
     }
 
 free_memory:
     if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
     {
-        LOG(ERROR, "free_rxtx_buffers failed");
+        LOG(ERROR, "free_rxtx_buffers failed\n");
         status = status ? status : VAL_ERROR_POINT(8);
     }
 
     if (val_memory_free(pages, size))
     {
-        LOG(ERROR, "val_mem_free failed");
+        LOG(ERROR, "val_mem_free failed\n");
         status = status ? status : VAL_ERROR_POINT(9);
     }
 

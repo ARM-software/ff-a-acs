@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2024-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -18,7 +18,7 @@ uint32_t ffa_mem_perm_get_client(uint32_t test_run_data)
     pages = (uint8_t *)val_memory_alloc(size);
     if (!pages)
     {
-        LOG(ERROR, "Memory allocation failed");
+        LOG(ERROR, "Memory allocation failed\n");
         status = VAL_ERROR_POINT(1);
         goto free_memory;
     }
@@ -32,7 +32,7 @@ uint32_t ffa_mem_perm_get_client(uint32_t test_run_data)
     {
         if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_NOT_SUPPORTED))
         {
-            LOG(ERROR, "ffa_mem_perm_set must return error for invalid instance %x",
+            LOG(ERROR, "ffa_mem_perm_set must return error for invalid instance %x\n",
                             payload.arg2);
             status = VAL_ERROR_POINT(2);
             goto free_memory;
@@ -42,7 +42,7 @@ uint32_t ffa_mem_perm_get_client(uint32_t test_run_data)
     {
         if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_DENIED))
         {
-            LOG(ERROR, "ffa_mem_perm_set must return error for post-initialization %x",
+            LOG(ERROR, "ffa_mem_perm_set must return error for post-initialization %x\n",
                             payload.arg2);
             status = VAL_ERROR_POINT(3);
             goto free_memory;
@@ -52,7 +52,7 @@ uint32_t ffa_mem_perm_get_client(uint32_t test_run_data)
 free_memory:
    if (val_memory_free(pages, size))
     {
-        LOG(ERROR, "val_mem_free failed");
+        LOG(ERROR, "val_mem_free failed\n");
         status = status ? status : VAL_ERROR_POINT(4);
     }
 

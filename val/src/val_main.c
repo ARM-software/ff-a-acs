@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -43,7 +43,7 @@ void val_main(void)
 #ifndef TARGET_LINUX
 exit:
 #endif
-    LOG(ALWAYS, "Entering standby.. ");
+    LOG(ALWAYS, "Entering standby.. \n");
     pal_terminate_simulation();
 }
 #else
@@ -57,15 +57,15 @@ void val_main(void)
     val_ffa_id_get(&payload);
     if (payload.fid != FFA_SUCCESS_32)
     {
-        LOG(ERROR, "EL0: Check failed for ffa_id_get success case");
+        LOG(ERROR, "EL0: Check failed for ffa_id_get success case\n");
         goto exit;
     }
 
-    LOG(ALWAYS, "EL0 entry.. id %lx", payload.arg2);
+    LOG(ALWAYS, "EL0 entry.. id %lx\n", payload.arg2);
     val_run_test_suite();
 
 exit:
-    LOG(ALWAYS, "Entering standby.. ");
+    LOG(ALWAYS, "Entering standby.. \n");
     pal_terminate_simulation();
 }
 #endif

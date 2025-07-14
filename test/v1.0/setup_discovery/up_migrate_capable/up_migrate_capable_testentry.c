@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -10,7 +10,7 @@
 void up_migrate_capable_testentry(uint32_t test_num)
 {
 #ifdef TARGET_LINUX
-    LOG(TEST, "Skipping this test: UP test not supported for Linux env");
+    LOG(TEST, "Skipping this test: UP test not supported for Linux env\n");
     val_set_status(RESULT_SKIP(VAL_SKIP_CHECK));
     return;
 #endif

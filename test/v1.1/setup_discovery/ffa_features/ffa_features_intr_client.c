@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2022-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -21,7 +21,7 @@ uint32_t ffa_features_intr_client(uint32_t test_run_data)
     {
         if (payload.fid != FFA_ERROR_32 || payload.arg2 != FFA_ERROR_NOT_SUPPORTED)
         {
-            LOG(ERROR, "Non NWd EP SRI request must return no support %x ", payload.arg2);
+            LOG(ERROR, "Non NWd EP SRI request must return no support %x \n", payload.arg2);
             return VAL_ERROR_POINT(1);
         }
     }
@@ -29,7 +29,7 @@ uint32_t ffa_features_intr_client(uint32_t test_run_data)
     {
         if (payload.fid == FFA_ERROR_32)
         {
-        LOG(ERROR, "Failed to retrieve SRI err");
+        LOG(ERROR, "Failed to retrieve SRI err\n");
         return VAL_ERROR_POINT(1);
         }
     }
@@ -43,13 +43,13 @@ uint32_t ffa_features_intr_client(uint32_t test_run_data)
 #if (PLATFORM_SP_EL == 0)
         if (payload.fid != FFA_ERROR_32 || payload.arg2 != FFA_ERROR_NOT_SUPPORTED)
         {
-            LOG(ERROR, "FFA_Features Must Fail to retrieve NPI err %x", payload.arg2);
+            LOG(ERROR, "FFA_Features Must Fail to retrieve NPI err %x\n", payload.arg2);
             return VAL_ERROR_POINT(2);
         }
 #else
         if (payload.fid == FFA_ERROR_32)
         {
-            LOG(ERROR, "Failed to retrieve NPI err %x", payload.arg2);
+            LOG(ERROR, "Failed to retrieve NPI err %x\n", payload.arg2);
             return VAL_ERROR_POINT(2);
         }
 #endif
@@ -57,13 +57,13 @@ uint32_t ffa_features_intr_client(uint32_t test_run_data)
 #if (PLATFORM_SP_EL == 0)
         if (payload.fid != FFA_ERROR_32 || payload.arg2 != FFA_ERROR_NOT_SUPPORTED)
         {
-            LOG(ERROR, "FFA_Features Must Fail to retrieve MEI err %x", payload.arg2);
+            LOG(ERROR, "FFA_Features Must Fail to retrieve MEI err %x\n", payload.arg2);
             return VAL_ERROR_POINT(2);
         }
 #else
         if (payload.fid == FFA_ERROR_32)
         {
-            LOG(ERROR, "Failed to retrieve MEI err %x", payload.arg2);
+            LOG(ERROR, "Failed to retrieve MEI err %x\n", payload.arg2);
             return VAL_ERROR_POINT(3);
         }
 #endif

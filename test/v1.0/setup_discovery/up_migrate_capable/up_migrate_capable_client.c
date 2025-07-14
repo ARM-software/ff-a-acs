@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -15,7 +15,7 @@ uint32_t up_migrate_capable_sec_cpu_client(uint32_t test_num)
     uint64_t mpid = val_read_mpidr() & MPID_MASK;
     (void)(test_num);
 
-    LOG(DBG, "Secondary cpu with mpid 0x%x booted", mpid);
+    LOG(DBG, "Secondary cpu with mpid 0x%x booted\n", mpid);
 
     /* Send direct request using secondary cpu */
     val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -25,11 +25,11 @@ uint32_t up_migrate_capable_sec_cpu_client(uint32_t test_num)
 
     if (payload.fid != FFA_MSG_SEND_DIRECT_RESP_32)
     {
-        LOG(ERROR, "Direct request failed, fid=0x%x, err %x", payload.fid, payload.arg2);
+        LOG(ERROR, "Direct request failed, fid=0x%x, err %x\n", payload.fid, payload.arg2);
         return VAL_ERROR_POINT(1);
     }
 
-    LOG(DBG, "Direct msg to SP3 passed for mpid=%x", mpid);
+    LOG(DBG, "Direct msg to SP3 passed for mpid=%x\n", mpid);
     /* Tell the boot CPU that the calling CPU has completed the test */
     val_send_event(&cpu_booted);
 
@@ -48,7 +48,7 @@ uint32_t up_migrate_capable_client(uint32_t test_run_data)
     payload = val_select_server_fn_direct(test_run_data, 0, 0, 0, 0);
     if (payload.fid != FFA_MSG_SEND_DIRECT_RESP_32)
     {
-        LOG(ERROR, "Direct request failed, fid=0x%x, err %x", payload.fid, payload.arg2);
+        LOG(ERROR, "Direct request failed, fid=0x%x, err %x\n", payload.fid, payload.arg2);
         return VAL_ERROR_POINT(1);
     }
 
@@ -57,12 +57,12 @@ uint32_t up_migrate_capable_client(uint32_t test_run_data)
 
     val_init_event(&cpu_booted);
 
-    LOG(DBG, "boot cpu mpid %x", boot_mpid);
+    LOG(DBG, "boot cpu mpid %x\n", boot_mpid);
     for (i = 0; i < total_cpus; i++)
     {
         mpid = val_get_mpid(i);
 
-        LOG(DBG, "Power up secondary CPUs mpid=%x", mpid);
+        LOG(DBG, "Power up secondary CPUs mpid=%x\n", mpid);
         if (mpid == boot_mpid)
         {
             continue;
@@ -71,17 +71,17 @@ uint32_t up_migrate_capable_client(uint32_t test_run_data)
         ret = val_power_on_cpu(i);
         if (ret != 0)
         {
-            LOG(ERROR, "val_power_on_cpu mpid 0x%x returns %x", mpid, ret);
+            LOG(ERROR, "val_power_on_cpu mpid 0x%x returns %x\n", mpid, ret);
             return VAL_ERROR_POINT(2);
         }
         break;
     }
 
-    LOG(DBG, "Waiting secondary CPU to turn off ...");
+    LOG(DBG, "Waiting secondary CPU to turn off ...\n");
 
     val_wait_for_event(&cpu_booted);
 
-    LOG(DBG, "CPU=%x power off ...", mpid);
+    LOG(DBG, "CPU=%x power off ...\n", mpid);
 
     /* Collect the server status in payload.arg3 */
     payload = val_select_server_fn_direct(test_run_data, 0, 0, 0, 0);

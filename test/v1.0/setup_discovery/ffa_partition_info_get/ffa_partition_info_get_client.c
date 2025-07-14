@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -43,18 +43,18 @@ static uint32_t ffa_partition_info_wrong_test(void)
 
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
     {
-        LOG(ERROR, "Invalid parameter check failed, fid=0x%x, err=0x%x",
+        LOG(ERROR, "Invalid parameter check failed, fid=0x%x, err=0x%x\n",
             payload.fid, payload.arg2);
         return VAL_ERROR_POINT(1);
     }
 
-    LOG(DBG, "UUID %x %x %x %x", uuid[0], uuid[1], uuid[2], uuid[3]);
+    LOG(DBG, "UUID %x %x %x %x\n", uuid[0], uuid[1], uuid[2], uuid[3]);
 
     /* First sanity call */
     payload = ffa_partition_info_get(null_uuid, flags);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "Invalid fid received, fid=0x%x", payload.fid);
+        LOG(ERROR, "Invalid fid received, fid=0x%x\n", payload.fid);
         status = VAL_ERROR_POINT(2);
         goto rx_release1;
     }
@@ -63,7 +63,7 @@ static uint32_t ffa_partition_info_wrong_test(void)
     payload = ffa_partition_info_get(null_uuid, flags);
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_BUSY))
     {
-        LOG(ERROR, "Busy error check failed, fid=0x%x, err=0x%x",
+        LOG(ERROR, "Busy error check failed, fid=0x%x, err=0x%x\n",
             payload.fid, payload.arg2);
         status = VAL_ERROR_POINT(3);
         goto rx_release1;
@@ -73,7 +73,7 @@ rx_release1:
     /* Release the RX buffer */
     if (val_rx_release())
     {
-        LOG(ERROR, "Rx release failed");
+        LOG(ERROR, "Rx release failed\n");
         status = VAL_ERROR_POINT(4);
     }
 
@@ -90,13 +90,13 @@ static uint32_t is_matching_endpoint_found(const val_endpoint_info_t *expected_e
 
         if (expected_ep[0].id != info_get[i].id)
             continue;
-        LOG(DBG, "id %x exec_context %x properties %x exp properties %x", info_get[i].id,
+        LOG(DBG, "id %x exec_context %x properties %x exp properties %x\n", info_get[i].id,
         info_get[i].exec_context, info_get[i].properties, expected_ep[0].ep_properties);
 
         if (expected_ep[0].ec_count != info_get[i].exec_context)
         {
-            LOG(ERROR, "Data mismatch for endpoint id: info.id=%x", expected_ep[0].id);
-            LOG(ERROR, "expected_ep[0].ec_count=%x, info.exec_context=%x",
+            LOG(ERROR, "Data mismatch for endpoint id: info.id=%x\n", expected_ep[0].id);
+            LOG(ERROR, "expected_ep[0].ec_count=%x, info.exec_context=%x\n",
                 expected_ep[0].ec_count,  info_get[i].exec_context);
             return 0;
         }
@@ -106,9 +106,9 @@ static uint32_t is_matching_endpoint_found(const val_endpoint_info_t *expected_e
         {
             if (expected_ep[0].ep_properties != info_get[i].properties)
             {
-                LOG(ERROR, "Data mismatch for endpoint id: info.id=%x",
+                LOG(ERROR, "Data mismatch for endpoint id: info.id=%x\n",
                     expected_ep[0].id, 0);
-                LOG(ERROR, "expected_ep[0].ep_properties=%x, info.properties=%x",
+                LOG(ERROR, "expected_ep[0].ep_properties=%x, info.properties=%x\n",
                     expected_ep[0].ep_properties,  info_get[i].properties);
                 return 0;
             }
@@ -118,16 +118,16 @@ static uint32_t is_matching_endpoint_found(const val_endpoint_info_t *expected_e
         {
             if (expected_ep[0].ep_properties < info_get[i].properties)
             {
-                LOG(ERROR, "Data mismatch for endpoint id: info.id=%x",
+                LOG(ERROR, "Data mismatch for endpoint id: info.id=%x\n",
                     expected_ep[0].id);
-                LOG(ERROR, "expected_ep[0].ep_properties=%x, info.properties=%x",
+                LOG(ERROR, "expected_ep[0].ep_properties=%x, info.properties=%x\n",
                     expected_ep[0].ep_properties,  info_get[i].properties);
                 return 0;
             }
         }
         return 1;
     }
-    LOG(ERROR, "Endpoint-id=%x info not found", expected_ep[0].id);
+    LOG(ERROR, "Endpoint-id=%x info not found\n", expected_ep[0].id);
     return 0;
 }
 
@@ -144,7 +144,7 @@ static uint32_t ffa_partition_info_helper(void *rx_buff, const uint32_t uuid[4],
     payload = ffa_partition_info_get(uuid, flags);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "ffa_partition_info_get failed");
+        LOG(ERROR, "ffa_partition_info_get failed\n");
         return VAL_ERROR_POINT(5);
     }
 
@@ -152,7 +152,7 @@ static uint32_t ffa_partition_info_helper(void *rx_buff, const uint32_t uuid[4],
     reserve_param_count = 4;
     if (val_reserve_param_check(payload, reserve_param_count))
     {
-        LOG(ERROR, "reserved registers must be zero");
+        LOG(ERROR, "reserved registers must be zero\n");
         status = VAL_ERROR_POINT(6);
         goto rx_release;
     }
@@ -161,7 +161,7 @@ static uint32_t ffa_partition_info_helper(void *rx_buff, const uint32_t uuid[4],
     {
         if (payload.arg2 != expected_count)
         {
-            LOG(ERROR, "Count mismatched, expected=%x, actual=%x",
+            LOG(ERROR, "Count mismatched, expected=%x, actual=%x\n",
                      expected_count, payload.arg2);
             status = VAL_ERROR_POINT(7);
             goto rx_release;
@@ -171,14 +171,14 @@ static uint32_t ffa_partition_info_helper(void *rx_buff, const uint32_t uuid[4],
     {
         if (payload.arg2 < expected_count)
         {
-            LOG(ERROR, "Count mismatched, expected=%x < actual=%x",
+            LOG(ERROR, "Count mismatched, expected=%x < actual=%x\n",
                      expected_count, payload.arg2);
             status = VAL_ERROR_POINT(8);
             goto rx_release;
         }
     }
 
-    LOG(DBG, "Count%x flags %x", payload.arg2, flags);
+    LOG(DBG, "Count%x flags %x\n", payload.arg2, flags);
 
     if (flags == FFA_PARTITION_INFO_FLAG_RETDESC)
     {
@@ -196,7 +196,7 @@ static uint32_t ffa_partition_info_helper(void *rx_buff, const uint32_t uuid[4],
     {
         if (payload.arg3)
         {
-            LOG(ERROR, "If Bit[0] = b’1, size field MBZ.");
+            LOG(ERROR, "If Bit[0] = b’1, size field MBZ.\n");
             status = VAL_ERROR_POINT(10);
             return status;
         }
@@ -208,7 +208,7 @@ rx_release:
     /* Release the RX buffer */
     if (val_rx_release())
     {
-        LOG(ERROR, "Rx release failed");
+        LOG(ERROR, "Rx release failed\n");
         status = VAL_ERROR_POINT(11);
     }
 
@@ -229,7 +229,7 @@ uint32_t ffa_partition_info_get_client(uint32_t test_run_data)
     rx_buff = val_memory_alloc(size);
     if (rx_buff == NULL || tx_buff == NULL)
     {
-        LOG(ERROR, "Failed to allocate RxTx buffer");
+        LOG(ERROR, "Failed to allocate RxTx buffer\n");
         status = VAL_ERROR_POINT(12);
         goto free_memory;
     }
@@ -237,7 +237,7 @@ uint32_t ffa_partition_info_get_client(uint32_t test_run_data)
     /* Map TX and RX buffers */
     if (val_rxtx_map_64((uint64_t)tx_buff, (uint64_t)rx_buff, (uint32_t)(size/PAGE_SIZE_4K)))
     {
-        LOG(ERROR, "RxTx Map failed");
+        LOG(ERROR, "RxTx Map failed\n");
         status = VAL_ERROR_POINT(13);
         goto free_memory;
     }
@@ -246,7 +246,7 @@ uint32_t ffa_partition_info_get_client(uint32_t test_run_data)
     if (!ep_info)
     {
         status = VAL_ERROR_POINT(14);
-        LOG(ERROR, "Endpoint info failed");
+        LOG(ERROR, "Endpoint info failed\n");
         goto unmap_rxtx;
     }
 
@@ -330,14 +330,14 @@ uint32_t ffa_partition_info_get_client(uint32_t test_run_data)
 unmap_rxtx:
     if (val_rxtx_unmap(val_get_endpoint_id(client_logical_id)))
     {
-        LOG(ERROR, "val_rxtx_unmap failed");
+        LOG(ERROR, "val_rxtx_unmap failed\n");
         status = status ? status : VAL_ERROR_POINT(23);
     }
 
 free_memory:
     if (val_memory_free(rx_buff, size) || val_memory_free(tx_buff, size))
     {
-        LOG(ERROR, "val_memory_free failed");
+        LOG(ERROR, "val_memory_free failed\n");
         status = status ? status : VAL_ERROR_POINT(24);
     }
     return status;

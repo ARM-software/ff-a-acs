@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -211,12 +211,12 @@ int pal_irq_handler_dispatcher(void)
 
 void pal_irq_setup(void)
 {
-    PAL_LOG(INFO, "GIC Initialisation started");
+    PAL_LOG("\t\tGIC Initialisation started\n", 0, 0);
     arm_gic_init(GICC_BASE, GICD_BASE, GICR_BASE);
     pal_memset(spi_desc_table, 0, sizeof(spi_desc_table));
     pal_memset(ppi_desc_table, 0, sizeof(ppi_desc_table));
     pal_memset(sgi_desc_table, 0, sizeof(sgi_desc_table));
     pal_memset(&spurious_desc_handler, 0, sizeof(spurious_desc_handler));
     pal_init_spinlock(&spi_lock);
-    PAL_LOG(INFO, "GIC Initialisation completed");
+    PAL_LOG("\t\tGIC Initialisation completed\n", 0, 0);
 }

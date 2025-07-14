@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+# Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
@@ -60,6 +60,7 @@ target_include_directories(${VAL_LIB} PRIVATE
     ${ROOT_DIR}/platform/common/inc/aarch64/
     ${ROOT_DIR}/platform/pal_baremetal/${TARGET}/inc/
     ${ROOT_DIR}/platform/driver/inc/
+    ${COMMON_VAL_PATH}/inc/
 )
 
 unset(VAL_SRC)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -34,7 +34,7 @@ uint32_t ffa_msg_send_error_client(uint32_t test_run_data)
 
     if (val_is_ffa_feature_supported(FFA_MSG_SEND_32))
     {
-        LOG(TEST, "FFA_MSG_SEND_32 not supported, skipping the check");
+        LOG(TEST, "FFA_MSG_SEND_32 not supported, skipping the check\n");
         return VAL_SKIP_CHECK;
     }
 
@@ -42,7 +42,7 @@ uint32_t ffa_msg_send_error_client(uint32_t test_run_data)
     rx_buff = val_memory_alloc(size);
     if (rx_buff == NULL || tx_buff == NULL)
     {
-        LOG(ERROR, "Failed to allocate RxTx buffer");
+        LOG(ERROR, "Failed to allocate RxTx buffer\n");
         status = VAL_ERROR_POINT(1);
         goto free_memory;
     }
@@ -50,7 +50,7 @@ uint32_t ffa_msg_send_error_client(uint32_t test_run_data)
     /* Map TX and RX buffers */
     if (val_rxtx_map_64((uint64_t)tx_buff, (uint64_t)rx_buff, (uint32_t)(size/PAGE_SIZE_4K)))
     {
-        LOG(ERROR, "RxTx Map failed");
+        LOG(ERROR, "RxTx Map failed\n");
         status = VAL_ERROR_POINT(2);
         goto free_memory;
     }
@@ -58,7 +58,7 @@ uint32_t ffa_msg_send_error_client(uint32_t test_run_data)
     payload = ffa_partition_info_get(null_uuid);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "Invalid fid received, fid=0x%x",
+        LOG(ERROR, "Invalid fid received, fid=0x%x\n",
             payload.fid);
         status = VAL_ERROR_POINT(3);
         goto rxtx_unmap;
@@ -67,11 +67,11 @@ uint32_t ffa_msg_send_error_client(uint32_t test_run_data)
     info = (ffa_partition_info_t *)rx_buff;
     count = (uint32_t)payload.arg2;
 
-    LOG(DBG, "Partition info count %x", (uint32_t)payload.arg2);
+    LOG(DBG, "Partition info count %x\n", (uint32_t)payload.arg2);
 
     if (val_rx_release())
     {
-        LOG(ERROR, "Rx release failed");
+        LOG(ERROR, "Rx release failed\n");
         status = VAL_ERROR_POINT(4);
         goto rxtx_unmap;
     }
@@ -81,7 +81,7 @@ uint32_t ffa_msg_send_error_client(uint32_t test_run_data)
      */
     for (i = 0; i < count; i++)
     {
-        LOG(DBG, "info.id %x", info[i].id);
+        LOG(DBG, "info.id %x\n", info[i].id);
         if (info[i].id == val_get_curr_endpoint_id())
             continue;
 
@@ -92,7 +92,7 @@ uint32_t ffa_msg_send_error_client(uint32_t test_run_data)
 
     if (i == count)
     {
-        LOG(TEST, "Skipping the check, required endpoint not found");
+        LOG(TEST, "Skipping the check, required endpoint not found\n");
         status = VAL_SKIP_CHECK;
         goto rxtx_unmap;
     }
@@ -103,11 +103,11 @@ uint32_t ffa_msg_send_error_client(uint32_t test_run_data)
                               info[i].id;
     payload.arg3 = sizeof(message);
     payload.arg4 = 0;
-    LOG(DBG, "Sending indirect msg to epid=0x%x", info[i].id);
+    LOG(DBG, "Sending indirect msg to epid=0x%x\n", info[i].id);
     val_ffa_msg_send(&payload);
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_DENIED))
     {
-        LOG(ERROR, "Unexpected return status, fid=0x%x, err=0x%x",
+        LOG(ERROR, "Unexpected return status, fid=0x%x, err=0x%x\n",
                 payload.fid, payload.arg2);
         status = VAL_ERROR_POINT(5);
     }
@@ -115,14 +115,14 @@ uint32_t ffa_msg_send_error_client(uint32_t test_run_data)
 rxtx_unmap:
     if (val_rxtx_unmap(val_get_endpoint_id(client_logical_id)))
     {
-        LOG(ERROR, "RXTX_UNMAP failed");
+        LOG(ERROR, "RXTX_UNMAP failed\n");
         status = status ? status : VAL_ERROR_POINT(6);
     }
 
 free_memory:
     if (val_memory_free(rx_buff, size) || val_memory_free(tx_buff, size))
     {
-        LOG(ERROR, "free_rxtx_buffers failed");
+        LOG(ERROR, "free_rxtx_buffers failed\n");
         status = status ? status : VAL_ERROR_POINT(7);
     }
     return status;

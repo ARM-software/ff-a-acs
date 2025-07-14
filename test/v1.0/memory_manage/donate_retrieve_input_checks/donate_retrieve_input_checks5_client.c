@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021, 2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -28,7 +28,7 @@ static uint32_t donate_retrieve_input_checks5_helper(uint32_t test_run_data, uin
     mb.recv = val_memory_alloc(size);
     if (mb.send == NULL || mb.recv == NULL)
     {
-        LOG(ERROR, "Failed to allocate RxTx buffer");
+        LOG(ERROR, "Failed to allocate RxTx buffer\n");
         status = VAL_ERROR_POINT(1);
         goto free_memory;
     }
@@ -36,7 +36,7 @@ static uint32_t donate_retrieve_input_checks5_helper(uint32_t test_run_data, uin
     /* Map TX and RX buffers */
     if (val_rxtx_map_64((uint64_t)mb.send, (uint64_t)mb.recv, (uint32_t)(size/PAGE_SIZE_4K)))
     {
-        LOG(ERROR, "RxTx Map failed");
+        LOG(ERROR, "RxTx Map failed\n");
         status = VAL_ERROR_POINT(2);
         goto free_memory;
     }
@@ -71,11 +71,11 @@ static uint32_t donate_retrieve_input_checks5_helper(uint32_t test_run_data, uin
 
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, " mem_donate request failed err %x", payload.arg2);
+        LOG(ERROR, " mem_donate request failed err %x\n", payload.arg2);
         status = VAL_ERROR_POINT(3);
         goto rxtx_unmap;
     }
-    LOG(DBG, "Mem Donate Complete");
+    LOG(DBG, "Mem Donate Complete\n");
 
     handle = ffa_mem_success_handle(payload);
 
@@ -86,7 +86,7 @@ static uint32_t donate_retrieve_input_checks5_helper(uint32_t test_run_data, uin
     val_ffa_msg_send_direct_req_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "Direct request failed err %x", payload.arg2);
+        LOG(ERROR, "Direct request failed err %x\n", payload.arg2);
         status = VAL_ERROR_POINT(4);
         goto rxtx_unmap;
     }
@@ -122,15 +122,15 @@ static uint32_t donate_retrieve_input_checks5_helper(uint32_t test_run_data, uin
 
     if (payload.fid != FFA_MEM_RETRIEVE_RESP_32)
     {
-        LOG(ERROR, "Mem retrieve request failed err %x", payload.arg2);
+        LOG(ERROR, "Mem retrieve request failed err %x\n", payload.arg2);
         status =  VAL_ERROR_POINT(5);
         goto rxtx_unmap;
     }
-    LOG(DBG, "Mem Retrieve Complete");
+    LOG(DBG, "Mem Retrieve Complete\n");
 
     if (val_rx_release())
     {
-        LOG(ERROR, "val_rx_release failed");
+        LOG(ERROR, "val_rx_release failed\n");
         status = status ? status : VAL_ERROR_POINT(6);
     }
 
@@ -139,14 +139,14 @@ static uint32_t donate_retrieve_input_checks5_helper(uint32_t test_run_data, uin
 rxtx_unmap:
     if (val_rxtx_unmap(sender))
     {
-        LOG(ERROR, "RXTX_UNMAP failed");
+        LOG(ERROR, "RXTX_UNMAP failed\n");
         status = status ? status : VAL_ERROR_POINT(7);
     }
 
 free_memory:
     if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
     {
-        LOG(ERROR, "free_rxtx_buffers failed");
+        LOG(ERROR, "free_rxtx_buffers failed\n");
         status = status ? status : VAL_ERROR_POINT(8);
     }
 
@@ -162,7 +162,7 @@ uint32_t donate_retrieve_input_checks5_client(uint32_t test_run_data)
     status_32 = val_is_ffa_feature_supported(FFA_MEM_DONATE_32);
     if (status_64 && status_32)
     {
-        LOG(TEST, "FFA_MEM_DONATE not supported, skipping the check");
+        LOG(TEST, "FFA_MEM_DONATE not supported, skipping the check\n");
         return VAL_SKIP_CHECK;
     }
     else if (status_64 && !status_32)

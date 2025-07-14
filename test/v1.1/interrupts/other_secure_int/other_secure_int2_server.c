@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2024-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -15,7 +15,7 @@ static int wd_irq_handler(void)
 {
     interrupt_triggered = true;
     val_twdog_disable();
-    LOG(DBG, "T-WD IRQ Handler Processed");
+    LOG(DBG, "T-WD IRQ Handler Processed\n");
     return 0;
 }
 
@@ -28,7 +28,7 @@ uint32_t other_secure_int2_server(ffa_args_t args)
 
    if (val_irq_register_handler(PLATFORM_TWDOG_INTID, wd_irq_handler))
     {
-        LOG(ERROR, "WD interrupt register failed");
+        LOG(ERROR, "WD interrupt register failed\n");
         status = VAL_ERROR_POINT(1);
         goto exit;
     }
@@ -41,7 +41,7 @@ uint32_t other_secure_int2_server(ffa_args_t args)
     payload = val_resp_client_fn_direct((uint32_t)args.arg3, 0, 0, 0, 0, 0);
     if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_64)
     {
-        LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x",
+        LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x\n",
                   payload.fid, payload.arg2);
         status =  VAL_ERROR_POINT(2);
         goto exit;
@@ -57,15 +57,15 @@ uint32_t other_secure_int2_server(ffa_args_t args)
 
     /* Wait for WD interrupt */
     sp_sleep(WD_TIME_OUT);
-    LOG(DBG, "SP Sleep Complete");
+    LOG(DBG, "SP Sleep Complete\n");
 
     if (interrupt_triggered == true)
     {
-        LOG(ERROR, "WD interrupt should be queued");
+        LOG(ERROR, "WD interrupt should be queued\n");
         status =  VAL_ERROR_POINT(3);
         goto free_interrupt;
     }
-    LOG(DBG, "IRQ Status %x", interrupt_triggered);
+    LOG(DBG, "IRQ Status %x\n", interrupt_triggered);
 
     /* Enter Wait state by responding to client to Get Interrupt */
     val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -73,7 +73,7 @@ uint32_t other_secure_int2_server(ffa_args_t args)
     val_ffa_msg_send_direct_resp_64(&payload);
     if (payload.fid != FFA_INTERRUPT_32)
     {
-        LOG(ERROR, "FFA_INTERRUPT_32 not received fid %x", payload.fid);
+        LOG(ERROR, "FFA_INTERRUPT_32 not received fid %x\n", payload.fid);
         status = VAL_ERROR_POINT(4);
         goto exit;
     }
@@ -82,15 +82,15 @@ uint32_t other_secure_int2_server(ffa_args_t args)
 
     if (interrupt_triggered != true)
     {
-        LOG(ERROR, "WD interrupt should be triggered");
+        LOG(ERROR, "WD interrupt should be triggered\n");
         status =  VAL_ERROR_POINT(5);
     }
-    LOG(DBG, "IRQ Status %x", interrupt_triggered);
+    LOG(DBG, "IRQ Status %x\n", interrupt_triggered);
 
 free_interrupt:
     if (val_irq_unregister_handler(PLATFORM_TWDOG_INTID))
     {
-        LOG(ERROR, "IRQ handler unregister failed");
+        LOG(ERROR, "IRQ handler unregister failed\n");
         status = VAL_ERROR_POINT(6);
     }
 

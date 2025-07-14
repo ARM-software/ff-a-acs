@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2024-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -14,7 +14,7 @@ static uint32_t *pages;
 static int refclk_irq_handler(void)
 {
     *(volatile uint32_t *)pages = (uint32_t)IRQ_TRIGGERED;
-    LOG(DBG, "REF-CLK IRQ Handler Processed");
+    LOG(DBG, "REF-CLK IRQ Handler Processed\n");
     return 0;
 }
 
@@ -39,7 +39,7 @@ uint32_t other_secure_int6_client(uint32_t test_run_data)
 
     if (val_is_ffa_feature_supported(FFA_MEM_SHARE_32))
     {
-        LOG(TEST, "FFA_MEM_SHARE_32 not supported, skipping the test");
+        LOG(TEST, "FFA_MEM_SHARE_32 not supported, skipping the test\n");
         return VAL_SKIP_CHECK;
     }
 
@@ -47,7 +47,7 @@ uint32_t other_secure_int6_client(uint32_t test_run_data)
     mb.recv = val_memory_alloc(size);
     if (mb.send == NULL || mb.recv == NULL)
     {
-        LOG(ERROR, "Failed to allocate RxTx buffer");
+        LOG(ERROR, "Failed to allocate RxTx buffer\n");
         status = VAL_ERROR_POINT(1);
         goto free_memory;
     }
@@ -55,7 +55,7 @@ uint32_t other_secure_int6_client(uint32_t test_run_data)
     /* Map TX and RX buffers */
     if (val_rxtx_map_64((uint64_t)mb.send, (uint64_t)mb.recv, (uint32_t)(size/PAGE_SIZE_4K)))
     {
-        LOG(ERROR, "RxTx Map failed");
+        LOG(ERROR, "RxTx Map failed\n");
         status = VAL_ERROR_POINT(2);
         goto free_memory;
     }
@@ -64,7 +64,7 @@ uint32_t other_secure_int6_client(uint32_t test_run_data)
     pages = (uint32_t *)val_memory_alloc(size);
     if (!pages)
     {
-        LOG(ERROR, "Memory allocation failed");
+        LOG(ERROR, "Memory allocation failed\n");
         status = VAL_ERROR_POINT(3);
         goto rxtx_unmap;
     }
@@ -72,7 +72,7 @@ uint32_t other_secure_int6_client(uint32_t test_run_data)
 
     if (val_irq_register_handler(PALTFORM_AP_REFCLK_CNTPSIRQ1, refclk_irq_handler))
     {
-        LOG(ERROR, "AP_REFCLK interrupt register failed");
+        LOG(ERROR, "AP_REFCLK interrupt register failed\n");
         status = VAL_ERROR_POINT(4);
         goto rxtx_unmap;
     }
@@ -109,7 +109,7 @@ uint32_t other_secure_int6_client(uint32_t test_run_data)
     val_ffa_mem_share_32(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "Mem_share request failed err %d", payload.arg2);
+        LOG(ERROR, "Mem_share request failed err %d\n", payload.arg2);
         status = VAL_ERROR_POINT(5);
         goto free_interrupt;
     }
@@ -118,7 +118,7 @@ uint32_t other_secure_int6_client(uint32_t test_run_data)
 
     /* Enable System Timer Interrupt. */
     val_sys_phy_timer_en(REFCLK_TIMEOUT);
-    LOG(DBG, "System timer enabled");
+    LOG(DBG, "System timer enabled\n");
 
     /* Pass memory handle to the server using direct message */
     val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -127,32 +127,32 @@ uint32_t other_secure_int6_client(uint32_t test_run_data)
     val_ffa_msg_send_direct_req_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "Direct request failed err %d", payload.arg2);
+        LOG(ERROR, "Direct request failed err %d\n", payload.arg2);
         status = VAL_ERROR_POINT(6);
         goto free_interrupt;
     }
 
     /* Disable System Timer Interrupt. */
     val_sys_phy_timer_dis(true);
-    LOG(DBG, "System timer disabled");
+    LOG(DBG, "System timer disabled\n");
 
     /* Should receive interrupt on preempt -> running. */
     if (*(volatile uint32_t *)pages != IRQ_TRIGGERED)
     {
-        LOG(ERROR, "WD interrupt should be triggered");
+        LOG(ERROR, "WD interrupt should be triggered\n");
         status =  VAL_ERROR_POINT(7);
         goto free_interrupt;
     }
-    LOG(DBG, "IRQ status Pages %x", pages);
+    LOG(DBG, "IRQ status Pages %x\n", pages);
 
     /* Schedule the preempted SP using FFA_RUN */
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 = (uint32_t)receiver << 16;
-    LOG(DBG, "Call FFA Run");
+    LOG(DBG, "Call FFA Run\n");
     val_ffa_run(&payload);
     if (payload.fid != FFA_MSG_SEND_DIRECT_RESP_64)
     {
-        LOG(ERROR, "DIRECT_RESP_64 not received fid %x", payload.fid);
+        LOG(ERROR, "DIRECT_RESP_64 not received fid %x\n", payload.fid);
         status = VAL_ERROR_POINT(8);
         goto free_interrupt;
     }
@@ -164,35 +164,35 @@ uint32_t other_secure_int6_client(uint32_t test_run_data)
     val_ffa_mem_reclaim(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "Mem Reclaim failed err %d", payload.arg2);
+        LOG(ERROR, "Mem Reclaim failed err %d\n", payload.arg2);
         status = VAL_ERROR_POINT(9);
     }
-    LOG(DBG, "FFA Mem Reclaim Complete");
+    LOG(DBG, "FFA Mem Reclaim Complete\n");
 
 free_interrupt:
     if (val_irq_unregister_handler(PALTFORM_AP_REFCLK_CNTPSIRQ1))
     {
-        LOG(ERROR, "IRQ handler unregister failed");
+        LOG(ERROR, "IRQ handler unregister failed\n");
         status = VAL_ERROR_POINT(10);
     }
 
 rxtx_unmap:
     if (val_rxtx_unmap(sender))
     {
-        LOG(ERROR, "RXTX_UNMAP failed");
+        LOG(ERROR, "RXTX_UNMAP failed\n");
         status = VAL_ERROR_POINT(11);
     }
 
 free_memory:
     if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
     {
-        LOG(ERROR, "free_rxtx_buffers failed");
+        LOG(ERROR, "free_rxtx_buffers failed\n");
         status = status ? status : VAL_ERROR_POINT(12);
     }
 
     if (val_memory_free(pages, size))
     {
-        LOG(ERROR, "val_mem_free failed");
+        LOG(ERROR, "val_mem_free failed\n");
         status = status ? status : VAL_ERROR_POINT(13);
     }
 

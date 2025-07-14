@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -22,7 +22,7 @@ uint32_t ffa_direct_message_32_client(uint32_t test_run_data)
     payload = val_select_server_fn_direct(test_run_data, 0, 0, 0, 0);
     if (payload.fid != FFA_MSG_SEND_DIRECT_RESP_32)
     {
-        LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x",
+        LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x\n",
                   payload.fid, payload.arg2);
         status = VAL_ERROR_POINT(1);
         goto exit;
@@ -41,7 +41,7 @@ uint32_t ffa_direct_message_32_client(uint32_t test_run_data)
             val_ffa_run(&req_data_32);
             if (req_data_32.fid != FFA_MSG_SEND_DIRECT_RESP_32)
             {
-                LOG(ERROR, "FFA_RUN Failed err %x", req_data_32.fid);
+                LOG(ERROR, "FFA_RUN Failed err %x\n", req_data_32.fid);
                 status = VAL_ERROR_POINT(2);
                 goto exit;
             }
@@ -49,7 +49,7 @@ uint32_t ffa_direct_message_32_client(uint32_t test_run_data)
         else
 #endif
         {
-            LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x",
+            LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x\n",
             req_data_32.fid, req_data_32.arg2);
             status = VAL_ERROR_POINT(3);
             goto exit;
@@ -57,10 +57,10 @@ uint32_t ffa_direct_message_32_client(uint32_t test_run_data)
 
     }
 
-    LOG(DBG, "req data arg3 %x arg4 %x arg5 %x arg 6 %x arg7 %x",
+    LOG(DBG, "req data arg3 %x arg4 %x arg5 %x arg 6 %x arg7 %x\n",
         req_data_32.arg3, req_data_32.arg4, req_data_32.arg5, req_data_32.arg6, req_data_32.arg7);
 
-    LOG(DBG, "expected resp arg3 %x arg4 %x arg5 %x arg 6 %x arg7 %x",
+    LOG(DBG, "expected resp arg3 %x arg4 %x arg5 %x arg 6 %x arg7 %x\n",
         expected_resp_data_32.arg3, expected_resp_data_32.arg4, expected_resp_data_32.arg5,
         expected_resp_data_32.arg6, expected_resp_data_32.arg7);
 
@@ -71,7 +71,7 @@ uint32_t ffa_direct_message_32_client(uint32_t test_run_data)
         req_data_32.arg6 != expected_resp_data_32.arg6 ||
         req_data_32.arg7 != expected_resp_data_32.arg7)
     {
-        LOG(ERROR, "Direct response data mismatched")
+        LOG(ERROR, "Direct response data mismatched\n")
         status = VAL_ERROR_POINT(4);
         goto exit;
     }
@@ -83,7 +83,7 @@ uint32_t ffa_direct_message_32_client(uint32_t test_run_data)
     val_ffa_msg_send_direct_req_32(&payload);
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
     {
-        LOG(ERROR, "Wrong source and dest id check failed, fid=0x%x, err=0x%x",
+        LOG(ERROR, "Wrong source and dest id check failed, fid=0x%x, err=0x%x\n",
             payload.fid, payload.arg2);
         status = VAL_ERROR_POINT(5);
         goto exit;
@@ -96,7 +96,7 @@ uint32_t ffa_direct_message_32_client(uint32_t test_run_data)
     val_ffa_msg_send_direct_req_32(&payload);
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
     {
-        LOG(ERROR, "Same source and dest id check failed, fid=0x%x, err=0x%x",
+        LOG(ERROR, "Same source and dest id check failed, fid=0x%x, err=0x%x\n",
             payload.fid, payload.arg2);
         status = VAL_ERROR_POINT(6);
         goto exit;
@@ -110,7 +110,7 @@ uint32_t ffa_direct_message_32_client(uint32_t test_run_data)
     val_ffa_msg_send_direct_req_32(&payload);
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
     {
-        LOG(ERROR, "W2 reserved register mbz check failed, fid=0x%x, err=0x%x",
+        LOG(ERROR, "W2 reserved register mbz check failed, fid=0x%x, err=0x%x\n",
                  payload.fid, payload.arg2);
         status = VAL_ERROR_POINT(7);
         goto exit;
@@ -127,7 +127,7 @@ uint32_t ffa_direct_message_32_client(uint32_t test_run_data)
         val_ffa_msg_send_direct_resp_32(&payload);
         if (payload.fid != FFA_ERROR_32)
         {
-            LOG(ERROR, "Direct response invalid combination check failed, fid=0x%x, err=0x%x",
+            LOG(ERROR, "Direct response invalid combination check failed, fid=0x%x, err=0x%x\n",
                     payload.fid, payload.arg2);
             status = VAL_ERROR_POINT(8);
             goto exit;

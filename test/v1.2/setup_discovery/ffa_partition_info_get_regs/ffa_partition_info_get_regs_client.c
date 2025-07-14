@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2024-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -26,13 +26,13 @@
  */
 static ffa_args_t ffa_partition_info_get_regs(const uint32_t uuid[4])
 {
-    LOG(DBG, "uuid[0] %x, uuid[1] %x uuid[2] %x uuid[3] %x", uuid[0], uuid[1], uuid[2], uuid[3]);
+    LOG(DBG, "uuid[0] %x, uuid[1] %x uuid[2] %x uuid[3] %x\n", uuid[0], uuid[1], uuid[2], uuid[3]);
     ffa_args_t payload;
     val_memset(&payload, 0, sizeof(ffa_args_t));
 
     payload.arg1 = ((uint64_t)uuid[1]<<32) | uuid[0];
     payload.arg2 = ((uint64_t)uuid[3]<<32) | uuid[2];
-    LOG(DBG, "arg1 %lx, arg2 %lx", payload.arg1, payload.arg2);
+    LOG(DBG, "arg1 %lx, arg2 %lx\n", payload.arg1, payload.arg2);
     val_ffa_partition_info_get_regs(&payload);
 
     return payload;
@@ -54,18 +54,18 @@ static uint32_t ffa_partition_info_get_regs_invalid_uuid_test(void)
 
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
     {
-        LOG(ERROR, "Invalid parameter check failed, fid=0x%x, err=0x%x",
+        LOG(ERROR, "Invalid parameter check failed, fid=0x%x, err=0x%x\n",
             payload.fid, payload.arg2);
         return VAL_ERROR_POINT(1);
     }
 
-    LOG(DBG, "UUID %x %x %x %x", uuid[0], uuid[1], uuid[2], uuid[3]);
+    LOG(DBG, "UUID %x %x %x %x\n", uuid[0], uuid[1], uuid[2], uuid[3]);
 
     /* FFA_INFO_GET_REG call with NULL UUID */
     payload = ffa_partition_info_get_regs(null_uuid);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "Invalid fid received, fid=0x%x", payload.fid);
+        LOG(ERROR, "Invalid fid received, fid=0x%x\n", payload.fid);
         status = VAL_ERROR_POINT(2);
     }
 
@@ -88,13 +88,13 @@ static uint32_t is_matching_endpoint_found(const val_endpoint_info_t *expected_e
         if (expected_ep[0].id != info_get[i].id)
             continue;
 
-        LOG(DBG, "id %x exec_context %x properties %x", info_get[i].id, info_get[i].exec_context,
+        LOG(DBG, "id %x exec_context %x properties %x\n", info_get[i].id, info_get[i].exec_context,
             info_get[i].properties);
 
         if (expected_ep[0].ec_count != info_get[i].exec_context)
         {
-            LOG(ERROR, "Data mismatch for endpoint id: info.id=%x", expected_ep[0].id);
-            LOG(ERROR, "expected_ep[0].ec_count=%x, info.exec_context=%x",
+            LOG(ERROR, "Data mismatch for endpoint id: info.id=%x\n", expected_ep[0].id);
+            LOG(ERROR, "expected_ep[0].ec_count=%x, info.exec_context=%x\n",
                 expected_ep[0].ec_count,  info_get[i].exec_context);
             return 0;
         }
@@ -104,9 +104,9 @@ static uint32_t is_matching_endpoint_found(const val_endpoint_info_t *expected_e
         {
             if (expected_ep[0].ep_properties != info_get[i].properties)
             {
-                LOG(ERROR, "Data mismatch for endpoint id: info.id=%x",
+                LOG(ERROR, "Data mismatch for endpoint id: info.id=%x\n",
                     expected_ep[0].id, 0);
-                LOG(ERROR, "expected_ep[0].ep_properties=%x, info.properties=%x",
+                LOG(ERROR, "expected_ep[0].ep_properties=%x, info.properties=%x\n",
                     expected_ep[0].ep_properties,  info_get[i].properties);
                 return 0;
             }
@@ -116,16 +116,16 @@ static uint32_t is_matching_endpoint_found(const val_endpoint_info_t *expected_e
         {
             if (expected_ep[0].ep_properties < info_get[i].properties)
             {
-                LOG(ERROR, "Data mismatch for endpoint id: info.id=%x",
+                LOG(ERROR, "Data mismatch for endpoint id: info.id=%x\n",
                     expected_ep[0].id);
-                LOG(ERROR, "expected_ep[0].ep_properties=%x, info.properties=%x",
+                LOG(ERROR, "expected_ep[0].ep_properties=%x, info.properties=%x\n",
                     expected_ep[0].ep_properties,  info_get[i].properties);
                 return 0;
             }
         }
         return 1;
     }
-    LOG(ERROR, "Endpoint-id=%x info not found", expected_ep[0].id);
+    LOG(ERROR, "Endpoint-id=%x info not found\n", expected_ep[0].id);
     return 0;
 }
 
@@ -142,7 +142,7 @@ static uint32_t ffa_partition_info_helper(const uint32_t uuid[4],
     payload = ffa_partition_info_get_regs(uuid);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "partition info get failed fid=0x%x, err=0x%x", payload.fid, payload.arg2);
+        LOG(ERROR, "partition info get failed fid=0x%x, err=0x%x\n", payload.fid, payload.arg2);
         return VAL_ERROR_POINT(5);
     }
 
@@ -171,7 +171,7 @@ uint32_t ffa_partition_info_get_regs_client(uint32_t test_run_data)
     if (!ep_info)
     {
         status = VAL_ERROR_POINT(14);
-        LOG(ERROR, "Endpoint info failed");
+        LOG(ERROR, "Endpoint info failed\n");
         goto exit;
     }
 
@@ -202,7 +202,7 @@ uint32_t ffa_partition_info_get_regs_client(uint32_t test_run_data)
         goto exit;
     }
 
-    LOG(DBG, "Requesting Partition Info with Nil UUID");
+    LOG(DBG, "Requesting Partition Info with Nil UUID\n");
     /* Endpoint can request information for all partitions in the system
      * including the caller by specifying the Nil UUID.
      */
@@ -230,7 +230,7 @@ uint32_t ffa_partition_info_get_regs_client(uint32_t test_run_data)
         }
     }
 
-    LOG(DBG, "Partition Info Wrong Test");
+    LOG(DBG, "Partition Info Wrong Test\n");
     if (ffa_partition_info_get_regs_invalid_uuid_test())
     {
         status = VAL_ERROR_POINT(22);

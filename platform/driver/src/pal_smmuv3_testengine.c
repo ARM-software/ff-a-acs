@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -66,7 +66,7 @@ uint32_t smmuv3_configure_testengine(uint32_t stream_id, uint64_t source, uint64
 
             if (data != ENGINE_HALTED)
             {
-                PAL_LOG(ERROR, "SMMU data transfer failed");
+                PAL_LOG("\t\tSMMU data transfer failed\n", 0, 0);
                 return PAL_ERROR;
             }
             else
@@ -75,7 +75,7 @@ uint32_t smmuv3_configure_testengine(uint32_t stream_id, uint64_t source, uint64
 
         if (!time_out)
         {
-            PAL_LOG(ERROR, "SMMU test engine timeout");
+            PAL_LOG("\t\tSMMU test engine timeout\n", 0, 0);
             return PAL_ERROR;
         }
 
@@ -85,7 +85,7 @@ uint32_t smmuv3_configure_testengine(uint32_t stream_id, uint64_t source, uint64
 
     if (pal_memcmp((void *)begin, (void *)dest, size))
     {
-        PAL_LOG(ERROR, "SMMU: Data mismatched");
+        PAL_LOG("\t\tSMMU: Data mismatched\n", 0, 0);
         return PAL_ERROR;
     }
 

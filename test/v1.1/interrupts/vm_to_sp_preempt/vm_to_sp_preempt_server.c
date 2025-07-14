@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2022-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -26,13 +26,13 @@ uint32_t vm_to_sp_preempt_server(ffa_args_t args)
     uint32_t msg_size;
     memory_region_descriptor_t mem_desc;
 
-    LOG(ALWAYS, "Va to pa mapping failed")
+    LOG(ALWAYS, "Va to pa mapping failed\n")
 
     mb.send = val_memory_alloc(size);
     mb.recv = val_memory_alloc(size);
     if (mb.send == NULL || mb.recv == NULL)
     {
-        LOG(ERROR, "Failed to allocate RxTx buffer");
+        LOG(ERROR, "Failed to allocate RxTx buffer\n");
         status = VAL_ERROR_POINT(1);
         goto free_memory;
     }
@@ -40,7 +40,7 @@ uint32_t vm_to_sp_preempt_server(ffa_args_t args)
     /* Map TX and RX buffers */
     if (val_rxtx_map_64((uint64_t)mb.send, (uint64_t)mb.recv, (uint32_t)(size/PAGE_SIZE_4K)))
     {
-        LOG(ERROR, "RxTx Map failed");
+        LOG(ERROR, "RxTx Map failed\n");
         status = VAL_ERROR_POINT(2);
         goto free_memory;
     }
@@ -51,7 +51,7 @@ uint32_t vm_to_sp_preempt_server(ffa_args_t args)
     payload = val_resp_client_fn_direct((uint32_t)args.arg3, 0, 0, 0, 0, 0);
     if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_64)
     {
-        LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x",
+        LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x\n",
                   payload.fid, payload.arg2);
         status =  VAL_ERROR_POINT(3);
         goto rxtx_unmap;
@@ -86,12 +86,12 @@ uint32_t vm_to_sp_preempt_server(ffa_args_t args)
     val_ffa_mem_retrieve_32(&payload);
     if (payload.fid != FFA_MEM_RETRIEVE_RESP_32)
     {
-        LOG(ERROR, "Mem retrieve request failed err %d", payload.arg2);
+        LOG(ERROR, "Mem retrieve request failed err %d\n", payload.arg2);
         status =  VAL_ERROR_POINT(4);
         goto rxtx_unmap;
     }
 
-    LOG(DBG, "FFA MEM Retrieve Complete");
+    LOG(DBG, "FFA MEM Retrieve Complete\n");
 
     memory_region = (struct ffa_memory_region *)mb.recv;
     composite = ffa_memory_region_get_composite(memory_region, 0);
@@ -108,7 +108,7 @@ uint32_t vm_to_sp_preempt_server(ffa_args_t args)
 
     if (val_mem_map_pgt(&mem_desc))
     {
-        LOG(ERROR, "Va to pa mapping failed");
+        LOG(ERROR, "Va to pa mapping failed\n");
         status =  VAL_ERROR_POINT(5);
         goto rx_release;
     }
@@ -118,7 +118,7 @@ uint32_t vm_to_sp_preempt_server(ffa_args_t args)
     val_ffa_msg_send_direct_resp_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "Direct response failed, err %d", payload.arg2);
+        LOG(ERROR, "Direct response failed, err %d\n", payload.arg2);
         status =  VAL_ERROR_POINT(6);
         goto rx_release;
     }
@@ -127,11 +127,11 @@ uint32_t vm_to_sp_preempt_server(ffa_args_t args)
 
     if ((*(volatile uint32_t *)ptr != IRQ_TRIGGERED))
     {
-        LOG(ERROR, "WD interrupt not triggered");
+        LOG(ERROR, "WD interrupt not triggered\n");
         status =  VAL_ERROR_POINT(7);
         goto rx_release;
     }
-    LOG(DBG, "SP Sleep Complete, IRQ Status %x", *(volatile uint32_t *)ptr);
+    LOG(DBG, "SP Sleep Complete, IRQ Status %x\n", *(volatile uint32_t *)ptr);
 
     /* relinquish the memory and notify the sender. */
     ffa_mem_relinquish_init((struct ffa_mem_relinquish *)mb.send, handle, 0, sender, 0x1);
@@ -139,28 +139,28 @@ uint32_t vm_to_sp_preempt_server(ffa_args_t args)
     val_ffa_mem_relinquish(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "Mem relinquish failed err %x", payload.arg2);
+        LOG(ERROR, "Mem relinquish failed err %x\n", payload.arg2);
         status = status ? status : VAL_ERROR_POINT(8);
     }
 
 rx_release:
     if (val_rx_release())
     {
-        LOG(ERROR, "val_rx_release failed");
+        LOG(ERROR, "val_rx_release failed\n");
         status = status ? status : VAL_ERROR_POINT(9);
     }
 
 rxtx_unmap:
     if (val_rxtx_unmap(sender))
     {
-        LOG(ERROR, "RXTX_UNMAP failed");
+        LOG(ERROR, "RXTX_UNMAP failed\n");
         status = status ? status : VAL_ERROR_POINT(10);
     }
 
 free_memory:
     if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
     {
-        LOG(ERROR, "free_rxtx_buffers failed");
+        LOG(ERROR, "free_rxtx_buffers failed\n");
         status = status ? status : VAL_ERROR_POINT(11);
     }
 
@@ -169,7 +169,7 @@ free_memory:
     val_ffa_msg_send_direct_resp_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "Direct response failed err %x", payload.arg2);
+        LOG(ERROR, "Direct response failed err %x\n", payload.arg2);
         status = status ? status : VAL_ERROR_POINT(12);
     }
 

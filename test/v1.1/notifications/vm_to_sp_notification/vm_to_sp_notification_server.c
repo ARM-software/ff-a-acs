@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2022-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -12,7 +12,7 @@ static volatile uint32_t npi_flag;
 static int npi_irq_handler(void)
 {
     npi_flag = 1;
-    LOG(DBG, "NPI IRQ Handler Processed");
+    LOG(DBG, "NPI IRQ Handler Processed\n");
     return 0;
 }
 
@@ -30,7 +30,7 @@ uint32_t vm_to_sp_notification_server(ffa_args_t args)
     val_ffa_features(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "Failed to retrieve NPI err %x", payload.arg2);
+        LOG(ERROR, "Failed to retrieve NPI err %x\n", payload.arg2);
         status = VAL_ERROR_POINT(1);
         goto exit;
     }
@@ -38,18 +38,18 @@ uint32_t vm_to_sp_notification_server(ffa_args_t args)
     npi_id = ffa_feature_intid(payload);
     if (val_irq_register_handler(npi_id, npi_irq_handler))
     {
-        LOG(ERROR, "NPI interrupt register failed");
+        LOG(ERROR, "NPI interrupt register failed\n");
         status = VAL_ERROR_POINT(2);
         goto exit;
     }
-    LOG(DBG, "Interrupt registration Done NPI ID %x", npi_id);
+    LOG(DBG, "Interrupt registration Done NPI ID %x\n", npi_id);
 
     /* Wait for the message. */
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload = val_resp_client_fn_direct((uint32_t)args.arg3, 0, 0, 0, 0, 0);
     if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_64)
     {
-        LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x",
+        LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x\n",
                   payload.fid, payload.arg2);
         status =  VAL_ERROR_POINT(3);
         goto free_interrupt;
@@ -65,7 +65,7 @@ uint32_t vm_to_sp_notification_server(ffa_args_t args)
     val_ffa_notification_bind(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "Failed notification bind err %x", payload.arg2);
+        LOG(ERROR, "Failed notification bind err %x\n", payload.arg2);
         status = VAL_ERROR_POINT(4);
         goto free_interrupt;
     }
@@ -75,15 +75,15 @@ uint32_t vm_to_sp_notification_server(ffa_args_t args)
     val_ffa_msg_send_direct_resp_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "Direct response failed, err %d", payload.arg2);
+        LOG(ERROR, "Direct response failed, err %d\n", payload.arg2);
         status =  VAL_ERROR_POINT(5);
         goto unbind;
     }
 
     if (npi_flag == 1) {
-        LOG(DBG, "NPI interrupt handled");
+        LOG(DBG, "NPI interrupt handled\n");
     } else {
-        LOG(DBG, "NPI interrupt not received");
+        LOG(DBG, "NPI interrupt not received\n");
         status = VAL_ERROR_POINT(6);
         goto unbind;
     }
@@ -94,17 +94,17 @@ uint32_t vm_to_sp_notification_server(ffa_args_t args)
     val_ffa_notification_get(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "Failed notification get err %x", payload.arg2);
+        LOG(ERROR, "Failed notification get err %x\n", payload.arg2);
         status = VAL_ERROR_POINT(7);
         goto unbind;
     }
 
-    LOG(DBG, "Notifications_bitmap %x payload.arg4 %x", notifications_bitmap,
+    LOG(DBG, "Notifications_bitmap %x payload.arg4 %x\n", notifications_bitmap,
         (uint32_t)payload.arg4);
 
     if (notifications_bitmap != (uint32_t)payload.arg4)
     {
-        LOG(ERROR, "Not received expected notification err %x", payload.arg4);
+        LOG(ERROR, "Not received expected notification err %x\n", payload.arg4);
         status = VAL_ERROR_POINT(8);
     }
 
@@ -117,7 +117,7 @@ unbind:
     val_ffa_notification_unbind(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "Failed notification unbind err %x", payload.arg2);
+        LOG(ERROR, "Failed notification unbind err %x\n", payload.arg2);
         status = status ? status : VAL_ERROR_POINT(9);
     }
 
@@ -125,7 +125,7 @@ free_interrupt:
     val_secure_intr_disable(npi_id, INTERRUPT_TYPE_FIQ);
     if (val_irq_unregister_handler(npi_id))
     {
-        LOG(ERROR, "IRQ handler unregister failed");
+        LOG(ERROR, "IRQ handler unregister failed\n");
         status = status ? status : VAL_ERROR_POINT(10);
     }
 
@@ -135,7 +135,7 @@ exit:
     val_ffa_msg_send_direct_resp_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "Direct response failed err %x", payload.arg2);
+        LOG(ERROR, "Direct response failed err %x\n", payload.arg2);
         status = status ? status : VAL_ERROR_POINT(11);
     }
 

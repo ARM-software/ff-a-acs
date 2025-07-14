@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -163,4 +163,10 @@
  * CPU info
  */
 #define PLATFORM_NO_OF_CPUS 8
+
+#ifndef __ASSEMBLER__
+extern uint8_t pal_misc_buffer[256];
+#define PLATFORM_SHARED_REGION_BASE (void*)pal_misc_buffer
+#endif
+
 #endif /* _PAL_CONFIG_H_ */

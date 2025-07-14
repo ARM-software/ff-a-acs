@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2024-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -16,7 +16,7 @@ static int mei_irq_handler(void)
 {
     managed_exit_received = true;
     val_secure_intr_disable(mei_id, INTERRUPT_TYPE_FIQ);
-    LOG(DBG, "MEI Handler Processed");
+    LOG(DBG, "MEI Handler Processed\n");
     return 0;
 }
 
@@ -39,7 +39,7 @@ static uint32_t mei_enabled_sp4_setup(ffa_args_t args)
     val_ffa_features(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "Failed to retrieve MEI err %x", payload.arg2);
+        LOG(ERROR, "Failed to retrieve MEI err %x\n", payload.arg2);
         status =  VAL_ERROR_POINT(1);
         goto exit;
     }
@@ -47,19 +47,19 @@ static uint32_t mei_enabled_sp4_setup(ffa_args_t args)
     mei_id = (uint32_t)payload.arg2;
     if (val_irq_register_handler(mei_id, mei_irq_handler))
     {
-        LOG(ERROR, "MEI interrupt register failed");
+        LOG(ERROR, "MEI interrupt register failed\n");
         status = VAL_ERROR_POINT(2);
         goto exit;
     }
     val_secure_intr_enable(mei_id, INTERRUPT_TYPE_FIQ);
-    LOG(DBG, "MEI Handler Registered, MEI ID %x", mei_id);
+    LOG(DBG, "MEI Handler Registered, MEI ID %x\n", mei_id);
 
     /* Wait for the message. */
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload = val_resp_client_fn_direct((uint32_t)args.arg3, 0, 0, 0, 0, 0);
     if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_64)
     {
-        LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x",
+        LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x\n",
                   payload.fid, payload.arg2);
         status =  VAL_ERROR_POINT(3);
         goto free_interrupt;
@@ -70,14 +70,14 @@ static uint32_t mei_enabled_sp4_setup(ffa_args_t args)
     val_ffa_msg_send_direct_req_64(&payload);
     if (payload.fid != FFA_MSG_SEND_DIRECT_RESP_64)
     {
-        LOG(ERROR, "DIRECT_RESP_64 not received fid %x err %x", payload.fid, payload.arg2);
+        LOG(ERROR, "DIRECT_RESP_64 not received fid %x err %x\n", payload.fid, payload.arg2);
         status = VAL_ERROR_POINT(4);
         goto free_interrupt;
     }
 
     if (!managed_exit_received)
     {
-        LOG(ERROR, "MEI not triggered");
+        LOG(ERROR, "MEI not triggered\n");
         status =  VAL_ERROR_POINT(5);
         goto free_interrupt;
     }
@@ -88,7 +88,7 @@ static uint32_t mei_enabled_sp4_setup(ffa_args_t args)
     val_ffa_msg_send_direct_resp_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "Direct response failed err %x", payload.arg2);
+        LOG(ERROR, "Direct response failed err %x\n", payload.arg2);
         status =  VAL_ERROR_POINT(6);
         goto exit;
     }
@@ -98,7 +98,7 @@ static uint32_t mei_enabled_sp4_setup(ffa_args_t args)
     val_ffa_msg_send_direct_req_64(&payload);
     if (payload.fid != FFA_MSG_SEND_DIRECT_RESP_64)
     {
-        LOG(ERROR, "DIRECT_RESP_64 not received fid %x err %x", payload.fid, payload.arg2);
+        LOG(ERROR, "DIRECT_RESP_64 not received fid %x err %x\n", payload.fid, payload.arg2);
         status = VAL_ERROR_POINT(7);
         goto free_interrupt;
     }
@@ -106,7 +106,7 @@ static uint32_t mei_enabled_sp4_setup(ffa_args_t args)
 free_interrupt:
     if (val_irq_unregister_handler(mei_id))
     {
-        LOG(ERROR, "IRQ handler unregister failed");
+        LOG(ERROR, "IRQ handler unregister failed\n");
         status = status ? status : VAL_ERROR_POINT(8);
     }
 
@@ -116,7 +116,7 @@ exit:
     val_ffa_msg_send_direct_resp_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "Direct response failed err %x", payload.arg2);
+        LOG(ERROR, "Direct response failed err %x\n", payload.arg2);
         status = status ? status : VAL_ERROR_POINT(9);
     }
 
@@ -137,7 +137,7 @@ static uint32_t mei_enabled_sp2_setup(ffa_args_t args)
     val_ffa_features(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "Failed to retrieve MEI err %x", payload.arg2);
+        LOG(ERROR, "Failed to retrieve MEI err %x\n", payload.arg2);
         status =  VAL_ERROR_POINT(1);
         goto exit;
     }
@@ -145,11 +145,11 @@ static uint32_t mei_enabled_sp2_setup(ffa_args_t args)
     mei_id = (uint32_t)payload.arg2;
     if (val_irq_register_handler(mei_id, mei_irq_handler))
     {
-        LOG(ERROR, "MEI interrupt register failed");
+        LOG(ERROR, "MEI interrupt register failed\n");
         status = VAL_ERROR_POINT(2);
         goto exit;
     }
-    LOG(DBG, "MEI Handler Registered, MEI ID %x", mei_id);
+    LOG(DBG, "MEI Handler Registered, MEI ID %x\n", mei_id);
 
     val_secure_intr_enable(mei_id, INTERRUPT_TYPE_FIQ);
 
@@ -158,7 +158,7 @@ static uint32_t mei_enabled_sp2_setup(ffa_args_t args)
     payload = val_resp_client_fn_direct((uint32_t)args.arg3, 0, 0, 0, 0, 0);
     if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_64)
     {
-        LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x",
+        LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x\n",
                   payload.fid, payload.arg2);
         status =  VAL_ERROR_POINT(3);
         goto free_interrupt;
@@ -169,25 +169,25 @@ static uint32_t mei_enabled_sp2_setup(ffa_args_t args)
 
     if (managed_exit_received != true)
     {
-        LOG(ERROR, "MEI not triggered");
+        LOG(ERROR, "MEI not triggered\n");
         status =  VAL_ERROR_POINT(4);
         goto free_interrupt;
     }
-    LOG(DBG, "SP Sleep Complete, managed_exit_received %x", managed_exit_received);
+    LOG(DBG, "SP Sleep Complete, managed_exit_received %x\n", managed_exit_received);
 
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 =  ((uint32_t)sender << 16) | receiver;
     val_ffa_msg_send_direct_resp_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "Direct response failed err %x", payload.arg2);
+        LOG(ERROR, "Direct response failed err %x\n", payload.arg2);
         status = status ? status : VAL_ERROR_POINT(5);
     }
 
 free_interrupt:
     if (val_irq_unregister_handler(mei_id))
     {
-        LOG(ERROR, "IRQ handler unregister failed");
+        LOG(ERROR, "IRQ handler unregister failed\n");
         status = status ? status : VAL_ERROR_POINT(6);
     }
 
@@ -197,7 +197,7 @@ exit:
     val_ffa_msg_send_direct_resp_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "Direct response failed err %x", payload.arg2);
+        LOG(ERROR, "Direct response failed err %x\n", payload.arg2);
         status = status ? status : VAL_ERROR_POINT(7);
     }
     return status;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2024-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -18,26 +18,26 @@ uint32_t ffa_run_direct_req_client(uint32_t test_run_data)
 
     val_select_server_fn_direct(test_run_data, 0, 0, 0, 0);
 
-    LOG(DBG, "Calling Server EP for invalid FFA_RUN Check");
+    LOG(DBG, "Calling Server EP for invalid FFA_RUN Check\n");
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 =  ((uint32_t)sender << 16) | recipient;
     val_ffa_msg_send_direct_req_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "Direct request failed err %d", payload.arg2);
+        LOG(ERROR, "Direct request failed err %d\n", payload.arg2);
         status = VAL_ERROR_POINT(8);
         goto exit;
     }
 
 
-    LOG(DBG, "FFA_RUN call chain check");
+    LOG(DBG, "FFA_RUN call chain check\n");
     /* Call ffa run */
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 = (uint32_t)recipient << 16;
     val_ffa_run(&payload);
     if (payload.fid != FFA_MSG_WAIT_32)
     {
-        LOG(ERROR, "FFA_MSG_WAIT_32 not received %x", payload.fid);
+        LOG(ERROR, "FFA_MSG_WAIT_32 not received %x\n", payload.fid);
         status = VAL_ERROR_POINT(6);
         goto exit;
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -53,7 +53,7 @@ static void send_event_common(event_t *event, unsigned int inc)
 
 void val_send_event(event_t *event)
 {
-    LOG(DBG, "Sending event %x", (uint64_t) event, 0);
+    LOG(DBG, "Sending event %x\n", (uint64_t) event, 0);
     send_event_common(event, 1);
 }
 
@@ -73,7 +73,7 @@ void val_wait_for_event(event_t *event)
 {
     unsigned int event_received = 0;
 
-    LOG(DBG, "Waiting for event %x", (uint64_t) event, 0);
+    LOG(DBG, "Waiting for event %x\n", (uint64_t) event, 0);
     while (!event_received) {
 
         val_dataCacheInvalidateVA((uint64_t)&event->cnt);
@@ -104,5 +104,5 @@ void val_wait_for_event(event_t *event)
         }
     }
 
-    LOG(DBG, "Event recieved for %x", (uint64_t) event, 0);
+    LOG(DBG, "Event recieved for %x\n", (uint64_t) event, 0);
 }

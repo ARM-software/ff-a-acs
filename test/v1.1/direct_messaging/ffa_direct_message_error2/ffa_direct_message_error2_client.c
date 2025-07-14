@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2022-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -25,7 +25,7 @@ uint32_t ffa_direct_message_error2_client(uint32_t test_run_data)
     val_ffa_msg_send_direct_req_64(&payload);
     if (payload.fid != FFA_ERROR_32)
     {
-        LOG(ERROR, "Relayer must return error S-EP sends direct request to NS-EP %x",
+        LOG(ERROR, "Relayer must return error S-EP sends direct request to NS-EP %x\n",
                             payload.arg2);
         status = VAL_ERROR_POINT(1);
         goto exit;
@@ -36,7 +36,7 @@ uint32_t ffa_direct_message_error2_client(uint32_t test_run_data)
     val_ffa_msg_send_direct_req_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "Direct request failed err %x", payload.arg2);
+        LOG(ERROR, "Direct request failed err %x\n", payload.arg2);
         status = VAL_ERROR_POINT(2);
         goto exit;
     }

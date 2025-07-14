@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -121,7 +121,7 @@ uint32_t val_ffa_memory_region_init(mem_region_init_t *mem_region_init,
     /* Check for Invalid combination of multi_share and receiver count */
     if (mem_region_init->multi_share ^ (mem_region_init->receiver_count>>1))
     {
-        LOG(ERROR, "Invalid Combination receiver_count %x, multi_share %x",
+        LOG(ERROR, "Invalid Combination receiver_count %x, multi_share %x\n",
           mem_region_init->receiver_count, mem_region_init->multi_share);
     }
 
@@ -168,7 +168,7 @@ uint32_t val_ffa_memory_region_init(mem_region_init_t *mem_region_init,
             mem_region_init->memory_region->receiver_count *
                 sizeof(struct ffa_memory_access));
 #if (PLATFORM_FFA_V >= FFA_V_1_2)
-            LOG(DBG, "rx %d impdef %x", i, memory_region->receivers[i].impdef);
+            LOG(DBG, "rx %d impdef %x\n", i, memory_region->receivers[i].impdef);
 #endif
         }
     }
@@ -240,7 +240,7 @@ uint32_t val_ffa_memory_retrieve_request_init(mem_region_init_t *mem_region_init
     /* Check for Invalid combination of multi_share and reciever count */
     if (mem_region_init->multi_share ^ (mem_region_init->receiver_count>>1))
     {
-        LOG(ERROR, "Invalid Combination multi_share %x, receiver_count %x",
+        LOG(ERROR, "Invalid Combination multi_share %x, receiver_count %x\n",
           mem_region_init->receiver_count, mem_region_init->multi_share);
     }
 
@@ -335,7 +335,7 @@ uint32_t val_ffa_mem_handle_share(ffa_endpoint_id_t sender, ffa_endpoint_id_t re
     val_ffa_msg_send_direct_req_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "Direct request failed err %x", payload.arg2, 0);
+        LOG(ERROR, "Direct request failed err %x\n", payload.arg2, 0);
         return VAL_ERROR;
     }
     else
