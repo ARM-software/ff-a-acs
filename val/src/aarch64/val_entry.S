@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -117,19 +117,26 @@ pie_fixup:
     bl    fix_symbol_table
 
     /* Setup the stack pointer to call C entry */
-    adr    x0, stacks_end
+    adrp   x0, stacks_end
+    add    x0, x0, :lo12:stacks_end
     mov    sp, x0
 
-   /* Clear BSS */
-   adr x2, val_image_load_offset
-   ldr x2, [x2]
-   adr x0, bss_start_addr
-   ldr x0, [x0]
-   add x0, x0, x2
-   adr x1, bss_end_addr
-   ldr x1, [x1]
-   add x1, x1, x2
-   sub x1, x1, x0
+    /* Clear BSS */
+    adrp   x2, val_image_load_offset
+    add    x2, x2, :lo12:val_image_load_offset
+    ldr    x2, [x2]
+
+    adrp   x0, bss_start_addr
+    add    x0, x0, :lo12:bss_start_addr
+    ldr    x0, [x0]
+    add    x0, x0, x2
+
+    adrp   x1, bss_end_addr
+    add    x1, x1, :lo12:bss_end_addr
+    ldr    x1, [x1]
+    add    x1, x1, x2
+
+    sub    x1, x1, x0
 2:
    stp xzr, xzr, [x0]
    add x0, x0, #16
