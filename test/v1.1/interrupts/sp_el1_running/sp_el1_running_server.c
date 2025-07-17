@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2024-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -11,7 +11,7 @@ static volatile bool interrupt_triggered;
 static int wd_irq_handler(void)
 {
     interrupt_triggered = true;
-    LOG(DBG, "AP REF CLK Handler Processed");
+    LOG(DBG, "AP REF CLK Handler Processed\n");
     return 0;
 }
 uint32_t sp_el1_running_server(ffa_args_t args)
@@ -26,34 +26,34 @@ uint32_t sp_el1_running_server(ffa_args_t args)
     payload = val_resp_client_fn_direct((uint32_t)args.arg3, 0, 0, 0, 0, 0);
     if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_64)
     {
-        LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x",
+        LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x\n",
                   payload.fid, payload.arg2);
         status =  VAL_ERROR_POINT(1);
         goto exit;
     }
    if (val_irq_register_handler(PALTFORM_AP_REFCLK_CNTPSIRQ1, wd_irq_handler))
     {
-        LOG(ERROR, "WD interrupt register failed");
+        LOG(ERROR, "WD interrupt register failed\n");
         status = VAL_ERROR_POINT(2);
         goto exit;
     }
     val_sys_phy_timer_en(AP_REF_CLK_TIMEOUT);
-    LOG(DBG, "System Timer IRQ Enabled");
+    LOG(DBG, "System Timer IRQ Enabled\n");
 
     /* Wait for WD interrupt */
     val_sp_sleep(AP_REF_CLK_WAIT);
 
     val_sys_phy_timer_dis(true);
-    LOG(DBG, "SP Sleep Complete, IRQ Status %x", interrupt_triggered);
+    LOG(DBG, "SP Sleep Complete, IRQ Status %x\n", interrupt_triggered);
 
     if (interrupt_triggered != true)
     {
-        LOG(ERROR, "WD interrupt should be triggered");
+        LOG(ERROR, "WD interrupt should be triggered\n");
         status =  VAL_ERROR_POINT(3);
     }
     if (val_irq_unregister_handler(PALTFORM_AP_REFCLK_CNTPSIRQ1))
     {
-        LOG(ERROR, "IRQ handler unregister failed");
+        LOG(ERROR, "IRQ handler unregister failed\n");
         status = VAL_ERROR_POINT(4);
     }
 exit:
@@ -62,7 +62,7 @@ exit:
     val_ffa_msg_send_direct_resp_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "Direct response failed err %x", payload.arg2);
+        LOG(ERROR, "Direct response failed err %x\n", payload.arg2);
         status = status ? status : VAL_ERROR_POINT(5);
     }
     return status;

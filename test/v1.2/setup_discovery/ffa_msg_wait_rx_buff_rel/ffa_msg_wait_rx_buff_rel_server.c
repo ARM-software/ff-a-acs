@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2024-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -29,7 +29,7 @@ uint32_t ffa_msg_wait_rx_buff_rel_server(ffa_args_t args)
     mb.recv = val_memory_alloc(size);
     if (mb.send == NULL || mb.recv == NULL)
     {
-        LOG(ERROR, "Failed to allocate RxTx buffer");
+        LOG(ERROR, "Failed to allocate RxTx buffer\n");
         status = VAL_ERROR_POINT(1);
         goto free_memory;
     }
@@ -37,7 +37,7 @@ uint32_t ffa_msg_wait_rx_buff_rel_server(ffa_args_t args)
     /* Map TX and RX buffers */
     if (val_rxtx_map_64((uint64_t)mb.send, (uint64_t)mb.recv, (uint32_t)(size/PAGE_SIZE_4K)))
     {
-        LOG(ERROR, "RxTx Map failed");
+        LOG(ERROR, "RxTx Map failed\n");
         status = VAL_ERROR_POINT(2);
         goto free_memory;
     }
@@ -48,7 +48,7 @@ uint32_t ffa_msg_wait_rx_buff_rel_server(ffa_args_t args)
     payload = val_resp_client_fn_direct((uint32_t)args.arg3, 0, 0, 0, 0, 0);
     if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_64)
     {
-        LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x",
+        LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x\n",
                   payload.fid, payload.arg2);
         status =  VAL_ERROR_POINT(3);
         goto rxtx_unmap;
@@ -83,11 +83,11 @@ uint32_t ffa_msg_wait_rx_buff_rel_server(ffa_args_t args)
     val_ffa_mem_retrieve_32(&payload);
     if (payload.fid != FFA_MEM_RETRIEVE_RESP_32)
     {
-        LOG(ERROR, "Mem retrieve request failed err %d", payload.arg2);
+        LOG(ERROR, "Mem retrieve request failed err %d\n", payload.arg2);
         status =  VAL_ERROR_POINT(4);
         goto rxtx_unmap;
     }
-    LOG(DBG, "FFA Mem Retrieve Complete");
+    LOG(DBG, "FFA Mem Retrieve Complete\n");
 
     memory_region = (struct ffa_memory_region *)mb.recv;
     composite = ffa_memory_region_get_composite(memory_region, 0);
@@ -104,18 +104,18 @@ uint32_t ffa_msg_wait_rx_buff_rel_server(ffa_args_t args)
 
     if (val_mem_map_pgt(&mem_desc))
     {
-        LOG(ERROR, "Va to pa mapping failed");
+        LOG(ERROR, "Va to pa mapping failed\n");
         status =  VAL_ERROR_POINT(5);
         goto rx_release;
     }
 
-    LOG(DBG, "Page Table Mapped for shared memory, checking content");
+    LOG(DBG, "Page Table Mapped for shared memory, checking content\n");
     /* Check the content of memory equal to the data set by receiver. */
     for (i = 0; i < msg_size; ++i)
     {
         if (ptr[i] != 0xabababab)
         {
-            LOG(ERROR, "Region data mismatch after retrieve %x", ptr[i]);
+            LOG(ERROR, "Region data mismatch after retrieve %x\n", ptr[i]);
             status = VAL_ERROR_POINT(6);
             goto rx_release;
         }
@@ -127,7 +127,7 @@ uint32_t ffa_msg_wait_rx_buff_rel_server(ffa_args_t args)
     val_ffa_mem_relinquish(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "Mem relinquish failed err %x", payload.arg2);
+        LOG(ERROR, "Mem relinquish failed err %x\n", payload.arg2);
         status = status ? status : VAL_ERROR_POINT(7);
         goto rx_release;
     }
@@ -138,19 +138,19 @@ uint32_t ffa_msg_wait_rx_buff_rel_server(ffa_args_t args)
     val_ffa_msg_send_direct_resp_64(&payload);
     if (payload.fid != FFA_RUN_32)
     {
-        LOG(ERROR, "Direct response failed err %x", payload.arg2);
+        LOG(ERROR, "Direct response failed err %x\n", payload.arg2);
         status = status ? status : VAL_ERROR_POINT(8);
         goto rx_release;
     }
 
     /* Call ffa msg wait to check for buffer ownership release */
-    LOG(DBG, "Relinquish Complete, FFA_MSG_WAIT without rx buffer release");
+    LOG(DBG, "Relinquish Complete, FFA_MSG_WAIT without rx buffer release\n");
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg2 = 0x1;
     val_ffa_msg_wait(&payload);
     if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_64)
     {
-        LOG(ERROR, "DIRECT_REQ_64 not received fid %x", payload.fid);
+        LOG(ERROR, "DIRECT_REQ_64 not received fid %x\n", payload.fid);
         status = VAL_ERROR_POINT(9);
         goto rx_release;
     }
@@ -158,7 +158,7 @@ uint32_t ffa_msg_wait_rx_buff_rel_server(ffa_args_t args)
     /* Release rx buffer for new memory transaction */
     if (val_rx_release())
     {
-        LOG(ERROR, "val_rx_release failed");
+        LOG(ERROR, "val_rx_release failed\n");
         status = status ? status : VAL_ERROR_POINT(10);
     }
 
@@ -168,7 +168,7 @@ uint32_t ffa_msg_wait_rx_buff_rel_server(ffa_args_t args)
     val_ffa_msg_send_direct_resp_64(&payload);
     if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_64)
     {
-        LOG(ERROR, "Direct response failed err %x", payload.arg2);
+        LOG(ERROR, "Direct response failed err %x\n", payload.arg2);
         status = status ? status : VAL_ERROR_POINT(11);
         goto rx_release;
     }
@@ -203,11 +203,11 @@ uint32_t ffa_msg_wait_rx_buff_rel_server(ffa_args_t args)
     val_ffa_mem_retrieve_32(&payload);
     if (payload.fid != FFA_MEM_RETRIEVE_RESP_32)
     {
-        LOG(ERROR, "Mem retrieve request failed err %d", payload.arg2);
+        LOG(ERROR, "Mem retrieve request failed err %d\n", payload.arg2);
         status =  VAL_ERROR_POINT(12);
         goto rx_release;
     }
-    LOG(DBG, "FFA Mem Retrieve Complete");
+    LOG(DBG, "FFA Mem Retrieve Complete\n");
 
     memory_region = (struct ffa_memory_region *)mb.recv;
     composite = ffa_memory_region_get_composite(memory_region, 0);
@@ -224,18 +224,18 @@ uint32_t ffa_msg_wait_rx_buff_rel_server(ffa_args_t args)
 
     if (val_mem_map_pgt(&mem_desc))
     {
-        LOG(ERROR, "Va to pa mapping failed");
+        LOG(ERROR, "Va to pa mapping failed\n");
         status =  VAL_ERROR_POINT(13);
         goto rx_release;
     }
 
-    LOG(DBG, "Page Table Mapped for shared memory, checking content");
+    LOG(DBG, "Page Table Mapped for shared memory, checking content\n");
     /* Check the content of memory equal to the data set by receiver. */
     for (i = 0; i < msg_size; ++i)
     {
         if (ptr[i] != 0xefefefef)
         {
-            LOG(ERROR, "Region data mismatch after retrieve %x", ptr[i]);
+            LOG(ERROR, "Region data mismatch after retrieve %x\n", ptr[i]);
             status = VAL_ERROR_POINT(14);
             goto rx_release;
         }
@@ -247,11 +247,11 @@ uint32_t ffa_msg_wait_rx_buff_rel_server(ffa_args_t args)
     val_ffa_mem_relinquish(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "Mem relinquish failed err %x", payload.arg2);
+        LOG(ERROR, "Mem relinquish failed err %x\n", payload.arg2);
         status = status ? status : VAL_ERROR_POINT(15);
         goto rx_release;
     }
-    LOG(DBG, "Second FFA Mem Relinquish Complete, FFA_MSG_WAIT with RX Release");
+    LOG(DBG, "Second FFA Mem Relinquish Complete, FFA_MSG_WAIT with RX Release\n");
 
     /* Respond back to client to switch run time model */
     val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -259,7 +259,7 @@ uint32_t ffa_msg_wait_rx_buff_rel_server(ffa_args_t args)
     val_ffa_msg_send_direct_resp_64(&payload);
     if (payload.fid != FFA_RUN_32)
     {
-        LOG(ERROR, "Direct response failed err %x", payload.arg2);
+        LOG(ERROR, "Direct response failed err %x\n", payload.arg2);
         status = status ? status : VAL_ERROR_POINT(16);
         goto rx_release;
     }
@@ -269,7 +269,7 @@ uint32_t ffa_msg_wait_rx_buff_rel_server(ffa_args_t args)
     val_ffa_msg_wait(&payload);
     if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_32)
     {
-        LOG(ERROR, "DIRECT_REQ_64 not received fid %x", payload.fid);
+        LOG(ERROR, "DIRECT_REQ_64 not received fid %x\n", payload.fid);
         status = VAL_ERROR_POINT(17);
         goto rx_release;
     }
@@ -279,7 +279,7 @@ uint32_t ffa_msg_wait_rx_buff_rel_server(ffa_args_t args)
     val_ffa_rx_release(&payload);
     if (payload.fid != FFA_ERROR_32)
     {
-        LOG(ERROR, "RX_RELEASE Must fail arg2 0x%x", payload.arg2);
+        LOG(ERROR, "RX_RELEASE Must fail arg2 0x%x\n", payload.arg2);
         status = status ? status : VAL_ERROR_POINT(18);
     }
     goto rxtx_unmap;
@@ -287,21 +287,21 @@ uint32_t ffa_msg_wait_rx_buff_rel_server(ffa_args_t args)
 rx_release:
     if ((val_rx_release()) && (rx_rel_wait == 0))
     {
-        LOG(ERROR, "val_rx_release failed");
+        LOG(ERROR, "val_rx_release failed\n");
         status = status ? status : VAL_ERROR_POINT(19);
     }
 
 rxtx_unmap:
     if (val_rxtx_unmap(sender))
     {
-        LOG(ERROR, "RXTX_UNMAP failed");
+        LOG(ERROR, "RXTX_UNMAP failed\n");
         status = status ? status : VAL_ERROR_POINT(20);
     }
 
 free_memory:
     if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
     {
-        LOG(ERROR, "free_rxtx_buffers failed");
+        LOG(ERROR, "free_rxtx_buffers failed\n");
         status = status ? status : VAL_ERROR_POINT(21);
     }
     return status;

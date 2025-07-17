@@ -54,9 +54,11 @@ The following tools are required to build the ACS: <br />
 
 ## Download source
 
-To download the main branch of the repository, type the following command: <br />
+To download the main branch of the repository, type the following commands: <br />
 ~~~
 git clone https://github.com/ARM-software/ff-a-acs.git
+cd ff-a-acs/
+git submodule update --init
 ~~~
 
 ### Porting steps
@@ -133,4 +135,4 @@ Arm FF-A ACS is distributed under BSD-3-Clause License.
 
 --------------
 
-*Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.*
+*Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.*

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2022-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -26,7 +26,7 @@ uint32_t notification_bind_client(uint32_t test_run_data)
     val_ffa_notification_bind(&payload);
     if (payload.fid != FFA_ERROR_32 ||  payload.arg2 != FFA_ERROR_INVALID_PARAMETERS)
     {
-        LOG(ERROR, "Relayer must return error for invalid endpoint id err %x",
+        LOG(ERROR, "Relayer must return error for invalid endpoint id err %x\n",
                             payload.arg2);
         status = VAL_ERROR_POINT(1);
         goto exit;
@@ -41,7 +41,7 @@ uint32_t notification_bind_client(uint32_t test_run_data)
     val_ffa_notification_bind(&payload);
     if (payload.fid != FFA_ERROR_32 || payload.arg2 != FFA_ERROR_INVALID_PARAMETERS)
     {
-        LOG(ERROR, "Relayer must return error for invalid endpoint id err %x",
+        LOG(ERROR, "Relayer must return error for invalid endpoint id err %x\n",
                             payload.arg2);
         status = VAL_ERROR_POINT(2);
         goto exit;
@@ -56,7 +56,7 @@ uint32_t notification_bind_client(uint32_t test_run_data)
     val_ffa_notification_bind(&payload);
     if (payload.fid != FFA_ERROR_32)
     {
-        LOG(ERROR, "Relayer must return error for invalid flags err %x",
+        LOG(ERROR, "Relayer must return error for invalid flags err %x\n",
                             payload.arg2);
         status = VAL_ERROR_POINT(3);
     }

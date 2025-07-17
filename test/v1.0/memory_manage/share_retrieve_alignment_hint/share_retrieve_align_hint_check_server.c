@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -17,11 +17,11 @@ static void relinquish_memory(ffa_memory_handle_t handle, void *tx_buf, ffa_endp
     val_ffa_mem_relinquish(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "Mem relinquish failed err %x", payload.arg2);
+        LOG(ERROR, "Mem relinquish failed err %x\n", payload.arg2);
     }
     if (val_rx_release())
     {
-        LOG(ERROR, "val_rx_release failed");
+        LOG(ERROR, "val_rx_release failed\n");
     }
 }
 
@@ -74,7 +74,7 @@ static uint32_t retrieve_align_hint_err_check(ffa_memory_handle_t handle, uint32
             relinquish_memory(handle, tx_buf, receiver);
         }
    }
-    LOG(DBG, "Mem Retrieve Check for Reserved Field Complete");
+    LOG(DBG, "Mem Retrieve Check for Reserved Field Complete\n");
     return status;
 }
 
@@ -134,7 +134,7 @@ static uint32_t retrieve_align_hint_check(ffa_memory_handle_t handle, uint32_t f
         /* Check the retrieved address is 8KB aligned or not */
         if ((uint64_t)ptr % align_size != 0)
         {
-            LOG(ERROR, "Retrieved address is not algined as specified by the receiver");
+            LOG(ERROR, "Retrieved address is not algined as specified by the receiver\n");
             status = VAL_ERROR_POINT(2);
         }
 
@@ -162,7 +162,7 @@ uint32_t share_retrieve_align_hint_check_server(ffa_args_t args)
     mb.recv = val_memory_alloc(size);
     if (mb.send == NULL || mb.recv == NULL)
     {
-        LOG(ERROR, "Failed to allocate RxTx buffer");
+        LOG(ERROR, "Failed to allocate RxTx buffer\n");
         status = VAL_ERROR_POINT(4);
         goto free_memory;
     }
@@ -170,7 +170,7 @@ uint32_t share_retrieve_align_hint_check_server(ffa_args_t args)
     /* Map TX and RX buffers */
     if (val_rxtx_map_64((uint64_t)mb.send, (uint64_t)mb.recv, (uint32_t)(size/PAGE_SIZE_4K)))
     {
-        LOG(ERROR, "RxTx Map failed");
+        LOG(ERROR, "RxTx Map failed\n");
         status = VAL_ERROR_POINT(5);
         goto free_memory;
     }
@@ -180,7 +180,7 @@ uint32_t share_retrieve_align_hint_check_server(ffa_args_t args)
     payload = val_resp_client_fn_direct((uint32_t)args.arg3, 0, 0, 0, 0, 0);
     if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_64)
     {
-        LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x",
+        LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x\n",
                   payload.fid, payload.arg2);
         status =  VAL_ERROR_POINT(6);
         goto rxtx_unmap;
@@ -211,14 +211,14 @@ uint32_t share_retrieve_align_hint_check_server(ffa_args_t args)
 rxtx_unmap:
     if (val_rxtx_unmap(sender))
     {
-        LOG(ERROR, "RXTX_UNMAP failed");
+        LOG(ERROR, "RXTX_UNMAP failed\n");
         status = status ? status : VAL_ERROR_POINT(7);
     }
 
 free_memory:
     if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
     {
-        LOG(ERROR, "free_rxtx_buffers failed");
+        LOG(ERROR, "free_rxtx_buffers failed\n");
         status = status ? status : VAL_ERROR_POINT(8);
     }
 
@@ -227,7 +227,7 @@ free_memory:
     val_ffa_msg_send_direct_resp_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "Direct response failed err %x", payload.arg2);
+        LOG(ERROR, "Direct response failed err %x\n", payload.arg2);
         status = status ? status : VAL_ERROR_POINT(9);
     }
 

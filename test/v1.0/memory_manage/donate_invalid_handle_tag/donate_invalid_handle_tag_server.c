@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -56,7 +56,7 @@ static uint32_t mem_donate_back_to_sender(ffa_memory_handle_t handle, uint32_t f
 
     if (payload.fid != FFA_MEM_RETRIEVE_RESP_32)
     {
-        LOG(ERROR, "Mem retrieve request failed err %x", payload.arg2);
+        LOG(ERROR, "Mem retrieve request failed err %x\n", payload.arg2);
         status =  VAL_ERROR_POINT(1);
         goto err;
     }
@@ -91,12 +91,12 @@ static uint32_t mem_donate_back_to_sender(ffa_memory_handle_t handle, uint32_t f
         val_ffa_mem_donate_32(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "Mem_donate request failed err %x", payload.arg2);
+        LOG(ERROR, "Mem_donate request failed err %x\n", payload.arg2);
         status = VAL_ERROR_POINT(2);
         goto rx_release;
     }
 
-    LOG(DBG, "Mem Donate Complete");
+    LOG(DBG, "Mem Donate Complete\n");
 
     handle = ffa_mem_success_handle(payload);
     val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -105,14 +105,14 @@ static uint32_t mem_donate_back_to_sender(ffa_memory_handle_t handle, uint32_t f
     val_ffa_msg_send_direct_resp_64(&payload);
     if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_32)
     {
-        LOG(ERROR, "Direct request failed fid %x err %x", payload.fid, payload.arg2);
+        LOG(ERROR, "Direct request failed fid %x err %x\n", payload.fid, payload.arg2);
         status = status ? status : VAL_ERROR_POINT(3);
     }
 
 rx_release:
     if (val_rx_release())
     {
-        LOG(ERROR, "val_rx_release failed");
+        LOG(ERROR, "val_rx_release failed\n");
         status = status ? status : VAL_ERROR_POINT(4);
     }
 
@@ -162,11 +162,11 @@ static uint32_t mem_donate_invalid_handle_tag_check(ffa_memory_handle_t handle, 
 
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
     {
-        LOG(ERROR, "Relayer must return error for invalid handle and tag err %x",
+        LOG(ERROR, "Relayer must return error for invalid handle and tag err %x\n",
                         payload.arg2);
         status =  VAL_ERROR_POINT(5);
     }
-    LOG(DBG, "Mem Retrieve Check Invalid Handle Complete");
+    LOG(DBG, "Mem Retrieve Check Invalid Handle Complete\n");
 
     return status;
 }
@@ -188,7 +188,7 @@ uint32_t donate_invalid_handle_tag_server(ffa_args_t args)
     mb.recv = val_memory_alloc(size);
     if (mb.send == NULL || mb.recv == NULL)
     {
-        LOG(ERROR, "Failed to allocate RxTx buffer");
+        LOG(ERROR, "Failed to allocate RxTx buffer\n");
         status = VAL_ERROR_POINT(6);
         goto free_memory;
     }
@@ -196,7 +196,7 @@ uint32_t donate_invalid_handle_tag_server(ffa_args_t args)
     /* Map TX and RX buffers */
     if (val_rxtx_map_64((uint64_t)mb.send, (uint64_t)mb.recv, (uint32_t)(size/PAGE_SIZE_4K)))
     {
-        LOG(ERROR, "RxTx Map failed");
+        LOG(ERROR, "RxTx Map failed\n");
         status = VAL_ERROR_POINT(7);
         goto free_memory;
     }
@@ -206,7 +206,7 @@ uint32_t donate_invalid_handle_tag_server(ffa_args_t args)
     payload = val_resp_client_fn_direct((uint32_t)args.arg3, 0, 0, 0, 0, 0);
     if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_64)
     {
-        LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x",
+        LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x\n",
                   payload.fid, payload.arg2);
         status =  VAL_ERROR_POINT(8);
         goto rxtx_unmap;
@@ -232,14 +232,14 @@ mem_donate:
 rxtx_unmap:
     if (val_rxtx_unmap(sender))
     {
-        LOG(ERROR, "RXTX_UNMAP failed");
+        LOG(ERROR, "RXTX_UNMAP failed\n");
         status = status ? status : VAL_ERROR_POINT(9);
     }
 
 free_memory:
     if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
     {
-        LOG(ERROR, "val_mem_free failed");
+        LOG(ERROR, "val_mem_free failed\n");
         status = status ? status : VAL_ERROR_POINT(10);
     }
 

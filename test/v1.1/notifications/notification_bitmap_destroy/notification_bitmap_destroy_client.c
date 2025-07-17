@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2022-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -23,7 +23,7 @@ uint32_t notification_bitmap_destroy_client(uint32_t test_run_data)
     {
         if (payload.fid != FFA_ERROR_32 || payload.arg2 != FFA_ERROR_NOT_SUPPORTED)
         {
-            LOG(ERROR, "Relayer must return no support for invocation from secure endpoint %x",
+            LOG(ERROR, "Relayer must return no support for invocation from secure endpoint %x\n",
                                 payload.arg2);
             status = VAL_ERROR_POINT(1);
             goto exit;
@@ -33,7 +33,7 @@ uint32_t notification_bitmap_destroy_client(uint32_t test_run_data)
     {
         if (payload.fid != FFA_ERROR_32 || payload.arg2 != FFA_ERROR_INVALID_PARAMETERS)
         {
-            LOG(ERROR, "Relayer must return error for invalid endpoint id %x",
+            LOG(ERROR, "Relayer must return error for invalid endpoint id %x\n",
                                 payload.arg2);
             status = VAL_ERROR_POINT(2);
             goto exit;
@@ -48,7 +48,7 @@ uint32_t notification_bitmap_destroy_client(uint32_t test_run_data)
         val_ffa_notification_bitmap_destroy(&payload);
         if (payload.fid != FFA_ERROR_32 || payload.arg2 != FFA_ERROR_DENIED)
         {
-            LOG(ERROR, "Relayer must return denied Notification bitmap not registered %x",
+            LOG(ERROR, "Relayer must return denied Notification bitmap not registered %x\n",
                                 payload.arg2);
             status = VAL_ERROR_POINT(2);
             goto exit;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -977,7 +977,7 @@ uint32_t val_rxtx_map_64(uint64_t tx_buf, uint64_t rx_buf, uint32_t page_count)
 
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "RXTX_MAP failed err 0x%x", payload.arg2);
+        LOG(ERROR, "RXTX_MAP failed err 0x%x\n", payload.arg2);
         return VAL_ERROR;
     }
 
@@ -1005,7 +1005,7 @@ uint32_t val_rxtx_map_32(uint64_t tx_buf, uint64_t rx_buf, uint32_t page_count)
 
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "RXTX_MAP failed err 0x%x", payload.arg2);
+        LOG(ERROR, "RXTX_MAP failed err 0x%x\n", payload.arg2);
         return VAL_ERROR;
     }
     return VAL_SUCCESS;
@@ -1026,7 +1026,7 @@ uint32_t val_rxtx_unmap(ffa_endpoint_id_t id)
 
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "RXTX_UNMAP failed err 0x%x", payload.arg2);
+        LOG(ERROR, "RXTX_UNMAP failed err 0x%x\n", payload.arg2);
         return VAL_ERROR;
     }
     (void)id;
@@ -1048,7 +1048,7 @@ uint32_t val_rx_release(void)
 
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "RX_RELEASE failed err 0x%x", payload.arg2);
+        LOG(ERROR, "RX_RELEASE failed err 0x%x\n", payload.arg2);
         return VAL_ERROR;
     }
     return VAL_SUCCESS;

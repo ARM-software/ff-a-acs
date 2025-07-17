@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2024-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -23,7 +23,7 @@ static uint32_t ffa_console_log_helper(uint32_t test_run_data, uint32_t fid)
         {
             str_len++;
         }
-        LOG(DBG, "char_buff 32 str_len %d", str_len)
+        LOG(DBG, "char_buff 32 str_len %d\n", str_len)
         val_memset(&payload, 0, sizeof(ffa_args_t));
         val_memcpy(&payload.arg2, char_buff_32, str_len);
 
@@ -32,7 +32,7 @@ static uint32_t ffa_console_log_helper(uint32_t test_run_data, uint32_t fid)
         val_ffa_console_log_32(&payload);
         if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
         {
-            LOG(ERROR, "ffa console log 32 must fail fid %x arg2 %x", payload.fid, payload.arg2);
+            LOG(ERROR, "ffa console log 32 must fail fid %x arg2 %x\n", payload.fid, payload.arg2);
             return VAL_ERROR_POINT(1);
         }
 
@@ -40,7 +40,7 @@ static uint32_t ffa_console_log_helper(uint32_t test_run_data, uint32_t fid)
         val_ffa_console_log_32(&payload);
         if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
         {
-            LOG(ERROR, "ffa console log 32 must fail fid %x arg2 %x", payload.fid, payload.arg2);
+            LOG(ERROR, "ffa console log 32 must fail fid %x arg2 %x\n", payload.fid, payload.arg2);
             return VAL_ERROR_POINT(1);
         }
 
@@ -49,7 +49,7 @@ static uint32_t ffa_console_log_helper(uint32_t test_run_data, uint32_t fid)
         val_ffa_console_log_32(&payload);
         if (payload.fid == FFA_ERROR_32)
         {
-            LOG(ERROR, "ffa console log 32 failed fid %x arg2 %x", payload.fid, payload.arg2);
+            LOG(ERROR, "ffa console log 32 failed fid %x arg2 %x\n", payload.fid, payload.arg2);
             return VAL_ERROR_POINT(1);
         }
     }
@@ -62,7 +62,7 @@ static uint32_t ffa_console_log_helper(uint32_t test_run_data, uint32_t fid)
         {
             str_len++;
         }
-        LOG(DBG, "char_buff 64 str_len %d", str_len)
+        LOG(DBG, "char_buff 64 str_len %d\n", str_len)
         val_memset(&payload, 0, sizeof(ffa_args_t));
         val_memcpy(&payload.arg2, char_buff_64, str_len);
 
@@ -72,7 +72,7 @@ static uint32_t ffa_console_log_helper(uint32_t test_run_data, uint32_t fid)
         val_ffa_console_log_64(&payload);
         if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
         {
-            LOG(ERROR, "ffa console log 32 must fail fid %x arg2 %x", payload.fid, payload.arg2);
+            LOG(ERROR, "ffa console log 32 must fail fid %x arg2 %x\n", payload.fid, payload.arg2);
             return VAL_ERROR_POINT(1);
         }
 
@@ -80,7 +80,7 @@ static uint32_t ffa_console_log_helper(uint32_t test_run_data, uint32_t fid)
         val_ffa_console_log_64(&payload);
         if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
         {
-            LOG(ERROR, "ffa console log 32 must fail fid %x arg2 %x", payload.fid, payload.arg2);
+            LOG(ERROR, "ffa console log 32 must fail fid %x arg2 %x\n", payload.fid, payload.arg2);
             return VAL_ERROR_POINT(1);
         }
 
@@ -89,7 +89,7 @@ static uint32_t ffa_console_log_helper(uint32_t test_run_data, uint32_t fid)
         val_ffa_console_log_64(&payload);
         if (payload.fid == FFA_ERROR_32)
         {
-            LOG(ERROR, "ffa console log 64 failed fid %x arg 2 %x", payload.fid, payload.arg2);
+            LOG(ERROR, "ffa console log 64 failed fid %x arg 2 %x\n", payload.fid, payload.arg2);
             return VAL_ERROR_POINT(1);
         }
     }
@@ -106,7 +106,7 @@ uint32_t ffa_console_log_client(uint32_t test_run_data)
     status_32 = val_is_ffa_feature_supported(FFA_CONSOLE_LOG_32);
     if (status_64 && status_32)
     {
-        LOG(TEST, "FFA_CONSOLE_LOG not supported, skipping the check");
+        LOG(TEST, "FFA_CONSOLE_LOG not supported, skipping the check\n");
         return VAL_SKIP_CHECK;
     }
     else if (status_64 && !status_32)

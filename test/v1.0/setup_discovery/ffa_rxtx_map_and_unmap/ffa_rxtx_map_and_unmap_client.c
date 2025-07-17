@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -19,7 +19,7 @@ static uint32_t test_rxtx_unmap_before_map(void)
     val_ffa_rxtx_unmap(&payload);
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
     {
-        LOG(ERROR, "Check failed for rxtx_unmap-1: fid=0x%x, err=0x%x",
+        LOG(ERROR, "Check failed for rxtx_unmap-1: fid=0x%x, err=0x%x\n",
             payload.fid, payload.arg2);
         return VAL_ERROR_POINT(1);
     }
@@ -38,7 +38,7 @@ static uint32_t test_rxtx_map_unaligned_buffers(void)
     rx_buff = val_memory_alloc(size);
     if (rx_buff == NULL || tx_buff == NULL)
     {
-        LOG(ERROR, "Failed to allocate RxTx buffer");
+        LOG(ERROR, "Failed to allocate RxTx buffer\n");
         return VAL_ERROR_POINT(2);
     }
 
@@ -50,7 +50,7 @@ static uint32_t test_rxtx_map_unaligned_buffers(void)
     val_ffa_rxtx_map_64(&payload);
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
     {
-        LOG(ERROR, "Check failed for rxtx_map-1: fid=0x%x, err=0x%x",
+        LOG(ERROR, "Check failed for rxtx_map-1: fid=0x%x, err=0x%x\n",
             payload.fid, payload.arg2);
         status = VAL_ERROR_POINT(3);
         goto free_memory1;
@@ -64,7 +64,7 @@ static uint32_t test_rxtx_map_unaligned_buffers(void)
     val_ffa_rxtx_map_64(&payload);
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
     {
-        LOG(ERROR, "Check failed for rxtx_map-2: fid=0x%x, err=0x%x",
+        LOG(ERROR, "Check failed for rxtx_map-2: fid=0x%x, err=0x%x\n",
             payload.fid, payload.arg2);
         status = VAL_ERROR_POINT(4);
         goto free_memory1;
@@ -73,7 +73,7 @@ static uint32_t test_rxtx_map_unaligned_buffers(void)
 free_memory1:
     if (val_memory_free(rx_buff, size) || val_memory_free(tx_buff, size))
     {
-        LOG(ERROR, "val_memory_free failed");
+        LOG(ERROR, "val_memory_free failed\n");
         status = status ? status : VAL_ERROR_POINT(5);
     }
 
@@ -91,7 +91,7 @@ static uint32_t test_rxtx_map_invalid_buffer_size(void)
     rx_buff = val_memory_alloc(size);
     if (rx_buff == NULL || tx_buff == NULL)
     {
-        LOG(ERROR, "Failed to allocate RxTx buffer");
+        LOG(ERROR, "Failed to allocate RxTx buffer\n");
         return VAL_ERROR_POINT(6);
     }
 
@@ -101,7 +101,7 @@ static uint32_t test_rxtx_map_invalid_buffer_size(void)
     val_ffa_features(&payload);
 
     alignment_boundary = VAL_EXTRACT_BITS(payload.arg2, 0, 1);
-    LOG(DBG, "Alignment Boundary %x", alignment_boundary);
+    LOG(DBG, "Alignment Boundary %x\n", alignment_boundary);
 
     if (alignment_boundary != FFA_RXTX_MAP_4K_SIZE)
     {
@@ -113,7 +113,7 @@ static uint32_t test_rxtx_map_invalid_buffer_size(void)
          val_ffa_rxtx_map_64(&payload);
          if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
          {
-             LOG(ERROR, "Check failed for rxtx_map-3: fid=0x%x, err=0x%x",
+             LOG(ERROR, "Check failed for rxtx_map-3: fid=0x%x, err=0x%x\n",
                  payload.fid, payload.arg2);
              status = VAL_ERROR_POINT(7);
              goto free_memory2;
@@ -128,7 +128,7 @@ static uint32_t test_rxtx_map_invalid_buffer_size(void)
     val_ffa_rxtx_map_64(&payload);
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
     {
-        LOG(ERROR, "Check failed for rxtx_map-3: fid=0x%x, err=0x%x",
+        LOG(ERROR, "Check failed for rxtx_map-3: fid=0x%x, err=0x%x\n",
             payload.fid, payload.arg2);
         status = VAL_ERROR_POINT(8);
         goto free_memory2;
@@ -137,7 +137,7 @@ static uint32_t test_rxtx_map_invalid_buffer_size(void)
 free_memory2:
     if (val_memory_free(rx_buff, size) || val_memory_free(tx_buff, size))
     {
-        LOG(ERROR, "val_memory_free failed");
+        LOG(ERROR, "val_memory_free failed\n");
         status = status ? status : VAL_ERROR_POINT(9);
     }
 
@@ -155,14 +155,14 @@ static uint32_t test_rxtx_map_denied(void)
     rx_buff = val_memory_alloc(size);
     if (rx_buff == NULL || tx_buff == NULL)
     {
-        LOG(ERROR, "Failed to allocate RxTx buffer");
+        LOG(ERROR, "Failed to allocate RxTx buffer\n");
         return VAL_ERROR_POINT(10);
     }
 
     /* Map TX and RX buffers */
     if (val_rxtx_map_64((uint64_t)tx_buff, (uint64_t)rx_buff, (uint32_t)(size/PAGE_SIZE_4K)))
     {
-        LOG(ERROR, "RxTx Map failed");
+        LOG(ERROR, "RxTx Map failed\n");
         status = VAL_ERROR_POINT(11);
         goto free_memory3;
     }
@@ -175,7 +175,7 @@ static uint32_t test_rxtx_map_denied(void)
     val_ffa_rxtx_map_64(&payload);
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_DENIED))
     {
-        LOG(ERROR, "Check failed for rxtx_map-4: fid=0x%x, err=0x%x",
+        LOG(ERROR, "Check failed for rxtx_map-4: fid=0x%x, err=0x%x\n",
             payload.fid, payload.arg2);
         status = VAL_ERROR_POINT(12);
         goto free_memory3;
@@ -184,14 +184,14 @@ static uint32_t test_rxtx_map_denied(void)
     /* Unmap buffers with correct endpoint id */
     if (val_rxtx_unmap(val_get_curr_endpoint_id()))
     {
-        LOG(ERROR, "val_rxtx_unmap failed");
+        LOG(ERROR, "val_rxtx_unmap failed\n");
         status = status ? status : VAL_ERROR_POINT(13);
     }
 
 free_memory3:
     if (val_memory_free(rx_buff, size) || val_memory_free(tx_buff, size))
     {
-        LOG(ERROR, "val_memory_free failed");
+        LOG(ERROR, "val_memory_free failed\n");
         status = status ? status : VAL_ERROR_POINT(14);
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -7,6 +7,7 @@
 
 #include "val_framework.h"
 #include "val_interfaces.h"
+#include "val_common_peripherals.h"
 
 #if (PLATFORM_SP_EL == -1)
 #define SKIP_WD_PROGRAMMING
@@ -22,94 +23,6 @@ static uint8_t g_nvmem[NVM_SIZE];
 
 extern const uint32_t  total_tests;
 
-/* Global */
-test_status_buffer_t    g_status_buffer = {
-                            .state       = TEST_FAIL,
-                            .status_code = VAL_STATUS_INVALID
-                        };
-
-/**
- *   @brief    - Parses input status for a given test and
- *               outputs appropriate information on the console
- *   @param    - Void
- *   @return   - Test state
-**/
-uint32_t val_report_status(uint32_t test_num)
-{
-    uint32_t status, status_code, state;
-    char      test_result_print[PRINT_LIMIT] = "RESULT:";
-    (void)test_num;
-
-    status = val_get_status();
-    state = (status >> TEST_STATE_SHIFT) & TEST_STATE_MASK;
-    status_code = status & TEST_STATUS_CODE_MASK;
-
-    switch (state)
-    {
-        case TEST_PASS:
-        case TEST_PASS_WITH_SKIP:
-            state = TEST_PASS;
-            val_strcat(test_result_print, " PASSED\n",
-                sizeof(test_result_print));
-            break;
-
-        case TEST_SKIP:
-            state = TEST_SKIP;
-            val_strcat(test_result_print, " SKIPPED (SKIP CODE=%d)\n",
-                sizeof(test_result_print));
-            break;
-
-        case TEST_ERROR:
-            state = TEST_ERROR;
-            val_strcat(test_result_print, " SIM ERROR (ERROR CODE=%d)\n",
-                sizeof(test_result_print));
-            break;
-        default:
-            state = TEST_FAIL;
-            val_strcat(test_result_print, " FAILED (ERROR CODE=%d)\n",
-                sizeof(test_result_print));
-            break;
-    }
-
-    LOG(ALWAYS, test_result_print, status_code);
-    return state;
-}
-
-/**
- *   @brief    - Records the state and status of test
- *   @param    - Test status bit field - (state|status_code)
- *   @return   - void
-**/
-void val_set_status(uint32_t status)
-{
-    uint8_t state = ((status >> TEST_STATE_SHIFT) & TEST_STATE_MASK);
-
-    g_status_buffer.status_code  = (status & TEST_STATUS_CODE_MASK);
-
-    if ((g_status_buffer.state == TEST_PASS_WITH_SKIP && state == TEST_PASS) ||
-        (g_status_buffer.state == TEST_PASS_WITH_SKIP && state == TEST_SKIP) ||
-        (g_status_buffer.state == TEST_PASS && state == TEST_SKIP) ||
-        (g_status_buffer.state == TEST_SKIP && state == TEST_PASS))
-    {
-        g_status_buffer.state = TEST_PASS_WITH_SKIP;
-    }
-    else
-    {
-        g_status_buffer.state = state;
-    }
-}
-
-/**
- *   @brief    - Returns the state and status for a given test
- *   @param    - Void
- *   @return   - test status
-**/
-uint32_t val_get_status(void)
-{
-    return (uint32_t)(((g_status_buffer.state) << TEST_STATE_SHIFT) |
-            (g_status_buffer.status_code));
-}
-
 /**
  * @brief  This API prints the testname and sets the test
  *         state to invalid.
@@ -119,18 +32,27 @@ uint32_t val_get_status(void)
 void val_test_init(uint32_t test_num)
 {
     uint32_t test_progress = TEST_START;
+    const char *name_ptr = test_list[test_num].test_name;
+
+    val_test_status_buffer_ts *status_buffer =
+        (val_test_status_buffer_ts *)PLATFORM_SHARED_REGION_BASE;
+
+    /* Advance one character to ignore empty space from test fixture macro*/
+    name_ptr++;
 
     /* Clear test status */
-    val_set_status(RESULT_FAIL(VAL_STATUS_INVALID));
-    LOG(TEST, "TEST:%s SUITE: %s ", test_list[test_num].test_name,
-            test_suite_list[test_list[test_num].suite_num].suite_desc);
+    status_buffer->state        = TEST_FAIL;
+    status_buffer->status_code  = VAL_STATUS_INVALID;
 
-    if (val_nvm_write(VAL_NVM_OFFSET(NVM_TEST_PROGRESS_INDEX), &test_progress, sizeof(uint32_t)))
+    LOG(ALWAYS, "Suite=%s : Test=%s\n", test_suite_list[test_list[test_num].suite_num].suite_desc,
+        name_ptr);
+
+    if (val_nvmem_write(VAL_NVM_OFFSET(NVM_TEST_PROGRESS_INDEX), &test_progress, sizeof(uint32_t)))
     {
         VAL_PANIC("nvm write failed");
     }
 
-    if (val_watchdog_enable())
+    if (val_wd_enable())
     {
         VAL_PANIC("Watchdog enable failed");
     }
@@ -145,12 +67,12 @@ void val_test_exit(void)
 {
    uint32_t test_progress = TEST_END;
 
-   if (val_watchdog_disable())
+   if (val_wd_disable())
    {
       VAL_PANIC("Watchdog disable failed");
    }
 
-   if (val_nvm_write(VAL_NVM_OFFSET(NVM_TEST_PROGRESS_INDEX),
+   if (val_nvmem_write(VAL_NVM_OFFSET(NVM_TEST_PROGRESS_INDEX),
            &test_progress, sizeof(uint32_t)))
    {
       VAL_PANIC("nvm write failed");
@@ -164,11 +86,11 @@ void val_test_exit(void)
 **/
 void val_reprogram_watchdog(void)
 {
-   if (val_watchdog_disable())
+   if (val_wd_disable())
    {
       VAL_PANIC("Watchdog disable failed");
    }
-   if (val_watchdog_enable())
+   if (val_wd_enable())
    {
       VAL_PANIC("Watchdog enable failed");
    }
@@ -203,7 +125,7 @@ static uint32_t nvm_check_bounds(uint32_t offset, void *buffer, size_t size)
  *               - size      : Number of bytes
  *    @return    - SUCCESS/FAILURE
 **/
-uint32_t val_nvm_write(uint32_t offset, void *buffer, size_t size)
+uint32_t val_nvmem_write(uint32_t offset, void *buffer, size_t size)
 {
 #ifndef SKIP_NVM_PROGRAMMING
    ffa_args_t  payload;
@@ -214,7 +136,7 @@ uint32_t val_nvm_write(uint32_t offset, void *buffer, size_t size)
 
    if (val_get_curr_endpoint_logical_id() == SP1)
    {
-      return pal_nvm_write(offset, buffer, size);
+      return val_nvm_write(offset, buffer, size);
    }
    else
    {
@@ -228,7 +150,7 @@ uint32_t val_nvm_write(uint32_t offset, void *buffer, size_t size)
       val_ffa_msg_send_direct_req_32(&payload);
       if (payload.fid != FFA_MSG_SEND_DIRECT_RESP_32)
       {
-         LOG(ERROR, "Invalid fid received, fid=0x%x, err=0x%x", payload.fid, payload.arg2);
+         LOG(ERROR, "Invalid fid received, fid=0x%x, err=0x%x\n", payload.fid, payload.arg2);
          return VAL_ERROR;
       }
 
@@ -252,7 +174,7 @@ uint32_t val_nvm_write(uint32_t offset, void *buffer, size_t size)
  *              - size      : Number of bytes
  *   @return    - SUCCESS/FAILURE
 **/
-uint32_t val_nvm_read(uint32_t offset, void *buffer, size_t size)
+uint32_t val_nvmem_read(uint32_t offset, void *buffer, size_t size)
 {
 #ifndef SKIP_NVM_PROGRAMMING
    ffa_args_t  payload;
@@ -261,7 +183,7 @@ uint32_t val_nvm_read(uint32_t offset, void *buffer, size_t size)
 
    if (val_get_curr_endpoint_logical_id() == SP1)
    {
-      return pal_nvm_read(offset, buffer, size);
+      return val_nvm_read(offset, buffer, size);
    }
    else
    {
@@ -274,7 +196,7 @@ uint32_t val_nvm_read(uint32_t offset, void *buffer, size_t size)
       val_ffa_msg_send_direct_req_32(&payload);
       if (payload.fid != FFA_MSG_SEND_DIRECT_RESP_32)
       {
-         LOG(ERROR, "Invalid fid received, fid=0x%x, err=0x%x", payload.fid, payload.arg2);
+         LOG(ERROR, "Invalid fid received, fid=0x%x, err=0x%x\n", payload.fid, payload.arg2);
          return VAL_ERROR;
       }
 
@@ -297,14 +219,14 @@ uint32_t val_nvm_read(uint32_t offset, void *buffer, size_t size)
  *   @param    - void
  *   @return   - SUCCESS/FAILURE
 **/
-uint32_t val_watchdog_enable(void)
+uint32_t val_wd_enable(void)
 {
 #ifndef SKIP_WD_PROGRAMMING
    ffa_args_t  payload;
 
    if (val_get_curr_endpoint_logical_id() == SP1)
    {
-      return pal_watchdog_enable();
+      return val_watchdog_enable();
    }
    else
    {
@@ -315,7 +237,7 @@ uint32_t val_watchdog_enable(void)
       val_ffa_msg_send_direct_req_32(&payload);
       if (payload.fid != FFA_MSG_SEND_DIRECT_RESP_32)
       {
-         LOG(ERROR, "Invalid fid received, fid=0x%x, err=0x%x", payload.fid, payload.arg2);
+         LOG(ERROR, "Invalid fid received, fid=0x%x, err=0x%x\n", payload.fid, payload.arg2);
          return VAL_ERROR;
       }
 
@@ -331,7 +253,7 @@ uint32_t val_watchdog_enable(void)
  *   @param    - void
  *   @return   - SUCCESS/FAILURE
 **/
-uint32_t val_watchdog_disable(void)
+uint32_t val_wd_disable(void)
 {
 #ifndef SKIP_WD_PROGRAMMING
    ffa_args_t  payload;
@@ -339,7 +261,7 @@ uint32_t val_watchdog_disable(void)
 
    if (val_get_curr_endpoint_logical_id() == SP1)
    {
-      return pal_watchdog_disable();
+      return val_watchdog_disable();
    }
    else
    {
@@ -357,7 +279,7 @@ uint32_t val_watchdog_disable(void)
       }
       if (payload.fid != FFA_MSG_SEND_DIRECT_RESP_32)
       {
-         LOG(ERROR, "Invalid fid received, fid=0x%x, err=0x%x", payload.fid, payload.arg2);
+         LOG(ERROR, "Invalid fid received, fid=0x%x, err=0x%x\n", payload.fid, payload.arg2);
          return VAL_ERROR;
       }
 
@@ -381,87 +303,70 @@ uint32_t val_smmu_device_configure(uint32_t stream_id, uint64_t source, uint64_t
 **/
 uint32_t val_get_last_run_test_info(test_info_t *test_info)
 {
-    uint32_t        reboot_run = 0, i = 0;
+    uint32_t        reboot_run = 0;
     regre_report_t  regre_report = {0};
     uint8_t         test_progress_pattern[] = {TEST_START, TEST_END, TEST_FAIL, TEST_REBOOTING};
 
-    if (val_nvm_read(VAL_NVM_OFFSET(NVM_CUR_SUITE_NUM_INDEX),
+    if (val_nvmem_read(VAL_NVM_OFFSET(NVM_CUR_SUITE_NUM_INDEX),
             &test_info->suite_num, sizeof(uint32_t)))
         return VAL_ERROR;
 
-    if (val_nvm_read(VAL_NVM_OFFSET(NVM_CUR_TEST_NUM_INDEX),
+    if (val_nvmem_read(VAL_NVM_OFFSET(NVM_CUR_TEST_NUM_INDEX),
             &test_info->test_num, sizeof(uint32_t)))
         return VAL_ERROR;
 
-    if (val_nvm_read(VAL_NVM_OFFSET(NVM_END_TEST_NUM_INDEX),
+    if (val_nvmem_read(VAL_NVM_OFFSET(NVM_END_TEST_NUM_INDEX),
             &test_info->end_test_num, sizeof(uint32_t)))
         return VAL_ERROR;
 
-    if (val_nvm_read(VAL_NVM_OFFSET(NVM_TEST_PROGRESS_INDEX),
+    if (val_nvmem_read(VAL_NVM_OFFSET(NVM_TEST_PROGRESS_INDEX),
             &test_info->test_progress, sizeof(uint32_t)))
         return VAL_ERROR;
 
-    LOG(INFO, "In val_get_last_run_test_info, test_num=%x", test_info->test_num);
-    LOG(INFO, "suite_num=%x", test_info->suite_num);
-    LOG(INFO, "test_progress=%x", test_info->test_progress);
+    val_log_test_info(test_info);
 
     /* Is power on reset or warm reset? Determine based on NVM content */
-    while (i < (uint32_t)(sizeof(test_progress_pattern)/sizeof(test_progress_pattern[0])))
-    {
-        if (test_info->test_progress == test_progress_pattern[i])
-        {
-            reboot_run = 1;
-            break;
-        }
-        i++;
-    }
+    reboot_run = is_reboot_run(test_info->test_progress, test_progress_pattern,
+                           sizeof(test_progress_pattern)/sizeof(test_progress_pattern[0]));
 
     /* Power on reset : Initiliase necessary data structure
      * Warm reset : Return previously executed test number
      * */
     if (!reboot_run)
     {
-         test_info->test_num          = VAL_INVALID_TEST_NUM;
-         test_info->end_test_num      = total_tests;
-         test_info->suite_num         = 0;
-         test_info->test_progress     = 0;
-         val_memset(&regre_report, 0x0, sizeof(regre_report_t));
+         val_reset_test_info_fields(test_info);
+         val_reset_regression_report(&regre_report);
 
-         if (val_nvm_write(VAL_NVM_OFFSET(NVM_CUR_SUITE_NUM_INDEX),
+         if (val_nvmem_write(VAL_NVM_OFFSET(NVM_CUR_SUITE_NUM_INDEX),
                  &test_info->suite_num, sizeof(uint32_t)))
              return VAL_ERROR;
-         if (val_nvm_write(VAL_NVM_OFFSET(NVM_CUR_TEST_NUM_INDEX),
+         if (val_nvmem_write(VAL_NVM_OFFSET(NVM_CUR_TEST_NUM_INDEX),
                  &test_info->test_num, sizeof(uint32_t)))
              return VAL_ERROR;
 
-         if (val_nvm_write(VAL_NVM_OFFSET(NVM_END_TEST_NUM_INDEX),
+         if (val_nvmem_write(VAL_NVM_OFFSET(NVM_END_TEST_NUM_INDEX),
                  &test_info->end_test_num, sizeof(uint32_t)))
              return VAL_ERROR;
 
-         if (val_nvm_write(VAL_NVM_OFFSET(NVM_TEST_PROGRESS_INDEX),
+         if (val_nvmem_write(VAL_NVM_OFFSET(NVM_TEST_PROGRESS_INDEX),
                  &test_info->test_progress, sizeof(uint32_t)))
              return VAL_ERROR;
 
-         if (val_nvm_write(VAL_NVM_OFFSET(NVM_TOTAL_PASS_INDEX),
+         if (val_nvmem_write(VAL_NVM_OFFSET(NVM_TOTAL_PASS_INDEX),
                  &regre_report.total_pass, sizeof(uint32_t)))
              return VAL_ERROR;
-         if (val_nvm_write(VAL_NVM_OFFSET(NVM_TOTAL_FAIL_INDEX),
+         if (val_nvmem_write(VAL_NVM_OFFSET(NVM_TOTAL_FAIL_INDEX),
                  &regre_report.total_fail, sizeof(uint32_t)))
              return VAL_ERROR;
-         if (val_nvm_write(VAL_NVM_OFFSET(NVM_TOTAL_SKIP_INDEX),
+         if (val_nvmem_write(VAL_NVM_OFFSET(NVM_TOTAL_SKIP_INDEX),
                  &regre_report.total_skip, sizeof(uint32_t)))
              return VAL_ERROR;
-         if (val_nvm_write(VAL_NVM_OFFSET(NVM_TOTAL_ERROR_INDEX),
+         if (val_nvmem_write(VAL_NVM_OFFSET(NVM_TOTAL_ERROR_INDEX),
                  &regre_report.total_error, sizeof(uint32_t)))
              return VAL_ERROR;
     }
 
-    LOG(INFO, "In val_get_last_run_test_num, test_num=%x", test_info->test_num);
-    LOG(INFO, "suite_num=%x", test_info->suite_num);
-    LOG(INFO, "regre_report.total_pass=%x", regre_report.total_pass);
-    LOG(INFO, "regre_report.total_fail=%x", regre_report.total_fail);
-    LOG(INFO, "regre_report.total_skip=%x", regre_report.total_skip);
-    LOG(INFO, "regre_report.total_error=%x", regre_report.total_error);
+    val_log_final_test_status(test_info, &regre_report);
     return VAL_SUCCESS;
 }
 
@@ -476,8 +381,8 @@ void val_set_reboot_flag(void)
 {
    uint32_t test_progress  = TEST_REBOOTING;
 
-   LOG(INFO, "Setting reboot flag");
-   if (val_nvm_write(VAL_NVM_OFFSET(NVM_TEST_PROGRESS_INDEX),
+   LOG(INFO, "Setting reboot flag\n");
+   if (val_nvmem_write(VAL_NVM_OFFSET(NVM_TEST_PROGRESS_INDEX),
                  &test_progress, sizeof(uint32_t)))
    {
       VAL_PANIC("nvm write failed");
@@ -494,8 +399,8 @@ void val_reset_reboot_flag(void)
 {
    uint32_t test_progress  = TEST_FAIL;
 
-   LOG(INFO, "Resetting reboot flag");
-   if (val_nvm_write(VAL_NVM_OFFSET(NVM_TEST_PROGRESS_INDEX),
+   LOG(INFO, "Resetting reboot flag\n");
+   if (val_nvmem_write(VAL_NVM_OFFSET(NVM_TEST_PROGRESS_INDEX),
                  &test_progress, sizeof(uint32_t)))
    {
       VAL_PANIC("nvm write failed");

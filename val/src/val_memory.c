@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -65,12 +65,12 @@ static uint32_t fill_translation_table(tt_descriptor_t tt_desc,
     uint64_t page_size = val_curr_endpoint_page_size();
 
 #ifdef PGT_DEBUG
-    LOG(DBG, "tt_desc.level: %d", tt_desc.level, 0);
-    LOG(DBG, "tt_desc.input_base: 0x%x", tt_desc.input_base, 0);
-    LOG(DBG, "tt_desc.input_top: 0x%x", tt_desc.input_top, 0);
-    LOG(DBG, "tt_desc.output_base: 0x%x", tt_desc.output_base, 0);
-    LOG(DBG, "tt_desc.size_log2: %d", tt_desc.size_log2, 0);
-    LOG(DBG, "tt_desc.nbits: %d", tt_desc.nbits, 0);
+    LOG(DBG, "tt_desc.level: %d\n", tt_desc.level, 0);
+    LOG(DBG, "tt_desc.input_base: 0x%x\n", tt_desc.input_base, 0);
+    LOG(DBG, "tt_desc.input_top: 0x%x\n", tt_desc.input_top, 0);
+    LOG(DBG, "tt_desc.output_base: 0x%x\n", tt_desc.output_base, 0);
+    LOG(DBG, "tt_desc.size_log2: %d\n", tt_desc.size_log2, 0);
+    LOG(DBG, "tt_desc.nbits: %d\n", tt_desc.nbits, 0);
 #endif
 
     for (input_address = tt_desc.input_base,
@@ -83,8 +83,8 @@ static uint32_t fill_translation_table(tt_descriptor_t tt_desc,
         table_desc = &tt_desc.tt_base[table_index];
 
 #ifdef PGT_DEBUG
-        LOG(DBG, "table_index = 0x%x", table_index, 0);
-        LOG(DBG, "table_desc_addr = 0x%lx", (uint64_t)table_desc, 0);
+        LOG(DBG, "table_index = 0x%x\n", table_index, 0);
+        LOG(DBG, "table_desc_addr = 0x%lx\n", (uint64_t)table_desc, 0);
 #endif
 
         if (tt_desc.level == 3)
@@ -94,7 +94,7 @@ static uint32_t fill_translation_table(tt_descriptor_t tt_desc,
             *table_desc |= (output_address & ~(page_size - 1));
             *table_desc |= mem_desc->attributes;
 #ifdef PGT_DEBUG
-            LOG(DBG, "page_descriptor = 0x%lx", *table_desc, 0);
+            LOG(DBG, "page_descriptor = 0x%lx\n", *table_desc, 0);
 #endif
             continue;
         }
@@ -112,7 +112,7 @@ static uint32_t fill_translation_table(tt_descriptor_t tt_desc,
             *table_desc |= (output_address & ~(block_size - 1));
             *table_desc |= mem_desc->attributes;
 #ifdef PGT_DEBUG
-            LOG(DBG, "block_descriptor = 0x%lx", *table_desc, 0);
+            LOG(DBG, "block_descriptor = 0x%lx\n", *table_desc, 0);
 #endif
             continue;
         }
@@ -159,7 +159,7 @@ static uint32_t fill_translation_table(tt_descriptor_t tt_desc,
                }
                else
                {
-                    LOG(ERROR, "Out of memory, allocate more tt_l2 space");
+                    LOG(ERROR, "Out of memory, allocate more tt_l2 space\n");
                     return VAL_ERROR;
                }
            }
@@ -197,7 +197,7 @@ static uint32_t fill_translation_table(tt_descriptor_t tt_desc,
                }
                else
                {
-                    LOG(ERROR, "Out of memory, allocate more tt_l3 space");
+                    LOG(ERROR, "Out of memory, allocate more tt_l3 space\n");
                     return VAL_ERROR;
                }
 
@@ -215,7 +215,7 @@ static uint32_t fill_translation_table(tt_descriptor_t tt_desc,
         *table_desc = PGT_ENTRY_TABLE_MASK | PGT_ENTRY_VALID_MASK;
         *table_desc |= (uint64_t)(tt_base_next_level) & ~(page_size - 1);
 #ifdef PGT_DEBUG
-        LOG(DBG, "table_descriptor = 0x%lx", *table_desc, 0);
+        LOG(DBG, "table_descriptor = 0x%lx\n", *table_desc, 0);
 #endif
 
         tt_desc_next_level.tt_base = tt_base_next_level;
@@ -269,25 +269,25 @@ static uint32_t val_pgt_create(pgt_descriptor_t pgt_desc,
     uint64_t page_size = val_curr_endpoint_page_size();
 
 #ifdef PGT_DEBUG
-    LOG(DBG, "val_pgt_create: input addr = 0x%lx",
+    LOG(DBG, "val_pgt_create: input addr = 0x%lx\n",
         mem_desc->virtual_address);
-    LOG(DBG, "val_pgt_create: output addr = 0x%lx",
+    LOG(DBG, "val_pgt_create: output addr = 0x%lx\n",
         mem_desc->physical_address);
-    LOG(DBG, "val_pgt_create: length = 0x%x",
+    LOG(DBG, "val_pgt_create: length = 0x%x\n",
         mem_desc->length);
-    LOG(DBG, "val_pgt_create: attributes = 0x%lx",
+    LOG(DBG, "val_pgt_create: attributes = 0x%lx\n",
         mem_desc->attributes);
 #endif
     if ((mem_desc->virtual_address & (uint64_t)(page_size - 1)) != 0 ||
         (mem_desc->physical_address & (uint64_t)(page_size - 1)) != 0)
     {
-            LOG(ERROR, "val_pgt_create: address alignment error");
+            LOG(ERROR, "val_pgt_create: address alignment error\n");
             return VAL_ERROR;
     }
 
     if (mem_desc->physical_address >= (0x1ull << pgt_desc.oas))
     {
-        LOG(ERROR, "val_pgt_create: output address size error");
+        LOG(ERROR, "val_pgt_create: output address size error\n");
         return VAL_ERROR;
     }
 
@@ -305,9 +305,9 @@ static uint32_t val_pgt_create(pgt_descriptor_t pgt_desc,
                       /bits_per_level;
 
 #ifdef PGT_DEBUG
-    LOG(DBG, "tval_pgt_create: page_size = 0x%x", page_size);
-    LOG(DBG, "val_pgt_create: page_size_log2 = %d", page_size_log2);
-    LOG(DBG, "val_pgt_create: nbits_per_level = %d", bits_per_level);
+    LOG(DBG, "tval_pgt_create: page_size = 0x%x\n", page_size);
+    LOG(DBG, "val_pgt_create: page_size_log2 = %d\n", page_size_log2);
+    LOG(DBG, "val_pgt_create: nbits_per_level = %d\n", bits_per_level);
 #endif
 
     if (pgt_desc.stage == PGT_STAGE1)
@@ -330,7 +330,7 @@ static uint32_t val_pgt_create(pgt_descriptor_t pgt_desc,
     pgt_addr_mask = ((0x1ull << (48 - page_size_log2)) - 1) << page_size_log2;
     if (fill_translation_table(tt_desc, mem_desc))
     {
-        LOG(ERROR, "val_pgt_create: page table creation failed");
+        LOG(ERROR, "val_pgt_create: page table creation failed\n");
         return VAL_ERROR;
     }
 
@@ -364,7 +364,7 @@ static uint32_t val_map_endpoint_region(pgt_descriptor_t pgt_desc)
         mem_desc.length = endpoint_image_regions[i].length;
         mem_desc.attributes = endpoint_image_regions[i].attributes;
 
-        LOG(DBG, "Creating page table for image region  : 0x%lx - 0x%lx",
+        LOG(DBG, "Creating page table for image region  : 0x%lx - 0x%lx\n",
             mem_desc.virtual_address, (mem_desc.virtual_address + mem_desc.length) - 1);
 
         if (val_pgt_create(pgt_desc, &mem_desc))
@@ -387,7 +387,7 @@ static uint32_t val_map_endpoint_region(pgt_descriptor_t pgt_desc)
         mem_desc.length = (uint64_t)((memory_region_descriptor_t *)region_list)->length;
         mem_desc.attributes = (uint64_t)((memory_region_descriptor_t *)region_list)->attributes;
 
-        LOG(DBG, "Creating page table for device region  : 0x%lx - 0x%lx",
+        LOG(DBG, "Creating page table for device region  : 0x%lx - 0x%lx\n",
             mem_desc.virtual_address, (mem_desc.virtual_address + mem_desc.length) - 1);
 
         if (val_pgt_create(pgt_desc, &mem_desc))
@@ -429,7 +429,7 @@ uint32_t val_setup_mmu(void)
 
     if (val_assign_tg0_to_endpoint())
     {
-        LOG(ERROR, "Endpoint tg0 update failed");
+        LOG(ERROR, "Endpoint tg0 update failed\n");
         return VAL_ERROR;
     }
 
@@ -469,10 +469,10 @@ uint32_t val_setup_mmu(void)
     pgt_desc.ias = PGT_IAS;
     pgt_desc.oas = PAGT_OAS;
 #ifdef PGT_DEBUG
-    LOG(DBG, "val_setup_mmu: TG0=0x%x", tg0);
-    LOG(DBG, "val_setup_mmu: ias=%d", pgt_desc.ias);
-    LOG(DBG, "val_setup_mmu: oas=%d", pgt_desc.oas);
-    LOG(DBG, "val_setup_mmu: tcr=0x%lx", tcr);
+    LOG(DBG, "val_setup_mmu: TG0=0x%x\n", tg0);
+    LOG(DBG, "val_setup_mmu: ias=%d\n", pgt_desc.ias);
+    LOG(DBG, "val_setup_mmu: oas=%d\n", pgt_desc.oas);
+    LOG(DBG, "val_setup_mmu: tcr=0x%lx\n", tcr);
 #endif
 
     /* Create page tables for image sections and assigned device */
@@ -487,7 +487,7 @@ uint32_t val_setup_mmu(void)
                     val_sctlr_read(currentEL),
                     currentEL);
 #ifdef PGT_DEBUG
-    LOG(DBG, "val_setup_mmu: successful");
+    LOG(DBG, "val_setup_mmu: successful\n");
 #endif
     return VAL_SUCCESS;
 }

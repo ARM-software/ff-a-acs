@@ -1,11 +1,14 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
  */
 
 #include "pal_interfaces.h"
+
+/* pal_misc_buffer for val internal use */
+uint8_t pal_misc_buffer[256]  = {0};
 
 #define BUFFER_COUNT 5
 uint32_t is_buffer_in_use[BUFFER_COUNT] = {0};
@@ -20,7 +23,7 @@ uint32_t is_buffer_in_use[BUFFER_COUNT] = {0};
  *   At the moment, acs uses 4K size and 4k alignment
  *   for memory addresses
  */
-__attribute__ ((aligned (PAGE_SIZE_4K))) uint8_t pal_buffer_4k[BUFFER_COUNT][PAGE_SIZE_4K];
+__attribute__ ((aligned (PAGE_SIZE_4K))) uint8_t pal_buffer_4k[BUFFER_COUNT][PAGE_SIZE_4K] = {0};
 
 static memory_region_descriptor_t endpoint_device_regions[] = {
 #if defined(SP1_COMPILE)
@@ -90,7 +93,7 @@ void *pal_memory_alloc(uint64_t size)
     else
     {
         /* Need to add logic for 16K and 64K pages */
-        PAL_LOG(ERROR, "val_memory_alloc failed");
+        PAL_LOG("\t\tval_memory_alloc failed\n", 0, 0);
     }
 
     return NULL; 

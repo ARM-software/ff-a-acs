@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2024-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -29,7 +29,7 @@ uint32_t mem_security_state_ns_bit_client(uint32_t test_run_data)
     mb.recv = val_memory_alloc(size);
     if (mb.send == NULL || mb.recv == NULL)
     {
-        LOG(ERROR, "Failed to allocate RxTx buffer");
+        LOG(ERROR, "Failed to allocate RxTx buffer\n");
         status = VAL_ERROR_POINT(1);
         goto free_memory;
     }
@@ -37,7 +37,7 @@ uint32_t mem_security_state_ns_bit_client(uint32_t test_run_data)
     /* Map TX and RX buffers */
     if (val_rxtx_map_64((uint64_t)mb.send, (uint64_t)mb.recv, (uint32_t)(size/PAGE_SIZE_4K)))
     {
-        LOG(ERROR, "RxTx Map failed");
+        LOG(ERROR, "RxTx Map failed\n");
         status = VAL_ERROR_POINT(2);
         goto free_memory;
     }
@@ -46,7 +46,7 @@ uint32_t mem_security_state_ns_bit_client(uint32_t test_run_data)
     pages = (uint8_t *)val_memory_alloc(size);
     if (!pages)
     {
-        LOG(ERROR, "Memory allocation failed");
+        LOG(ERROR, "Memory allocation failed\n");
         status = VAL_ERROR_POINT(3);
         goto rxtx_unmap;
     }
@@ -88,7 +88,7 @@ uint32_t mem_security_state_ns_bit_client(uint32_t test_run_data)
     val_ffa_mem_share_32(&payload);
     if (payload.fid != FFA_ERROR_32 || payload.arg2 != FFA_ERROR_INVALID_PARAMETERS)
     {
-        LOG(ERROR, "MEM_SHARE request must fail for invalid NS Bit err %x", payload.arg2);
+        LOG(ERROR, "MEM_SHARE request must fail for invalid NS Bit err %x\n", payload.arg2);
         status = VAL_ERROR_POINT(4);
         goto rxtx_unmap;
     }
@@ -100,7 +100,7 @@ uint32_t mem_security_state_ns_bit_client(uint32_t test_run_data)
     val_ffa_mem_lend_32(&payload);
     if (payload.fid != FFA_ERROR_32 || payload.arg2 != FFA_ERROR_INVALID_PARAMETERS)
     {
-        LOG(ERROR, "MEM_LEND request must fail for invalid NS Bit err %x", payload.arg2);
+        LOG(ERROR, "MEM_LEND request must fail for invalid NS Bit err %x\n", payload.arg2);
         status = VAL_ERROR_POINT(5);
         goto rxtx_unmap;
     }
@@ -122,7 +122,7 @@ uint32_t mem_security_state_ns_bit_client(uint32_t test_run_data)
     val_ffa_mem_donate_32(&payload);
     if (payload.fid != FFA_ERROR_32 || payload.arg2 != FFA_ERROR_INVALID_PARAMETERS)
     {
-        LOG(ERROR, "MEM_DONATE request must fail for invalid NS Bit err %x", payload.arg2);
+        LOG(ERROR, "MEM_DONATE request must fail for invalid NS Bit err %x\n", payload.arg2);
         status = VAL_ERROR_POINT(6);
         goto rxtx_unmap;
     }
@@ -151,11 +151,11 @@ uint32_t mem_security_state_ns_bit_client(uint32_t test_run_data)
 
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "Mem_share request failed err %x", payload.arg2);
+        LOG(ERROR, "Mem_share request failed err %x\n", payload.arg2);
         status = VAL_ERROR_POINT(7);
         goto rxtx_unmap;
     }
-    LOG(DBG, "Mem Share Complete");
+    LOG(DBG, "Mem Share Complete\n");
 
     /* Corrupt the TX buffer */
     val_memset(mb.send, 0x0, size);
@@ -169,7 +169,7 @@ uint32_t mem_security_state_ns_bit_client(uint32_t test_run_data)
     val_ffa_msg_send_direct_req_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "Direct request failed err %x", payload.arg2);
+        LOG(ERROR, "Direct request failed err %x\n", payload.arg2);
         status = VAL_ERROR_POINT(9);
         goto rxtx_unmap;
     }
@@ -180,7 +180,7 @@ uint32_t mem_security_state_ns_bit_client(uint32_t test_run_data)
     val_ffa_msg_send_direct_req_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "Direct request failed err %x", payload.arg2);
+        LOG(ERROR, "Direct request failed err %x\n", payload.arg2);
         status = VAL_ERROR_POINT(11);
         goto rxtx_unmap;
     }
@@ -192,29 +192,29 @@ uint32_t mem_security_state_ns_bit_client(uint32_t test_run_data)
     val_ffa_mem_reclaim(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "Mem Reclaim failed err %x", payload.arg2);
+        LOG(ERROR, "Mem Reclaim failed err %x\n", payload.arg2);
         status = VAL_ERROR_POINT(12);
         goto rxtx_unmap;
     }
-    LOG(DBG, "Mem Reclaim Complete");
+    LOG(DBG, "Mem Reclaim Complete\n");
 
 rxtx_unmap:
     if (val_rxtx_unmap(sender))
     {
-        LOG(ERROR, "RXTX_UNMAP failed");
+        LOG(ERROR, "RXTX_UNMAP failed\n");
         status = status ? status : VAL_ERROR_POINT(14);
     }
 
 free_memory:
     if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
     {
-        LOG(ERROR, "free_rxtx_buffers failed");
+        LOG(ERROR, "free_rxtx_buffers failed\n");
         status = status ? status : VAL_ERROR_POINT(15);
     }
 
     if (val_memory_free(pages, size))
     {
-        LOG(ERROR, "val_mem_free failed");
+        LOG(ERROR, "val_mem_free failed\n");
         status = status ? status : VAL_ERROR_POINT(16);
     }
 

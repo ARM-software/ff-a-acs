@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2022-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -11,6 +11,7 @@
 #include <pal_arch_helpers.h>
 
 #include <pal_spm_helpers.h>
+#include <pal_log.h>
 
 /*******************************************************************************
  * Test framework helpers
@@ -19,7 +20,7 @@
 void expect(int expr, int expected)
 {
     if (expr != expected) {
-        PAL_LOG(ERROR, "Expected value %i, got %i", (uint64_t)expected, (uint64_t)expr);
+        PAL_LOG("\t\tExpected value %i, got %i\n", (uint64_t)expected, (uint64_t)expr);
         while (1)
             continue;
     }
@@ -28,7 +29,7 @@ void expect(int expr, int expected)
 uint64_t sp_sleep_elapsed_time(uint64_t ms)
 {
     uint64_t timer_freq = read_cntfrq_el0();
-    PAL_LOG(INFO, "Timer frequency = 0x%x Sleeping for %d milliseconds", timer_freq, (uint64_t)ms);
+    PAL_LOG("\t\tTimer frequency = 0x%x Sleeping for %d milliseconds\n", timer_freq, (uint64_t)ms);
 
     uint64_t time1 = virtualcounter_read();
     volatile uint64_t time2 = time1;
@@ -50,7 +51,7 @@ static inline void while_wait_loop(uint64_t ms)
     uint64_t loop;
     volatile uint64_t count = 0; /* to prevent optimization*/
 
-    PAL_LOG(INFO, "Executing software loop based wait for ms %d", ms, 0);
+    PAL_LOG("\t\tExecuting software loop based wait for ms %d\n", ms, 0);
     for (loop = 0; loop < timeout; loop++) {
         /* Wait */
         count++;

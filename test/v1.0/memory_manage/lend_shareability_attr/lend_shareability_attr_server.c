@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021, 2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -42,7 +42,7 @@ static uint32_t mem_lend_shareability_attr_check(ffa_memory_handle_t handle, uin
 
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_DENIED))
     {
-        LOG(ERROR, "The Relayer must return denied for shareability attribute mismatch err:%x",
+        LOG(ERROR, "The Relayer must return denied for shareability attribute mismatch err:%x\n",
                                                          payload.arg2);
         status =  VAL_ERROR_POINT(1);
         if (payload.fid == FFA_MEM_RETRIEVE_RESP_32)
@@ -53,11 +53,11 @@ static uint32_t mem_lend_shareability_attr_check(ffa_memory_handle_t handle, uin
             val_ffa_mem_relinquish(&payload);
             if (payload.fid == FFA_ERROR_32)
             {
-                LOG(ERROR, "Mem relinquish failed err %x", payload.arg2);
+                LOG(ERROR, "Mem relinquish failed err %x\n", payload.arg2);
             }
             if (val_rx_release())
             {
-                LOG(ERROR, "val_rx_release failed");
+                LOG(ERROR, "val_rx_release failed\n");
             }
         }
     }
@@ -80,7 +80,7 @@ uint32_t lend_shareability_attr_server(ffa_args_t args)
     mb.recv = val_memory_alloc(size);
     if (mb.send == NULL || mb.recv == NULL)
     {
-        LOG(ERROR, "Failed to allocate RxTx buffer");
+        LOG(ERROR, "Failed to allocate RxTx buffer\n");
         status = VAL_ERROR_POINT(2);
         goto free_memory;
     }
@@ -88,7 +88,7 @@ uint32_t lend_shareability_attr_server(ffa_args_t args)
     /* Map TX and RX buffers */
     if (val_rxtx_map_64((uint64_t)mb.send, (uint64_t)mb.recv, (uint32_t)(size/PAGE_SIZE_4K)))
     {
-        LOG(ERROR, "RxTx Map failed");
+        LOG(ERROR, "RxTx Map failed\n");
         status = VAL_ERROR_POINT(3);
         goto free_memory;
     }
@@ -98,7 +98,7 @@ uint32_t lend_shareability_attr_server(ffa_args_t args)
     payload = val_resp_client_fn_direct((uint32_t)args.arg3, 0, 0, 0, 0, 0);
     if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_64)
     {
-        LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x",
+        LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x\n",
                   payload.fid, payload.arg2);
         status =  VAL_ERROR_POINT(4);
         goto rxtx_unmap;
@@ -118,14 +118,14 @@ uint32_t lend_shareability_attr_server(ffa_args_t args)
 rxtx_unmap:
     if (val_rxtx_unmap(sender))
     {
-        LOG(ERROR, "RXTX_UNMAP failed");
+        LOG(ERROR, "RXTX_UNMAP failed\n");
         status = status ? status : VAL_ERROR_POINT(5);
     }
 
 free_memory:
     if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
     {
-        LOG(ERROR, "free_rxtx_buffers failed");
+        LOG(ERROR, "free_rxtx_buffers failed\n");
         status = status ? status : VAL_ERROR_POINT(6);
     }
 
@@ -134,7 +134,7 @@ free_memory:
     val_ffa_msg_send_direct_resp_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "Direct response failed err %x", payload.arg2);
+        LOG(ERROR, "Direct response failed err %x\n", payload.arg2);
         status = status ? status : VAL_ERROR_POINT(7);
     }
 

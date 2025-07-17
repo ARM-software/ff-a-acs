@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -25,20 +25,20 @@ static uint32_t ffa_feature_query(uint32_t fid, char *str)
         payload.arg2 = 0x2;
     }
 #endif
-    LOG(DBG, "FFA_FEATURE Query idx %s fid %x", str, fid);
+    LOG(DBG, "FFA_FEATURE Query idx %s fid %x\n", str, fid);
     val_ffa_features(&payload);
 
     if (payload.fid == FFA_ERROR_32 && (payload.arg2 == FFA_ERROR_NOT_SUPPORTED))
     {
-        LOG(DBG, "%s -> feature not supported", str);
+        LOG(DBG, "%s -> feature not supported\n", str);
     }
     else if (payload.fid == FFA_SUCCESS_32 || payload.fid == FFA_SUCCESS_64)
     {
-        LOG(DBG, "%s -> feature supported", str);
+        LOG(DBG, "%s -> feature supported\n", str);
     }
     else
     {
-        LOG(ERROR, "%s -Invalid return code received, fid=%x, err=%x",
+        LOG(ERROR, "%s -Invalid return code received, fid=%x, err=%x\n",
             str, payload.fid, payload.arg2);
         return VAL_ERROR_POINT(1);
     }
@@ -58,7 +58,7 @@ static uint32_t ffa_feature_query(uint32_t fid, char *str)
         case FFA_RUN_32:
             if (payload.fid == FFA_ERROR_32)
             {
-                LOG(ERROR, "fid = 0x%x must be supported", fid);
+                LOG(ERROR, "fid = 0x%x must be supported\n", fid);
                 status = VAL_ERROR_POINT(2);
                 break;
             }
@@ -66,7 +66,7 @@ static uint32_t ffa_feature_query(uint32_t fid, char *str)
             output_reserve_count = 6;
             if (val_reserve_param_check(payload, output_reserve_count))
             {
-                LOG(ERROR, "reserved registers must be zero");
+                LOG(ERROR, "reserved registers must be zero\n");
                 status = VAL_ERROR_POINT(3);
             }
 
@@ -85,7 +85,7 @@ static uint32_t ffa_feature_query(uint32_t fid, char *str)
             output_reserve_count = 6;
             if (val_reserve_param_check(payload, output_reserve_count))
             {
-                LOG(ERROR, "reserved registers must be zero");
+                LOG(ERROR, "reserved registers must be zero\n");
                 status = VAL_ERROR_POINT(4);
             }
             break;
@@ -101,19 +101,19 @@ static uint32_t ffa_feature_query(uint32_t fid, char *str)
             data = VAL_EXTRACT_BITS(payload.arg2, 0, 1);
             if (data == FFA_RXTX_MAP_4K_SIZE)
             {
-                LOG(DBG, "RXTX_MAP alignment boundary is 4K size");
+                LOG(DBG, "RXTX_MAP alignment boundary is 4K size\n");
             }
             else if (data == FFA_RXTX_MAP_64K_SIZE)
             {
-                LOG(DBG, "RXTX_MAP alignment boundary is 64K size");
+                LOG(DBG, "RXTX_MAP alignment boundary is 64K size\n");
             }
             else if (data == FFA_RXTX_MAP_16K_SIZE)
             {
-                LOG(DBG, "RXTX_MAP alignment boundary is 16K size");
+                LOG(DBG, "RXTX_MAP alignment boundary is 16K size\n");
             }
             else
             {
-                LOG(ERROR, "FFA_RXTX_MAP_64 alignment boundary not defined");
+                LOG(ERROR, "FFA_RXTX_MAP_64 alignment boundary not defined\n");
                 status = VAL_ERROR_POINT(5);
                 break;
             }
@@ -123,7 +123,7 @@ static uint32_t ffa_feature_query(uint32_t fid, char *str)
             data = VAL_EXTRACT_BITS(payload.arg2, 2, 31);
             if (data)
             {
-                LOG(ERROR, "w2[31:2] must be zero");
+                LOG(ERROR, "w2[31:2] must be zero\n");
                 status = VAL_ERROR_POINT(6);
                 break;
             }
@@ -132,20 +132,20 @@ static uint32_t ffa_feature_query(uint32_t fid, char *str)
             data = VAL_EXTRACT_BITS(payload.arg2, 2, 15);
             if (data)
             {
-                LOG(ERROR, "w2[15:2] must be zero");
+                LOG(ERROR, "w2[15:2] must be zero\n");
                 status = VAL_ERROR_POINT(6);
                 break;
             }
             /* Check RXTX_MAP Maximum buffer size w2[31:16] no of pages,
                zero size means no limit specified */
             data = VAL_EXTRACT_BITS(payload.arg2, 16, 31);
-            LOG(DBG, "RXTX_MAP Maximum buffer size w2[31:16] %x", data);
+            LOG(DBG, "RXTX_MAP Maximum buffer size w2[31:16] %x\n", data);
 #endif
             /* Check output w3-w7 reserved(MBZ) */
             output_reserve_count = 5;
             if (val_reserve_param_check(payload, output_reserve_count))
             {
-                LOG(ERROR, "reserved registers must be zero");
+                LOG(ERROR, "reserved registers must be zero\n");
                 status = VAL_ERROR_POINT(7);
             }
             break;
@@ -173,7 +173,7 @@ static uint32_t ffa_feature_query(uint32_t fid, char *str)
             output_reserve_count = 6;
             if (val_reserve_param_check(payload, output_reserve_count))
             {
-                LOG(ERROR, "reserved registers must be zero");
+                LOG(ERROR, "reserved registers must be zero\n");
                 status = VAL_ERROR_POINT(8);
             }
             break;
@@ -194,11 +194,11 @@ static uint32_t ffa_feature_query(uint32_t fid, char *str)
             LOG(DBG, str);
             if (data == FFA_DYNAMIC_BUFFER_SUPPORT)
             {
-                LOG(DBG, "Dynamic buffer supported");
+                LOG(DBG, "Dynamic buffer supported\n");
             }
             else
             {
-                LOG(DBG, "Dynamic buffer not supported");
+                LOG(DBG, "Dynamic buffer not supported\n");
             }
 
             /* Output w2[31:1] and w3 are reserved(MBZ) */
@@ -219,17 +219,17 @@ static uint32_t ffa_feature_query(uint32_t fid, char *str)
             LOG(DBG, str);
             if (data == FFA_DYNAMIC_BUFFER_SUPPORT)
             {
-                LOG(DBG, "Dynamic buffer supported");
+                LOG(DBG, "Dynamic buffer supported\n");
             }
             else
             {
-                LOG(DBG, "Dynamic buffer not supported");
+                LOG(DBG, "Dynamic buffer not supported\n");
             }
 
             /* Check for Outstanding retrievals field w3[7:0] */
             data = VAL_EXTRACT_BITS(payload.arg3, 0, 7);
             LOG(DBG, str);
-            LOG(DBG, "Outstanding retrievals count %d", data);
+            LOG(DBG, "Outstanding retrievals count %d\n", data);
 
             /* Output w2[31:1] and w3[31:8] are reserved(MBZ) */
 #if (PLATFORM_FFA_V == FFA_V_1_0)
@@ -243,7 +243,7 @@ static uint32_t ffa_feature_query(uint32_t fid, char *str)
             break;
 
         default:
-            LOG(INFO, "fid=%x invalid feature ", fid);
+            LOG(INFO, "fid=%x invalid feature \n", fid);
             status = VAL_SKIP_CHECK;
     }
 
@@ -263,7 +263,7 @@ uint32_t ffa_features_client(uint32_t test_run_data)
     ep_info = val_get_endpoint_info();
     if (!ep_info)
     {
-        LOG(ERROR, "get_endpoint_info error!");
+        LOG(ERROR, "get_endpoint_info error!\n");
         return VAL_ERROR_POINT(11);
     }
 
@@ -340,7 +340,7 @@ uint32_t ffa_features_client(uint32_t test_run_data)
     if (status_1 && status_2 && status_3
          && status_4 && status_5 && status_6)
     {
-           LOG(ERROR, "At least one of the memory manage ABI must be supported");
+           LOG(ERROR, "At least one of the memory manage ABI must be supported\n");
            return VAL_ERROR_POINT(14);
     }
 
@@ -378,7 +378,7 @@ uint32_t ffa_features_client(uint32_t test_run_data)
     {
         if (status_1 || status_2)
         {
-            LOG(ERROR, "Invalid return code for indirect messaging ABIs");
+            LOG(ERROR, "Invalid return code for indirect messaging ABIs\n");
             return VAL_ERROR_POINT(17);
         }
     }
@@ -386,7 +386,7 @@ uint32_t ffa_features_client(uint32_t test_run_data)
     {
         if (!status_1 || !status_2)
         {
-            LOG(ERROR, "Invalid return code for indirect messaging ABIs");
+            LOG(ERROR, "Invalid return code for indirect messaging ABIs\n");
             return VAL_ERROR_POINT(18);
         }
     }
@@ -397,7 +397,7 @@ uint32_t ffa_features_client(uint32_t test_run_data)
         status_1 = ffa_feature_query(FFA_MSG_SEND2_32, "FFA_MSG_SEND2_32");
         if (status_1)
         {
-            LOG(ERROR, "Invalid return code for indirect messaging ABIs");
+            LOG(ERROR, "Invalid return code for indirect messaging ABIs\n");
             return VAL_ERROR_POINT(17);
 
         }
@@ -408,7 +408,7 @@ uint32_t ffa_features_client(uint32_t test_run_data)
         status_2 = ffa_feature_query(FFA_YIELD_32, "FFA_YIELD_32");
         if (status_2)
         {
-            LOG(ERROR, "Invalid return code for FFA_YIELD_32 ABI");
+            LOG(ERROR, "Invalid return code for FFA_YIELD_32 ABI\n");
             return VAL_ERROR_POINT(17);
 
         }
@@ -428,7 +428,7 @@ uint32_t ffa_features_client(uint32_t test_run_data)
     {
         if (status_2 && status_4)
         {
-            LOG(ERROR, "Invalid return code for direct messaging ABIs");
+            LOG(ERROR, "Invalid return code for direct messaging ABIs\n");
             return VAL_ERROR_POINT(19);
         }
     }
@@ -436,7 +436,7 @@ uint32_t ffa_features_client(uint32_t test_run_data)
     {
         if (!status_2 || !status_4)
         {
-            LOG(ERROR, "Invalid return code for direct messaging ABIs");
+            LOG(ERROR, "Invalid return code for direct messaging ABIs\n");
             return VAL_ERROR_POINT(20);
         }
     }
@@ -447,7 +447,7 @@ uint32_t ffa_features_client(uint32_t test_run_data)
     {
         if (status_3 && status_5)
         {
-            LOG(ERROR, "Invalid return code for direct messaging ABIs");
+            LOG(ERROR, "Invalid return code for direct messaging ABIs\n");
             return VAL_ERROR_POINT(21);
         }
     }
@@ -455,7 +455,7 @@ uint32_t ffa_features_client(uint32_t test_run_data)
     {
         if (!status_3 || !status_5)
         {
-            LOG(ERROR, "Invalid return code for direct messaging ABIs");
+            LOG(ERROR, "Invalid return code for direct messaging ABIs\n");
             return VAL_ERROR_POINT(22);
         }
     }
@@ -463,7 +463,7 @@ uint32_t ffa_features_client(uint32_t test_run_data)
     /* Either of the messaging method must be supported */
     if ((status_1 == VAL_SKIP_CHECK) && (status_2 == VAL_SKIP_CHECK))
     {
-        LOG(ERROR, "Either of the messaging method must be supported");
+        LOG(ERROR, "Either of the messaging method must be supported\n");
         return VAL_ERROR_POINT(23);
     }
 
@@ -476,7 +476,7 @@ uint32_t ffa_features_client(uint32_t test_run_data)
     {
         if (status_2)
         {
-            LOG(ERROR, "Invalid return code for direct messaging 2 ABIs");
+            LOG(ERROR, "Invalid return code for direct messaging 2 ABIs\n");
             return VAL_ERROR_POINT(24);
         }
     }
@@ -484,7 +484,7 @@ uint32_t ffa_features_client(uint32_t test_run_data)
     {
         if (!status_2)
         {
-            LOG(ERROR, "Invalid return code for direct messaging 2 ABIs");
+            LOG(ERROR, "Invalid return code for direct messaging 2 ABIs\n");
             return VAL_ERROR_POINT(25);
         }
     }
@@ -495,7 +495,7 @@ uint32_t ffa_features_client(uint32_t test_run_data)
     {
         if (status_3)
         {
-            LOG(ERROR, "Invalid return code for direct messaging 2 ABIs");
+            LOG(ERROR, "Invalid return code for direct messaging 2 ABIs\n");
             return VAL_ERROR_POINT(26);
         }
     }
@@ -503,14 +503,14 @@ uint32_t ffa_features_client(uint32_t test_run_data)
     {
         if (!status_3)
         {
-            LOG(ERROR, "Invalid return code for direct messaging 2 ABIs");
+            LOG(ERROR, "Invalid return code for direct messaging 2 ABIs\n");
             return VAL_ERROR_POINT(27);
         }
     }
 
     val_reprogram_watchdog();
 
-    LOG(DBG, "VAL Watchdog Reprogram Complete");
+    LOG(DBG, "VAL Watchdog Reprogram Complete\n");
 
     /* Check invalid FID */
     val_memset(&payload, 0, sizeof(ffa_args_t));

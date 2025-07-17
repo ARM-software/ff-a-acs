@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+# Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
@@ -70,6 +70,9 @@ if(NOT ${TARGET} IN_LIST TARGET_LIST)
 else()
     message(STATUS "[ACS] : TARGET is set to ${TARGET}")
 endif()
+
+# Include Common VAL cmake support
+include(${ROOT_DIR}/tools/cmake/common/CommonVAL.cmake)
 
 # Check for valid suites
 _get_sub_dir_list(SUITE_LIST_V_1_0  ${ROOT_DIR}/test/v1.0)

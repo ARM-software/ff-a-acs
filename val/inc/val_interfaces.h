@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -22,6 +22,7 @@
 #include "val_irq.h"
 #include "val_wd.h"
 #include "val_timer.h"
+#include "val_log.h"
 
 /* Test entry prototype */
 typedef void (*test_entry_fptr_t)(uint32_t test_num);

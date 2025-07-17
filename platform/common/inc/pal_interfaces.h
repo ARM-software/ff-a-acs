@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -18,6 +18,7 @@
 #include "pal_misc_asm.h"
 #include "pal_irq.h"
 #include "pal_shemaphore.h"
+#include "pal_common_val_intf.h"
 #ifndef TARGET_LINUX
 #include <pal_sp805_watchdog.h>
 #include "pal_arch_helpers.h"
@@ -25,43 +26,12 @@
 
 /**
  *   @brief    - This function prints the given string and data onto the uart
- *   @param    - str      : Input String
- *   @param    - ...      : ellipses for variadic args 
- *   @return   - SUCCESS((Any positive number for character written)/FAILURE(0)
-**/
-uint32_t pal_printf(print_verbosity_t verbosity, const char *msg, ...);
-
-/**
- *   @brief    - Writes into given non-volatile address.
- *   @param    - offset  : Offset into nvmem
- *   @param    - buffer  : Pointer to source address
- *   @param    - size    : Number of bytes
+ *   @param    - msg      : Input String
+ *   @param    - data1    : Value for first format specifier
+ *   @param    - data2    : Value for second format specifier
  *   @return   - SUCCESS/FAILURE
 **/
-uint32_t pal_nvm_write(uint32_t offset, void *buffer, size_t size);
-
-/**
- *   @brief    - Reads from given non-volatile address.
- *   @param    - offset  : Offset into nvmem
- *   @param    - buffer  : Pointer to destination address
- *   @param    - size    : Number of bytes
- *   @return   - SUCCESS/FAILURE
-**/
-uint32_t pal_nvm_read(uint32_t offset, void *buffer, size_t size);
-
-/**
- *   @brief    - Initializes and enable the hardware watchdog timer
- *   @param    - void
- *   @return   - SUCCESS/FAILURE
-**/
-uint32_t pal_watchdog_enable(void);
-
-/**
- *   @brief    - Disables the hardware watchdog timer
- *   @param    - void
- *   @return   - SUCCESS/FAILURE
-**/
-uint32_t pal_watchdog_disable(void);
+uint32_t pal_printf(const char *msg, uint64_t data1, uint64_t data2);
 
 /**
  *   @brief    - Initializes and enable physical system timer with interrupt

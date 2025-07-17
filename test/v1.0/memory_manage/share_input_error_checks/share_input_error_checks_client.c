@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -26,7 +26,7 @@ static uint32_t mem_share_invalid_epid_check(void *tx_buf,
     pages = (uint8_t *)val_memory_alloc(size);
     if (!pages)
     {
-        LOG(ERROR, "Memory allocation failed");
+        LOG(ERROR, "Memory allocation failed\n");
         return VAL_ERROR_POINT(1);
     }
 
@@ -66,13 +66,13 @@ static uint32_t mem_share_invalid_epid_check(void *tx_buf,
 
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
     {
-        LOG(ERROR, "Mem_share request must return error for invalid id %x", payload.arg2);
+        LOG(ERROR, "Mem_share request must return error for invalid id %x\n", payload.arg2);
         status = VAL_ERROR_POINT(2);
     }
 
     if (val_memory_free(pages, size))
     {
-        LOG(ERROR, "val_mem_free failed");
+        LOG(ERROR, "val_mem_free failed\n");
         status = status ? status : VAL_ERROR_POINT(3);
     }
 
@@ -94,7 +94,7 @@ static uint32_t mem_share_zero_flag_check(void *tx_buf, ffa_endpoint_id_t sender
     pages = (uint8_t *)val_memory_alloc(size);
     if (!pages)
     {
-        LOG(ERROR, "Memory allocation failed");
+        LOG(ERROR, "Memory allocation failed\n");
         return VAL_ERROR_POINT(4);
     }
 
@@ -135,15 +135,15 @@ static uint32_t mem_share_zero_flag_check(void *tx_buf, ffa_endpoint_id_t sender
 
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
     {
-        LOG(ERROR, "Mem_share request must return error if zero flag is set %x",
+        LOG(ERROR, "Mem_share request must return error if zero flag is set %x\n",
                         payload.arg2);
         status = VAL_ERROR_POINT(5);
     }
-    LOG(DBG, "Mem Share Check for Zero Flag Complete");
+    LOG(DBG, "Mem Share Check for Zero Flag Complete\n");
 
     if (val_memory_free(pages, size))
     {
-        LOG(ERROR, "val_mem_free failed");
+        LOG(ERROR, "val_mem_free failed\n");
         status = status ? status : VAL_ERROR_POINT(6);
     }
 
@@ -165,7 +165,7 @@ static uint32_t mem_share_inst_perm_check(void *tx_buf, ffa_endpoint_id_t sender
     pages = (uint8_t *)val_memory_alloc(size);
     if (!pages)
     {
-        LOG(ERROR, "Memory allocation failed");
+        LOG(ERROR, "Memory allocation failed\n");
         return VAL_ERROR_POINT(7);
     }
 
@@ -205,15 +205,15 @@ static uint32_t mem_share_inst_perm_check(void *tx_buf, ffa_endpoint_id_t sender
 
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
     {
-        LOG(ERROR, "Mem_share request must return error if inst perm is set to non-zero %x",
+        LOG(ERROR, "Mem_share request must return error if inst perm is set to non-zero %x\n",
                         payload.arg2);
         status = VAL_ERROR_POINT(8);
     }
-    LOG(DBG, "Mem Share Check for Inst Perm Complete");
+    LOG(DBG, "Mem Share Check for Inst Perm Complete\n");
 
     if (val_memory_free(pages, size))
     {
-        LOG(ERROR, "val_mem_free failed");
+        LOG(ERROR, "val_mem_free failed\n");
         status = status ? status : VAL_ERROR_POINT(9);
     }
 
@@ -271,10 +271,10 @@ static uint32_t mem_share_mmio_check(void *tx_buf, ffa_endpoint_id_t sender, uin
 
     if (payload.fid != FFA_ERROR_32)
     {
-        LOG(ERROR, "Framework must not allow to share mmio region during runtime");
+        LOG(ERROR, "Framework must not allow to share mmio region during runtime\n");
         status = VAL_ERROR_POINT(10);
     }
-    LOG(DBG, "Mem Share Check for MMIO Share Complete");
+    LOG(DBG, "Mem Share Check for MMIO Share Complete\n");
 
     return status;
 }
@@ -291,7 +291,7 @@ static uint32_t ffa_mem_share_helper(uint32_t test_run_data, uint32_t fid)
     mb.recv = val_memory_alloc(size);
     if (mb.send == NULL || mb.recv == NULL)
     {
-        LOG(ERROR, "Failed to allocate RxTx buffer");
+        LOG(ERROR, "Failed to allocate RxTx buffer\n");
         status = VAL_ERROR_POINT(11);
         goto free_memory;
     }
@@ -299,7 +299,7 @@ static uint32_t ffa_mem_share_helper(uint32_t test_run_data, uint32_t fid)
     /* Map TX and RX buffers */
     if (val_rxtx_map_64((uint64_t)mb.send, (uint64_t)mb.recv, (uint32_t)(size/PAGE_SIZE_4K)))
     {
-        LOG(ERROR, "RxTx Map failed");
+        LOG(ERROR, "RxTx Map failed\n");
         status = VAL_ERROR_POINT(12);
         goto free_memory;
     }
@@ -328,14 +328,14 @@ static uint32_t ffa_mem_share_helper(uint32_t test_run_data, uint32_t fid)
 rxtx_unmap:
     if (val_rxtx_unmap(sender))
     {
-        LOG(ERROR, "RXTX_UNMAP failed");
+        LOG(ERROR, "RXTX_UNMAP failed\n");
         status = status ? status : VAL_ERROR_POINT(13);
     }
 
 free_memory:
     if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
     {
-        LOG(ERROR, "val_mem_free failed");
+        LOG(ERROR, "val_mem_free failed\n");
         status = status ? status : VAL_ERROR_POINT(14);
     }
 
@@ -350,7 +350,7 @@ uint32_t share_input_error_checks_client(uint32_t test_run_data)
     status_32 = val_is_ffa_feature_supported(FFA_MEM_SHARE_32);
     if (status_64 && status_32)
     {
-        LOG(TEST, "FFA_MEM_SHARE not supported, skipping the check");
+        LOG(TEST, "FFA_MEM_SHARE not supported, skipping the check\n");
         return VAL_SKIP_CHECK;
     }
     else if (status_64 && !status_32)

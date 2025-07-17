@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -17,7 +17,7 @@ uint32_t ffa_version_client(uint32_t test_run_data)
 
     for (i = 0; i < num_checks; i++)
     {
-        LOG(DBG, "FFA_VERSION Check idx %d", i);
+        LOG(DBG, "FFA_VERSION Check idx %d\n", i);
         input_version_number = (uint32_t)((check[i].major << 16)
                                           | check[i].minor);
         val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -31,8 +31,8 @@ uint32_t ffa_version_client(uint32_t test_run_data)
                          &&  (check[i].minor <= (payload.fid & 0xFFFF)))))
             #endif
             {
-            LOG(ERROR, "Check failed for iteration = %d", i);
-            LOG(ERROR, "Expected=0x%x but Actual=0x%x",
+            LOG(ERROR, "Check failed for iteration = %d\n", i);
+            LOG(ERROR, "Expected=0x%x but Actual=0x%x\n",
                         check[i].expected_status,
                         payload.fid);
             return VAL_ERROR_POINT(1);
@@ -42,7 +42,7 @@ uint32_t ffa_version_client(uint32_t test_run_data)
         /* Reserved registers (MBZ) */
         if (val_reserve_param_check(payload, output_reserve_count))
         {
-            LOG(ERROR, "Received non-zero value for reserved registers");
+            LOG(ERROR, "Received non-zero value for reserved registers\n");
             return VAL_ERROR_POINT(2);
         }
     }

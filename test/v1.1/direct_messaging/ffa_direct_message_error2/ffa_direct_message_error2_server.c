@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2022-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -19,7 +19,7 @@ uint32_t ffa_direct_message_error2_server(ffa_args_t args)
     payload = val_resp_client_fn_direct((uint32_t)args.arg3, 0, 0, 0, 0, 0);
     if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_64)
     {
-        LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x",
+        LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x\n",
                   payload.fid, payload.arg2);
         return VAL_ERROR_POINT(1);
     }
@@ -32,11 +32,11 @@ uint32_t ffa_direct_message_error2_server(ffa_args_t args)
     val_ffa_msg_send_direct_req_64(&payload);
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_BUSY))
     {
-        LOG(ERROR, "Direct request must failed err %x %x", payload.arg2, payload.fid);
+        LOG(ERROR, "Direct request must failed err %x %x\n", payload.arg2, payload.fid);
         status = VAL_ERROR_POINT(2);
         goto exit;
     }
-    LOG(DBG, "SP Returned Busy for Direct Req arg2 %x", payload.arg2);
+    LOG(DBG, "SP Returned Busy for Direct Req arg2 %x\n", payload.arg2);
 
 exit:
     val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -44,7 +44,7 @@ exit:
     val_ffa_msg_send_direct_resp_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "Direct response failed err %x", payload.arg2);
+        LOG(ERROR, "Direct response failed err %x\n", payload.arg2);
         status = status ? status : VAL_ERROR_POINT(3);
     }
 

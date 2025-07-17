@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2024-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -17,7 +17,7 @@ static int wd_irq_handler(void)
 {
     *(volatile uint32_t *)pages = (uint32_t)NS_IRQ_TRIGGERED;
     val_ns_wdog_disable();
-    LOG(DBG, "NS-WD IRQ Handler Processed");
+    LOG(DBG, "NS-WD IRQ Handler Processed\n");
     return 0;
 }
 
@@ -41,7 +41,7 @@ uint32_t ns_int_precedence_client(uint32_t test_run_data)
     /* Check if Memsharecis supported */
     if (val_is_ffa_feature_supported(FFA_MEM_SHARE_32))
     {
-        LOG(TEST, "FFA_MEM_SHARE_32 not supported, skipping the test");
+        LOG(TEST, "FFA_MEM_SHARE_32 not supported, skipping the test\n");
         return VAL_SKIP_CHECK;
     }
 
@@ -49,7 +49,7 @@ uint32_t ns_int_precedence_client(uint32_t test_run_data)
     mb.recv = val_memory_alloc(size);
     if (mb.send == NULL || mb.recv == NULL)
     {
-        LOG(ERROR, "Failed to allocate RxTx buffer");
+        LOG(ERROR, "Failed to allocate RxTx buffer\n");
         status = VAL_ERROR_POINT(1);
         goto free_memory;
     }
@@ -57,7 +57,7 @@ uint32_t ns_int_precedence_client(uint32_t test_run_data)
     /* Map TX and RX buffers */
     if (val_rxtx_map_64((uint64_t)mb.send, (uint64_t)mb.recv, (uint32_t)(size/PAGE_SIZE_4K)))
     {
-        LOG(ERROR, "RxTx Map failed");
+        LOG(ERROR, "RxTx Map failed\n");
         status = VAL_ERROR_POINT(2);
         goto free_memory;
     }
@@ -67,7 +67,7 @@ uint32_t ns_int_precedence_client(uint32_t test_run_data)
     pages = (uint32_t *)val_memory_alloc(size);
     if (!pages)
     {
-        LOG(ERROR, "Memory allocation failed");
+        LOG(ERROR, "Memory allocation failed\n");
         status = VAL_ERROR_POINT(3);
         goto rxtx_unmap;
     }
@@ -106,7 +106,7 @@ uint32_t ns_int_precedence_client(uint32_t test_run_data)
     val_ffa_mem_share_32(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "Mem_share request failed err %d", payload.arg2);
+        LOG(ERROR, "Mem_share request failed err %d\n", payload.arg2);
         status = VAL_ERROR_POINT(4);
         goto rxtx_unmap;
     }
@@ -120,7 +120,7 @@ uint32_t ns_int_precedence_client(uint32_t test_run_data)
     val_ffa_msg_send_direct_req_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "Direct request failed err %d", payload.arg2);
+        LOG(ERROR, "Direct request failed err %d\n", payload.arg2);
         status = VAL_ERROR_POINT(5);
         goto rxtx_unmap;
     }
@@ -128,17 +128,17 @@ uint32_t ns_int_precedence_client(uint32_t test_run_data)
     /* NS-Interrupt Registration */
     if (val_irq_register_handler(PLATFORM_NS_WD_INTR, wd_irq_handler))
     {
-        LOG(ERROR, "WD interrupt register failed");
+        LOG(ERROR, "WD interrupt register failed\n");
         status = VAL_ERROR_POINT(6);
         goto rxtx_unmap;
     }
-    LOG(DBG, "NS-WD IRQ Handler Registered ID %x", PLATFORM_NS_WD_INTR);
+    LOG(DBG, "NS-WD IRQ Handler Registered ID %x\n", PLATFORM_NS_WD_INTR);
 
     /* Enable NS Int */
     val_irq_enable(PLATFORM_NS_WD_INTR, 0);
     val_ns_wdog_enable(NS_WD_TIMEOUT);
 
-    LOG(DBG, "NS Int Enabled");
+    LOG(DBG, "NS Int Enabled\n");
 
     /* Send Direct Request to SP for wait till Int */
     val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -146,7 +146,7 @@ uint32_t ns_int_precedence_client(uint32_t test_run_data)
     val_ffa_msg_send_direct_req_64(&payload);
     if (payload.fid != FFA_MSG_SEND_DIRECT_RESP_64)
     {
-        LOG(ERROR, "DIRECT_RESP_64 not received fid %x err %x", payload.fid, payload.arg2);
+        LOG(ERROR, "DIRECT_RESP_64 not received fid %x err %x\n", payload.fid, payload.arg2);
         status = VAL_ERROR_POINT(7);
         goto free_interrupt;
     }
@@ -154,11 +154,11 @@ uint32_t ns_int_precedence_client(uint32_t test_run_data)
     /* NS-Int should be triggered */
     if ((*(volatile uint32_t *)pages != NS_IRQ_TRIGGERED))
     {
-        LOG(ERROR, "WD interrupt not received");
+        LOG(ERROR, "WD interrupt not received\n");
         status = VAL_ERROR_POINT(8);
     }
 
-    LOG(DBG, "NS-WD pages %x", *(volatile uint32_t *)pages);
+    LOG(DBG, "NS-WD pages %x\n", *(volatile uint32_t *)pages);
 
     /* Send Direct Request SP For Clean up */
     val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -166,7 +166,7 @@ uint32_t ns_int_precedence_client(uint32_t test_run_data)
     val_ffa_msg_send_direct_req_64(&payload);
     if (payload.fid != FFA_MSG_SEND_DIRECT_RESP_64)
     {
-        LOG(ERROR, "DIRECT_RESP_64 not received fid %x err %x", payload.fid, payload.arg2);
+        LOG(ERROR, "DIRECT_RESP_64 not received fid %x err %x\n", payload.fid, payload.arg2);
         status = VAL_ERROR_POINT(9);
     }
 
@@ -178,37 +178,37 @@ uint32_t ns_int_precedence_client(uint32_t test_run_data)
     val_ffa_mem_reclaim(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "Mem Reclaim failed err %d", payload.arg2);
+        LOG(ERROR, "Mem Reclaim failed err %d\n", payload.arg2);
         status = VAL_ERROR_POINT(10);
     }
 
-    LOG(DBG, "Mem Recalim Complete");
+    LOG(DBG, "Mem Recalim Complete\n");
 
 free_interrupt:
     val_irq_disable(PLATFORM_NS_WD_INTR);
     if (val_irq_unregister_handler(PLATFORM_NS_WD_INTR))
     {
-        LOG(ERROR, "IRQ handler unregister failed");
+        LOG(ERROR, "IRQ handler unregister failed\n");
         status = VAL_ERROR_POINT(11);
     }
 
 rxtx_unmap:
     if (val_rxtx_unmap(sender))
     {
-        LOG(ERROR, "RXTX_UNMAP failed");
+        LOG(ERROR, "RXTX_UNMAP failed\n");
         status = VAL_ERROR_POINT(12);
     }
 
 free_memory:
    if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
     {
-        LOG(ERROR, "free_rxtx_buffers failed");
+        LOG(ERROR, "free_rxtx_buffers failed\n");
         status = status ? status : VAL_ERROR_POINT(13);
     }
 
     if (val_memory_free(pages, size))
     {
-        LOG(ERROR, "val_mem_free failed");
+        LOG(ERROR, "val_mem_free failed\n");
         status = status ? status : VAL_ERROR_POINT(14);
     }
 
