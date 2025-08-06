@@ -21,6 +21,20 @@ __attribute__ ((aligned (4096))) uint8_t val_stack[STACK_SIZE];
 void val_main(void)
 {
 
+/* SPMD/Hypervisor expects Version Negotiation During Boot */
+#if ((defined(VM1_COMPILE)) || (defined(VM2_COMPILE)) || (defined(VM3_COMPILE)))
+    ffa_args_t payload;
+    payload.arg1 = (FFA_VERSION_MAJOR << 16) | FFA_VERSION_MINOR;
+    val_ffa_version(&payload);
+    if (payload.fid == FFA_ERROR_NOT_SUPPORTED)
+    {
+        LOG(ERROR, "FFA Version Negotiation Failed fid %x arg2 %x", payload.fid, payload.arg2);
+        VAL_PANIC("Terminating ACS Run");
+    }
+
+    LOG(DBG, "Negotiate FF-A Version %x", (FFA_VERSION_MAJOR << 16) | FFA_VERSION_MINOR);
+#endif
+
 #ifndef TARGET_LINUX
     /* Configure and enable Stage-1 MMU */
     if (val_setup_mmu())
