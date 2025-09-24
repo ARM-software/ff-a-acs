@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -14,7 +14,7 @@
 #define ACS_MAJOR_VERSION   0
 #define ACS_MINOR_VERSION   9
 
-#define IMAGE_SIZE        0x100000
+#define IMAGE_SIZE        0x200000
 
 #define STACK_SIZE          0x1000
 #define SCTLR_I_BIT         (1 << 12)
@@ -30,7 +30,26 @@
 #error "Undefined value for PLATFORM_PAGE_SIZE"
 #endif
 
+
 /* Logical ids for test endpoint */
+#define ENDPOINT_LIST         \
+    EPX(NO_SERVER_EP, 0)      \
+    EPX(SP1, 1)               \
+    EPX(SP2, 2)               \
+    EPX(SP3, 3)               \
+    EPX(SP4, 4)               \
+    EPX(VM1, 5)               \
+    EPX(VM2, 6)               \
+    EPX(VM3, 7)
+
+#ifndef __ASSEMBLER__
+#define EPX(name, val)  name = val,
+typedef enum {
+    ENDPOINT_LIST
+} endpoint_id_t;
+#undef EPX
+#endif
+
 #define NO_SERVER_EP  0
 #define SP1           1
 #define SP2           2

@@ -10,9 +10,6 @@
 /* pal_misc_buffer for val internal use */
 uint8_t pal_misc_buffer[256]  = {0};
 
-#define BUFFER_COUNT 5
-uint32_t is_buffer_in_use[BUFFER_COUNT] = {0};
-
 /* Memory granularity and alignment:
  * To map the memory region correctly in both translation
  * regimes,the following constraints must be met:
@@ -23,7 +20,8 @@ uint32_t is_buffer_in_use[BUFFER_COUNT] = {0};
  *   At the moment, acs uses 4K size and 4k alignment
  *   for memory addresses
  */
-__attribute__ ((aligned (PAGE_SIZE_4K))) uint8_t pal_buffer_4k[BUFFER_COUNT][PAGE_SIZE_4K] = {0};
+
+__attribute__ ((aligned (PAGE_SIZE_4K))) uint8_t pal_heap_buffer[PLATFORM_HEAP_BUF_SIZE];
 
 static memory_region_descriptor_t endpoint_device_regions[] = {
 #if defined(SP1_COMPILE)
@@ -49,6 +47,11 @@ static memory_region_descriptor_t endpoint_device_regions[] = {
 #endif
     };
 
+void *pal_get_heap_buffer(void)
+{
+    return (void *)pal_heap_buffer;
+}
+
 uint32_t pal_get_endpoint_device_map(void **region_list, size_t *no_of_mem_regions)
 {
     *region_list = (void *)endpoint_device_regions;
@@ -61,65 +64,6 @@ uint32_t pal_terminate_simulation(void)
 {
     while (1);
     return PAL_SUCCESS;
-}
-
-void *pal_memory_alloc(uint64_t size)
-{
-    int i;
-
-    if (size == PAGE_SIZE_4K)
-    {
-        for (i = 0; i < BUFFER_COUNT ; i++)
-        {
-            if (!is_buffer_in_use[i])
-            {
-                is_buffer_in_use[i] = 1;
-                return &pal_buffer_4k[i][0];
-            }
-        }
-    }
-    else if (size == PAGE_SIZE_4K * 2)
-    {
-        for (i = 0; i < BUFFER_COUNT ; i++)
-        {
-            if ((!is_buffer_in_use[i]) && (i != BUFFER_COUNT - 1))
-            {
-                is_buffer_in_use[i] = 1;
-                is_buffer_in_use[i+1] = 1;
-                return &pal_buffer_4k[i][0];
-            }
-        }
-    }
-    else
-    {
-        /* Need to add logic for 16K and 64K pages */
-        PAL_LOG("\t\tval_memory_alloc failed\n", 0, 0);
-    }
-
-    return NULL; 
-}
-
-uint32_t pal_memory_free(void *address, uint64_t size)
-{
-    int i;
-
-    for (i = 0; i < BUFFER_COUNT ; i++)
-    {
-        if (&pal_buffer_4k[i][0] == address && size == PAGE_SIZE_4K)
-        {
-            is_buffer_in_use[i] = 0;
-            return PAL_SUCCESS;
-        }
-        if (&pal_buffer_4k[i][0] == address && size == PAGE_SIZE_4K * 2)
-        {
-            is_buffer_in_use[i] = 0;
-            is_buffer_in_use[i+1] = 0;
-            return PAL_SUCCESS;
-        }
-    }
-
-    (void)size;
-    return PAL_ERROR;
 }
 
 void *pal_mem_virt_to_phys(void *va)

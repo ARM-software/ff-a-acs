@@ -41,9 +41,16 @@ function (create_executable EXE_NAME)
     add_custom_target(Process-linker-script-${EXE_NAME} ALL DEPENDS Process-linker-script--${EXE_NAME})
 
     # Link the objects
-    add_custom_command(OUTPUT ${EXE_NAME}.elf
-                    COMMAND ${GNUARM_LINKER} ${CMAKE_LINKER_FLAGS} ${GNUARM_LINKER_FLAGS} -T ${SCATTER_OUTPUT_FILE} -o ${EXE_NAME}.elf ${VAL_LIB}.a ${PAL_LIB}.a ${COMMON_VAL_LIB}.a ${TEST_LIB}.a ${VAL_LIB}.a ${PAL_LIB}.a ${PAL_OBJ_LIST}
-                    DEPENDS Process-linker-script-${EXE_NAME})
+    add_custom_command(
+    OUTPUT ${EXE_NAME}.elf
+    COMMAND ${GNUARM_LINKER} ${CMAKE_LINKER_FLAGS} ${GNUARM_LINKER_FLAGS}
+            -T ${SCATTER_OUTPUT_FILE}
+            -o ${EXE_NAME}.elf
+            --start-group
+                ${PAL_LIB}.a ${VAL_LIB}.a ${TEST_LIB}.a ${COMMON_VAL_LIB}.a
+            --end-group
+            ${PAL_OBJ_LIST}
+    DEPENDS Process-linker-script-${EXE_NAME})
     add_custom_target(${EXE_NAME}_elf ALL DEPENDS ${EXE_NAME}.elf)
 
     # Create the dump info

@@ -8,6 +8,9 @@
 #include "val_memory.h"
 #include "val_framework.h"
 #include "val_interfaces.h"
+#if defined(VM1_COMPILE) && defined(XEN_SUPPORT)
+#include <xen/public/xen.h>
+#endif
 
 #define min(a, b) (a < b)?a:b
 
@@ -22,12 +25,36 @@ static uint8_t tt_l2_base_3_used;
 static uint8_t tt_l2_base_4_used;
 static uint8_t tt_l2_base_5_used;
 static uint8_t tt_l2_base_6_used;
+static uint8_t tt_l2_base_7_used;
+static uint8_t tt_l2_base_8_used;
+static uint8_t tt_l2_base_9_used;
+static uint8_t tt_l2_base_10_used;
+static uint8_t tt_l2_base_11_used;
+static uint8_t tt_l2_base_12_used;
 static uint8_t tt_l3_base_1_used;
 static uint8_t tt_l3_base_2_used;
 static uint8_t tt_l3_base_3_used;
 static uint8_t tt_l3_base_4_used;
 static uint8_t tt_l3_base_5_used;
 static uint8_t tt_l3_base_6_used;
+static uint8_t tt_l3_base_7_used;
+static uint8_t tt_l3_base_8_used;
+static uint8_t tt_l3_base_9_used;
+static uint8_t tt_l3_base_10_used;
+static uint8_t tt_l3_base_11_used;
+static uint8_t tt_l3_base_12_used;
+static uint8_t tt_l3_base_13_used;
+static uint8_t tt_l3_base_14_used;
+static uint8_t tt_l3_base_15_used;
+static uint8_t tt_l3_base_16_used;
+static uint8_t tt_l3_base_17_used;
+static uint8_t tt_l3_base_18_used;
+static uint8_t tt_l3_base_19_used;
+static uint8_t tt_l3_base_20_used;
+static uint8_t tt_l3_base_21_used;
+static uint8_t tt_l3_base_22_used;
+static uint8_t tt_l3_base_23_used;
+static uint8_t tt_l3_base_24_used;
 #endif
 
 /* Linker symbols used to figure out the memory layout of secure partition. */
@@ -157,6 +184,36 @@ static uint32_t fill_translation_table(tt_descriptor_t tt_desc,
                      tt_base_next_level = tt_l2_base_6;
                      tt_l2_base_6_used = 1;
                }
+              if (!tt_l2_base_7_used)
+               {
+                     tt_base_next_level = tt_l2_base_7;
+                     tt_l2_base_7_used = 1;
+               }
+               else if (!tt_l2_base_8_used)
+               {
+                     tt_base_next_level = tt_l2_base_8;
+                     tt_l2_base_8_used = 1;
+               }
+               else if (!tt_l2_base_9_used)
+               {
+                     tt_base_next_level = tt_l2_base_9;
+                     tt_l2_base_9_used = 1;
+               }
+               else if (!tt_l2_base_10_used)
+               {
+                     tt_base_next_level = tt_l2_base_10;
+                     tt_l2_base_10_used = 1;
+               }
+               else if (!tt_l2_base_11_used)
+               {
+                     tt_base_next_level = tt_l2_base_11;
+                     tt_l2_base_11_used = 1;
+               }
+               else if (!tt_l2_base_12_used)
+               {
+                     tt_base_next_level = tt_l2_base_12;
+                     tt_l2_base_12_used = 1;
+               }
                else
                {
                     LOG(ERROR, "Out of memory, allocate more tt_l2 space\n");
@@ -165,42 +222,131 @@ static uint32_t fill_translation_table(tt_descriptor_t tt_desc,
            }
            else if (tt_desc.level == 2)
            {
-               if (!tt_l3_base_1_used)
-               {
-                     tt_base_next_level = tt_l3_base_1;
-                     tt_l3_base_1_used = 1;
-               }
-               else if (!tt_l3_base_2_used)
-               {
-                     tt_base_next_level = tt_l3_base_2;
-                     tt_l3_base_2_used = 1;
-               }
-               else if (!tt_l3_base_3_used)
-               {
-                     tt_base_next_level = tt_l3_base_3;
-                     tt_l3_base_3_used = 1;
-               }
-               else if (!tt_l3_base_4_used)
-               {
-                     tt_base_next_level = tt_l3_base_4;
-                     tt_l3_base_4_used = 1;
-               }
-               else if (!tt_l3_base_5_used)
-               {
-                     tt_base_next_level = tt_l3_base_5;
-                     tt_l3_base_5_used = 1;
-               }
-               else if (!tt_l3_base_6_used)
-               {
-                     tt_base_next_level = tt_l3_base_6;
-                     tt_l3_base_6_used = 1;
-               }
-               else
-               {
+                if (!tt_l3_base_1_used)
+                {
+                    tt_base_next_level = tt_l3_base_1;
+                    tt_l3_base_1_used = 1;
+                }
+                else if (!tt_l3_base_2_used)
+                {
+                    tt_base_next_level = tt_l3_base_2;
+                    tt_l3_base_2_used = 1;
+                }
+                else if (!tt_l3_base_3_used)
+                {
+                    tt_base_next_level = tt_l3_base_3;
+                    tt_l3_base_3_used = 1;
+                }
+                else if (!tt_l3_base_4_used)
+                {
+                    tt_base_next_level = tt_l3_base_4;
+                    tt_l3_base_4_used = 1;
+                }
+                else if (!tt_l3_base_5_used)
+                {
+                    tt_base_next_level = tt_l3_base_5;
+                    tt_l3_base_5_used = 1;
+                }
+                else if (!tt_l3_base_6_used)
+                {
+                    tt_base_next_level = tt_l3_base_6;
+                    tt_l3_base_6_used = 1;
+                }
+                else if (!tt_l3_base_7_used)
+                {
+                    tt_base_next_level = tt_l3_base_7;
+                    tt_l3_base_7_used = 1;
+                }
+                else if (!tt_l3_base_8_used)
+                {
+                    tt_base_next_level = tt_l3_base_8;
+                    tt_l3_base_8_used = 1;
+                }
+                else if (!tt_l3_base_9_used)
+                {
+                    tt_base_next_level = tt_l3_base_9;
+                    tt_l3_base_9_used = 1;
+                }
+                else if (!tt_l3_base_10_used)
+                {
+                    tt_base_next_level = tt_l3_base_10;
+                    tt_l3_base_10_used = 1;
+                }
+                else if (!tt_l3_base_11_used)
+                {
+                    tt_base_next_level = tt_l3_base_11;
+                    tt_l3_base_11_used = 1;
+                }
+                else if (!tt_l3_base_12_used)
+                {
+                    tt_base_next_level = tt_l3_base_12;
+                    tt_l3_base_12_used = 1;
+                }
+                else if (!tt_l3_base_13_used)
+                {
+                    tt_base_next_level = tt_l3_base_13;
+                    tt_l3_base_13_used = 1;
+                }
+                else if (!tt_l3_base_14_used)
+                {
+                    tt_base_next_level = tt_l3_base_14;
+                    tt_l3_base_14_used = 1;
+                }
+                else if (!tt_l3_base_15_used)
+                {
+                    tt_base_next_level = tt_l3_base_15;
+                    tt_l3_base_15_used = 1;
+                }
+                else if (!tt_l3_base_16_used)
+                {
+                    tt_base_next_level = tt_l3_base_16;
+                    tt_l3_base_16_used = 1;
+                }
+                else if (!tt_l3_base_17_used)
+                {
+                    tt_base_next_level = tt_l3_base_17;
+                    tt_l3_base_17_used = 1;
+                }
+                else if (!tt_l3_base_18_used)
+                {
+                    tt_base_next_level = tt_l3_base_18;
+                    tt_l3_base_18_used = 1;
+                }
+                else if (!tt_l3_base_19_used)
+                {
+                    tt_base_next_level = tt_l3_base_19;
+                    tt_l3_base_19_used = 1;
+                }
+                else if (!tt_l3_base_20_used)
+                {
+                    tt_base_next_level = tt_l3_base_20;
+                    tt_l3_base_20_used = 1;
+                }
+                else if (!tt_l3_base_21_used)
+                {
+                    tt_base_next_level = tt_l3_base_21;
+                    tt_l3_base_21_used = 1;
+                }
+                else if (!tt_l3_base_22_used)
+                {
+                    tt_base_next_level = tt_l3_base_22;
+                    tt_l3_base_22_used = 1;
+                }
+                else if (!tt_l3_base_23_used)
+                {
+                    tt_base_next_level = tt_l3_base_23;
+                    tt_l3_base_23_used = 1;
+                }
+                else if (!tt_l3_base_24_used)
+                {
+                    tt_base_next_level = tt_l3_base_24;
+                    tt_l3_base_24_used = 1;
+                }
+                else
+                {
                     LOG(ERROR, "Out of memory, allocate more tt_l3 space\n");
                     return VAL_ERROR;
-               }
-
+                }
            }
            else
            {
@@ -294,7 +440,7 @@ static uint32_t val_pgt_create(pgt_descriptor_t pgt_desc,
     if (mem_desc->virtual_address >= (0x1ull << pgt_desc.ias))
     {
         LOG(WARN, "val_pgt_create: input address size error,\
-                    truncating to %d-bits", pgt_desc.ias);
+                    truncating to %d-bits\n", pgt_desc.ias);
         mem_desc->virtual_address &= ((0x1ull << pgt_desc.ias) - 1);
     }
 
@@ -353,6 +499,9 @@ static uint32_t val_map_endpoint_region(pgt_descriptor_t pgt_desc)
     {EP_RODATA_START, EP_RODATA_START, (EP_RODATA_END - EP_RODATA_START), ATTR_RO_DATA},
     {EP_DATA_START, EP_DATA_START, (EP_DATA_END - EP_DATA_START), ATTR_RW_DATA},
     {EP_BSS_START, EP_BSS_START, (EP_BSS_END - EP_BSS_START), ATTR_RW_DATA},
+#if defined(VM1_COMPILE) && defined(XEN_SUPPORT)
+    {GUEST_MAGIC_BASE, GUEST_MAGIC_BASE, GUEST_MAGIC_SIZE, ATTR_RW_DATA},
+#endif
     };
 
     /* Map Image regions */

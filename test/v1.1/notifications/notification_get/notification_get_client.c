@@ -13,8 +13,10 @@ uint32_t notification_get_client(uint32_t test_run_data)
 {
     ffa_args_t payload;
     uint32_t status = VAL_SUCCESS;
+#if ((!defined(XEN_SUPPORT) && !(TARGET_LINUX_ENV == 1)) || (PLATFORM_FFA_V < FFA_V_1_2))
     uint32_t client_logical_id = GET_CLIENT_LOGIC_ID(test_run_data);
     ffa_endpoint_id_t sender = val_get_endpoint_id(client_logical_id);
+#endif
 
     /* Invalid receiver id check */
     val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -29,6 +31,7 @@ uint32_t notification_get_client(uint32_t test_run_data)
         goto exit;
     }
 
+#if !defined(XEN_SUPPORT) && !(TARGET_LINUX_ENV == 1)
     /* Invalid receiver vcpu id check */
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 = (uint32_t)((INVALID_VMID << 16) | (sender));
@@ -41,7 +44,9 @@ uint32_t notification_get_client(uint32_t test_run_data)
         status = VAL_ERROR_POINT(2);
         goto exit;
     }
+#endif
 
+#if PLATFORM_FFA_V < FFA_V_1_2
     /* Invalid flags check */
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 = (uint32_t)(sender);
@@ -53,7 +58,11 @@ uint32_t notification_get_client(uint32_t test_run_data)
                             payload.arg2);
         status = VAL_ERROR_POINT(3);
     }
+#endif
 
+#if !((!defined(XEN_SUPPORT) && !(TARGET_LINUX_ENV == 1)) || (PLATFORM_FFA_V < FFA_V_1_2))
+    (void)(test_run_data);
+#endif
 exit:
     return status;
 }

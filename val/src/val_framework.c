@@ -9,10 +9,9 @@
 #include "val_interfaces.h"
 #include "val_common_peripherals.h"
 
-#if (PLATFORM_SP_EL == -1)
+/* Configurations that currently do not support NVM and WD */
 #define SKIP_WD_PROGRAMMING
 #define SKIP_NVM_PROGRAMMING
-#endif
 
 #ifdef SKIP_NVM_PROGRAMMING
 #define NVM_SIZE (1024)
@@ -405,4 +404,329 @@ void val_reset_reboot_flag(void)
    {
       VAL_PANIC("nvm write failed");
    }
+}
+
+/**
+ *   @brief    - This function is used valid EP configuration during test entry.
+ *   @param    - EP ID
+ *   @return   - Status
+**/
+uint32_t val_check_ep_compile_status(uint32_t client_logical_id, uint32_t server_logical_id)
+{
+    // Initialize EP Array Ptr
+    val_endpoint_info_t *info_ptr = (val_endpoint_info_t *)val_get_endpoint_info();
+
+    if (info_ptr[client_logical_id].is_valid == VAL_PARTITION_NOT_PRESENT ||
+       ((info_ptr[server_logical_id].is_valid == VAL_PARTITION_NOT_PRESENT) &&
+       (server_logical_id != NO_SERVER_EP)))
+    {
+        LOG(INFO, "EP Status invalid for client %x-->%x server %x-->%x, returning VAL_SKIP\n",
+            client_logical_id, info_ptr[client_logical_id].is_valid, server_logical_id,
+            info_ptr[server_logical_id].is_valid);
+        return VAL_SKIP_CHECK;
+    }
+    return VAL_SUCCESS;
+}
+
+
+/**
+ * @brief  This function sends a request with a Nil UUID to retrieve
+ *         information about all partitions in the system. It compares
+ *         the returned descriptors with the local endpoint info table
+ *         and updates the compile_status accordingly.
+ *
+ * @param  None
+ * @return None
+ */
+void val_ep_info_relayer_sync(void)
+{
+    val_endpoint_info_t *ep_info;
+    ffa_partition_info_t *ret_info;
+    void *rx_buff, *tx_buff;
+    const uint32_t null_uuid[4] = {0};
+    uint64_t size = PAGE_SIZE_4K;
+    uint32_t i = 0, j = 0;
+    uint32_t desc_count = 0;
+    uint32_t ep_count = 5;//val_get_endpoint_info_table_count();
+    ffa_args_t payload;
+
+    tx_buff = val_aligned_alloc(PAGE_SIZE_4K, size);
+    rx_buff = val_aligned_alloc(PAGE_SIZE_4K, size);
+    if (rx_buff == NULL || tx_buff == NULL)
+    {
+        LOG(ERROR, "Failed to allocate RxTx buffer\n");
+        goto free_memory;
+    }
+
+    /* Map TX and RX buffers for FFA communication */
+    if (val_rxtx_map_64((uint64_t)tx_buff, (uint64_t)rx_buff, (uint32_t)(size / PAGE_SIZE_4K)))
+    {
+        LOG(ERROR, "RxTx Map failed\n");
+        goto free_memory;
+    }
+
+    ep_info = val_get_endpoint_info();
+    if (!ep_info)
+    {
+        LOG(ERROR, "Endpoint info retrieval failed\n");
+        goto unmap_rxtx;
+    }
+
+    val_memset(&payload, 0, sizeof(ffa_args_t));
+    payload.arg1 = null_uuid[0];
+    payload.arg2 = null_uuid[1];
+    payload.arg3 = null_uuid[2];
+    payload.arg4 = null_uuid[3];
+    payload.arg5 = FFA_PARTITION_INFO_FLAG_RETDESC;
+
+    /* Request information for all partitions using the Nil UUID */
+    val_ffa_partition_info_get(&payload);
+    if (payload.fid == FFA_ERROR_32)
+    {
+        LOG(ERROR, "ffa_partition_info_get failed\n");
+        goto rx_release;
+    }
+    desc_count = (uint32_t)payload.arg2;
+    ret_info = (ffa_partition_info_t *)rx_buff;
+
+    /* Print all rx descriptors */
+    LOG(DBG, "Partition Descriptor count: %d\n", (int)payload.arg2);
+    for (i = 0; i < desc_count; i++) {
+        ffa_partition_info_t *part = &ret_info[i];
+
+        LOG(DBG, "+---------------- Partition Descriptor [%d] ----------------+\n", i);
+        LOG(DBG, "| ID            : 0x%08x                               |\n", part->id);
+        LOG(DBG, "| Exec Contexts : %-36u     |\n", part->exec_context);
+        LOG(DBG, "| Properties    : 0x%08x                               |\n", part->properties);
+        LOG(DBG, "| UUID          : %08x-%08x-%08x-%08x      |\n",
+                 part->uuid[0], part->uuid[1], part->uuid[2], part->uuid[3]);
+        LOG(DBG, "+----------------------------------------------------------+\n");
+    }
+
+    /* Validate returned descriptor size */
+    if (payload.arg3 != sizeof(ffa_partition_info_t))
+    {
+        LOG(ERROR, "Expected desc size %zu, got %d\n",
+            sizeof(ffa_partition_info_t), payload.arg2);
+        goto rx_release;
+    }
+
+    /* Match each known endpoint against returned partition descriptors */
+    for (i = 1; i < ep_count; i++)
+    {
+        int found = 0;
+
+        for (j = 0; j < desc_count; j++)
+        {
+            if (ep_info[i].id == ret_info[j].id)
+            {
+                ep_info[i].is_valid = VAL_PARTITION_PRESENT;
+                LOG(INFO, "Partition with EPID 0x%x Found\n", ep_info[i].id);
+                found = 1;
+                break;
+            }
+        }
+        if (!found)
+        {
+            ep_info[i].is_valid = VAL_PARTITION_NOT_PRESENT;
+            LOG(INFO, "Partition with EPID 0x%x Not Found\n", ep_info[i].id);
+        }
+    }
+
+rx_release:
+    /* Release the RX buffer */
+    if (val_rx_release())
+    {
+        LOG(ERROR, "Rx release failed\n");
+    }
+
+unmap_rxtx:
+    if (val_rxtx_unmap(val_get_endpoint_id(VM1)))
+    {
+        LOG(ERROR, "val_rxtx_unmap failed\n");
+    }
+
+free_memory:
+    if (val_free(rx_buff) || val_free(tx_buff))
+    {
+        LOG(ERROR, "val_free failed\n");
+    }
+}
+
+
+/**
+ * @brief  Sends direct messages to SPs and Non Primary VM's to synchronize the endpoint info table.
+ *
+ *         This function iterates over all compiled Secure Partitions and synchronizes
+ *         their endpoint info with Primary VM using two direct message calls (split payload).
+ *
+ * @param  None
+ * @return None
+ */
+void val_send_sync_ep_info(void)
+{
+    ffa_args_t args[2] = {0};
+    uint16_t count;
+    uint32_t i, j;
+
+    // Validate structure size matches serialized format size
+    if (sizeof(val_endpoint_info_t) != VAL_ENDPOINT_INFO_SIZE)
+    {
+        LOG(ERROR, "val_endpoint_info_t size %d, required size %d\n",
+            sizeof(val_endpoint_info_t), VAL_ENDPOINT_INFO_SIZE);
+        VAL_PANIC("EP info struct size mismatch");
+    }
+
+    // Synchronize endpoint info for all SPs + VM1
+    count = VAL_S_EP_COUNT + 1;
+
+    // Get pointer to endpoint info table
+    val_endpoint_info_t *info_ptr = (val_endpoint_info_t *)val_get_endpoint_info();
+    for (i = 1; i <= VAL_S_EP_COUNT; i++)
+    {
+        // Skip partitions that are not present/compiled
+        if (info_ptr[i].is_valid == VAL_PARTITION_NOT_PRESENT)
+        {
+            LOG(INFO, "Partition ID %x Not Compiled. Status: %x - Skipping Sync\n",
+                info_ptr[i].id, info_ptr[i].is_valid);
+            continue;
+        }
+        for (j = 1; j <= count; j++)
+        {
+            // Get pointer to the endpoint info structure to sync
+            uint32_t *ptr = (uint32_t *)&info_ptr[j];
+
+            // Clear argument structures
+            val_memset(&args[0], 0, sizeof(ffa_args_t));
+            val_memset(&args[1], 0, sizeof(ffa_args_t));
+
+            // Set arg1: [sender << 16 | receiver] = [VM1 << 16 | info_ptr[i].id]
+            args[0].arg1 = ((uint32_t)val_get_endpoint_id(VM1) << 16) | info_ptr[i].id;
+            args[1].arg1 = args[0].arg1;
+
+            // Set service ID and index (j) in arg3
+            args[0].arg3 = (j << 16) | EP_INFO_SYNC_SERVICE;
+            args[1].arg3 = args[0].arg3;
+
+            // First half of ep_info structure
+            args[0].arg4 = ptr[0];
+            args[0].arg5 = ptr[1];
+            args[0].arg6 = ptr[2];
+            args[0].arg7 = ptr[3];
+
+            // Second half of ep_info structure
+            args[1].arg4 = ptr[4];
+            args[1].arg5 = ptr[5];
+            args[1].arg6 = ptr[6];
+            args[1].arg7 = ptr[7];
+
+            // Send both parts of the descriptor to the SP
+            val_ffa_msg_send_direct_req_32(&args[0]);
+            val_ffa_msg_send_direct_req_32(&args[1]);
+
+            // Check for errors in direct message sends
+            if (args[0].fid == FFA_ERROR_32 || args[1].fid == FFA_ERROR_32)
+            {
+                LOG(ERROR, "Direct Request 32 failed: err[0]=0x%x, err[1]=0x%x\n",
+                    args[0].arg2, args[1].arg2);
+                VAL_PANIC("EP Sync Error");
+            }
+        }
+    }
+}
+
+/**
+ * @brief  Service to Handle Endpoint Descriptor Sync with Primary VM.
+ *
+ *         This function is invoked when an Primary VM sends a direct message to update
+ *         endpoint info table entry on the receiver's side. It unpacks the data sent
+ *         in `ffa_args_t` and updates the corresponding `val_endpoint_info_t` entry.
+ *
+ * @param  args  Pointer to ffa_args_t received via direct message.
+ * @return None
+ */
+void val_sync_ep_info_service(ffa_args_t *args)
+{
+    ffa_args_t payload;
+    uint16_t count;
+    uint32_t *ptr;
+    val_endpoint_info_t ep_info;
+    val_endpoint_info_t *ep_table_ptr;
+    ffa_endpoint_id_t sender, receiver;
+    uint32_t i = (uint32_t) args->arg3 >> 16;  // Extract table index from arg3 upper 16 bits
+
+    // Check if the size of val_endpoint_info_t matches expected serialized size
+    if (sizeof(val_endpoint_info_t) != VAL_ENDPOINT_INFO_SIZE)
+    {
+        VAL_PANIC("EP info struct size mismatch");
+    }
+
+    // Extract sender and receiver endpoint IDs from arg1
+    sender = args->arg1 & 0x0000FFFF;
+    receiver = (args->arg1 & 0xFFFF0000) >> 16;
+
+    // Map structure to raw words for data transfer (8 uint32_t entries)
+    ptr = (uint32_t *) &ep_info;
+    ep_table_ptr = val_get_endpoint_info();
+    (void)count; // 'count' currently unused
+
+    // Deserialize the first half of val_endpoint_info_t from args
+    ptr[0] = (uint32_t) args->arg4;
+    ptr[1] = (uint32_t) args->arg5;
+    ptr[2] = (uint32_t) args->arg6;
+    ptr[3] = (uint32_t) args->arg7;
+
+    // Prepare a direct response payload to acknowledge the received message
+    val_memset(&payload, 0, sizeof(ffa_args_t));
+    payload.arg1 = ((uint32_t)(sender << 16) | receiver);
+    payload.arg2 = 0;
+
+    val_ffa_msg_send_direct_resp_32(&payload);
+
+    // Check for FFA error
+    if (payload.fid == FFA_ERROR_32)
+    {
+        LOG(ERROR, "Direct Resp 32 failed err [0] %x [1] %x\n", payload.arg2, payload.arg3);
+        VAL_PANIC("EP Sync Resp Error");
+    }
+
+    // Deserialize the second half of val_endpoint_info_t from response payload
+    ptr[4] = (uint32_t) payload.arg4;
+    ptr[5] = (uint32_t) payload.arg5;
+    ptr[6] = (uint32_t) payload.arg6;
+    ptr[7] = (uint32_t) payload.arg7;
+
+    // Log and update endpoint info entry at index `i`
+    LOG(DBG, "Updating val_endpoint_info[%x]:\n", i);
+    LOG(DBG, "+------------+-----------------+-----------------+\n");
+    LOG(DBG, "| Field      | New Value       | Old Value       |\n");
+    LOG(DBG, "+------------+-----------------+-----------------+\n");
+    LOG(DBG, "| name       | %-14s  | %-14s  |\n", ep_info.name, ep_table_ptr[i].name);
+    val_memcpy(ep_table_ptr[i].name, ep_info.name, 5);
+    LOG(DBG, "| id         | 0x%08x      | 0x%08x      |\n", ep_info.id, ep_table_ptr[i].id);
+    ep_table_ptr[i].id = ep_info.id;
+    LOG(DBG, "| valid      | 0x%08x      | 0x%08x      |\n",
+        ep_info.is_valid, ep_table_ptr[i].is_valid);
+    ep_table_ptr[i].is_valid = ep_info.is_valid;
+    ep_table_ptr[i].id = ep_info.id;
+    LOG(DBG, "| secure     | 0x%08x      | 0x%08x      |\n",
+        ep_info.is_secure, ep_table_ptr[i].is_secure);
+    ep_table_ptr[i].is_secure = ep_info.is_secure;
+    LOG(DBG, "| tg0        | 0x%08x      | 0x%08x      |\n", ep_info.tg0, ep_table_ptr[i].tg0);
+    ep_table_ptr[i].tg0 = ep_info.tg0;
+    LOG(DBG, "| el_info    | 0x%08x      | 0x%08x      |\n",
+        ep_info.el_info, ep_table_ptr[i].el_info);
+    ep_table_ptr[i].el_info = ep_info.el_info;
+    LOG(DBG, "| ec_count   | 0x%08x      | 0x%08x      |\n",
+        ep_info.ec_count, ep_table_ptr[i].ec_count);
+    ep_table_ptr[i].ec_count = ep_info.ec_count;
+    LOG(DBG, "| properties | 0x%08x      | 0x%08x      |\n",
+        ep_info.ep_properties, ep_table_ptr[i].ep_properties);
+    ep_table_ptr[i].ep_properties = ep_info.ep_properties;
+    for (int j = 0; j < 4; j++) {
+        LOG(DBG, "| uuid[%d]    | 0x%08x      | 0x%08x      |\n",
+            j, ep_info.uuid[j], ep_table_ptr[i].uuid[j]);
+        ep_table_ptr[i].uuid[j] = ep_info.uuid[j];
+    }
+    LOG(DBG, "+------------+-----------------+-----------------+\n");
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2025, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2025-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -25,8 +25,8 @@ static uint32_t ffa_mem_share_helper(uint32_t test_run_data, uint32_t fid)
     const uint32_t constituents_count = sizeof(constituents) /
                 sizeof(struct ffa_memory_region_constituent);
 
-    mb.send = val_memory_alloc(size);
-    mb.recv = val_memory_alloc(size);
+    mb.send = val_aligned_alloc(PAGE_SIZE_4K, size);
+    mb.recv = val_aligned_alloc(PAGE_SIZE_4K, size);
     if (mb.send == NULL || mb.recv == NULL)
     {
         LOG(ERROR, "Failed to allocate RxTx buffer\n");
@@ -78,11 +78,13 @@ static uint32_t ffa_mem_share_helper(uint32_t test_run_data, uint32_t fid)
     val_memset((void *)PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION, 0xab, size);
     val_memset((void *)PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION_INVALID, 0xea, size);
 
+#ifndef TARGET_LINUX
     /* Initiate the DMA transactions to
      * memory regions using device upstream of SMMU
      */
     flush_dcache_range(PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION, size*2);
     flush_dcache_range(PLAT_SMMU_UPSTREAM_DEVICE_MEM_REGION_INVALID, size*2);
+#endif
 
     if (VAL_IS_ENDPOINT_SECURE(val_get_endpoint_logical_id(sender)))
     {
@@ -191,7 +193,7 @@ rxtx_unmap:
     }
 
 free_memory:
-    if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
+    if (val_free(mb.recv) || val_free(mb.send))
     {
         LOG(ERROR, "free_rxtx_buffers failed\n");
         status = status ? status : VAL_ERROR_POINT(8);

@@ -15,7 +15,7 @@ uint32_t ffa_mem_perm_set_client(uint32_t test_run_data)
     ffa_endpoint_id_t curr_ep_logical_id;
     uint8_t *pages = NULL;
 
-    pages = (uint8_t *)val_memory_alloc(size);
+    pages = (uint8_t *)val_aligned_alloc(PAGE_SIZE_4K, size);
     if (!pages)
     {
         LOG(ERROR, "Memory allocation failed\n");
@@ -52,9 +52,9 @@ uint32_t ffa_mem_perm_set_client(uint32_t test_run_data)
     }
 
 free_memory:
-   if (val_memory_free(pages, size))
+   if (val_free(pages))
     {
-        LOG(ERROR, "val_mem_free failed\n");
+        LOG(ERROR, "val_free failed\n");
         status = status ? status : VAL_ERROR_POINT(4);
     }
 

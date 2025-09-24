@@ -18,10 +18,10 @@
 #include "pal_misc_asm.h"
 #include "pal_irq.h"
 #include "pal_shemaphore.h"
+#include "pal_arch_helpers.h"
 #include "pal_common_val_intf.h"
 #ifndef TARGET_LINUX
 #include <pal_sp805_watchdog.h>
-#include "pal_arch_helpers.h"
 #endif
 
 /**
@@ -31,7 +31,11 @@
  *   @param    - data2    : Value for second format specifier
  *   @return   - SUCCESS/FAILURE
 **/
+#if (TARGET_LINUX == 1) && defined(VM1_COMPILE)
+uint32_t pal_printf(const char *msg, ...);
+#else
 uint32_t pal_printf(const char *msg, uint64_t data1, uint64_t data2);
+#endif
 
 /**
  *   @brief    - Initializes and enable physical system timer with interrupt
@@ -119,6 +123,12 @@ uint32_t pal_power_on_cpu(uint64_t mpid);
 uint32_t pal_power_off_cpu(void);
 
 /**
+ *   @brief  Retrieves the base address of the heap buffer.
+ *   @return Pointer to the heap buffer.
+ */
+void *pal_get_heap_buffer(void);
+
+/**
  *   @brief    - Terminates the simulation at the end of all tests completion.
  *   @param    - void
  *   @return   - SUCCESS(0)/FAILURE
@@ -151,6 +161,20 @@ uint32_t pal_smmu_device_configure(uint32_t stream_id, uint64_t source, uint64_t
 **/
 void pal_irq_setup(void);
 
+#ifdef TARGET_LINUX
+/**
+ * @brief       - Forward SMC Call to Kernel FF-A Driver.
+ * @param       - FFA args.
+ * @return      - Void.
+**/
+void pal_linux_call_conduit(void *args);
+#endif
+/**
+ *   @brief    - get current sp/vm id
+ *   @param    - Void
+ *   @return   - FFA ID
+**/
+uint32_t pal_get_current_ep_id(void);
 
 uint64_t pal_sleep(uint32_t ms);
 void pal_twdog_intr_enable(void);

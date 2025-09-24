@@ -10,6 +10,7 @@
 
 #include "val_misc.h"
 #include "val_framework.h"
+#include "val_malloc.h"
 #include "val_test_dispatch.h"
 #include "val_ffa.h"
 #include "val_memory.h"

@@ -18,8 +18,8 @@ uint32_t ffa_msg_send_server(ffa_args_t args)
     uint32_t msg_size = sizeof(message) - 0x1;
     mb_buf_t mb;
 
-    mb.send = val_memory_alloc(size);
-    mb.recv = val_memory_alloc(size);
+    mb.send = val_aligned_alloc(PAGE_SIZE_4K, size);
+    mb.recv = val_aligned_alloc(PAGE_SIZE_4K, size);
     if (mb.send == NULL || mb.recv == NULL)
     {
         LOG(ERROR, "Failed to allocate RxTx buffer\n");
@@ -110,7 +110,7 @@ uint32_t ffa_msg_send_server(ffa_args_t args)
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
     {
         LOG(ERROR, "Only valid with the ERET conduit at the Non-secure virtual FF-A instance\
-                  else MBZ, fid=0x%x, err=0x%x", payload.fid, payload.arg2);
+                  else MBZ, fid=0x%x, err=0x%x\n", payload.fid, payload.arg2);
         status = VAL_ERROR_POINT(10);
     }
 
@@ -215,7 +215,7 @@ uint32_t ffa_msg_send_server(ffa_args_t args)
     }
 
 free_memory:
-    if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
+    if (val_free(mb.recv) || val_free(mb.send))
     {
         LOG(ERROR, "free_rxtx_buffers failed\n");
         status = VAL_ERROR_POINT(21);

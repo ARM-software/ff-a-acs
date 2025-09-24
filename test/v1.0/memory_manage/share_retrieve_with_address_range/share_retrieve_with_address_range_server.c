@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, 2025, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -44,8 +44,8 @@ uint32_t share_retrieve_with_address_range_server(ffa_args_t args)
     const uint32_t constituents_count = sizeof(constituents) /
                 sizeof(struct ffa_memory_region_constituent);
 
-    mb.send = val_memory_alloc(size);
-    mb.recv = val_memory_alloc(size);
+    mb.send = val_aligned_alloc(PAGE_SIZE_4K, size);
+    mb.recv = val_aligned_alloc(PAGE_SIZE_4K, size);
     if (mb.send == NULL || mb.recv == NULL)
     {
         LOG(ERROR, "Failed to allocate RxTx buffer\n");
@@ -63,7 +63,7 @@ uint32_t share_retrieve_with_address_range_server(ffa_args_t args)
     val_memset(mb.send, 0, size);
 
     /* Allocate 8k page */
-    pages = (uint8_t *)val_memory_alloc(size * 2);
+    pages = (uint8_t *)val_aligned_alloc(PAGE_SIZE_4K, size * 2);
     if (!pages)
     {
         LOG(ERROR, "Memory allocation failed\n");
@@ -71,7 +71,7 @@ uint32_t share_retrieve_with_address_range_server(ffa_args_t args)
         goto rxtx_unmap;
     }
 
-    tmp_buf = (uint8_t *)val_memory_alloc(size);
+    tmp_buf = (uint8_t *)val_aligned_alloc(PAGE_SIZE_4K, size);
     if (!tmp_buf)
     {
         LOG(ERROR, "Memory allocation failed\n");
@@ -236,21 +236,21 @@ rxtx_unmap:
     }
 
 free_memory:
-    if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
+    if (val_free(mb.recv) || val_free(mb.send))
     {
         LOG(ERROR, "free_rxtx_buffers failed\n");
         status = status ? status : VAL_ERROR_POINT(12);
     }
 
-    if (val_memory_free(pages, size * 2))
+    if (val_free(pages))
     {
-        LOG(ERROR, "val_mem_free failed\n");
+        LOG(ERROR, "val_free failed\n");
         status = status ? status : VAL_ERROR_POINT(13);
     }
 
-    if (val_memory_free(tmp_buf, size))
+    if (val_free(tmp_buf))
     {
-        LOG(ERROR, "val_mem_free failed\n");
+        LOG(ERROR, "val_free failed\n");
         status = status ? status : VAL_ERROR_POINT(14);
     }
 

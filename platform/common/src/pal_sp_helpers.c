@@ -9,7 +9,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <pal_arch_helpers.h>
-
 #include <pal_spm_helpers.h>
 #include <pal_log.h>
 
@@ -67,3 +66,27 @@ void sp_sleep(uint64_t ms)
     (void)sp_sleep_elapsed_time(ms);
 #endif
 }
+
+/**
+ * Uses FFA_ID_GET Interface to receive current endpoint ID.
+ */
+
+ #define PAL_FFA_ID_GET_32 0x84000069U
+ #define PAL_FFA_ID_GET_SUCCESS_32 0x84000061U
+
+ uint32_t pal_get_current_ep_id(void)
+ {
+     smc_args args;
+     smc_ret_values retargs;
+     args.fid =  (uint32_t) PAL_FFA_ID_GET_32;
+     args.arg1 = (u_register_t) 0;
+     args.arg2 = (u_register_t) 0;
+     args.arg3 = (u_register_t) 0;
+     args.arg4 = (u_register_t) 0;
+     args.arg5 = (u_register_t) 0;
+     args.arg6 = (u_register_t) 0;
+     args.arg7 = (u_register_t) 0;
+
+     retargs = pal_smc(&args);
+     return (uint32_t)retargs.ret2;
+ }

@@ -1,0 +1,22 @@
+# Copyright (c) 2022, Arm Limited.
+# SPDX-License-Identifier: MIT
+
+%YAML 1.2
+---
+description: >-
+  A setup with TFA and Hafnium with TFTF as SP in the secure world.
+  In the normal world u-boot with Xen and dom0 linux on top.
+
+concrete: true
+
+layers:
+  - ns-base-ffa.yaml
+  - ffa-hafnium.yaml
+  - ffa-acs-base.yaml
+
+buildex:
+  btvars:
+    FFA_ACS_NS_HYP:
+      type: string
+      value: '0'
+

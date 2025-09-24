@@ -14,6 +14,7 @@
     description = "Base-1";
     ffa-version = <0x00010002>; /* 31:16 - Major, 15:0 - Minor */
     uuid = <0x092358d1 0xb94723f0 0x64447c82 0xc88f57f5>;
+    id = <2>;
     execution-ctx-count = <1>;
     exception-level = <1>; /* S-EL0 */
     execution-state = <0>; /* AARCH64 */

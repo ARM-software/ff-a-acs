@@ -23,7 +23,7 @@ static uint32_t mem_donate_invalid_epid_check(void *tx_buf,
     const uint32_t constituents_count = sizeof(constituents) /
                 sizeof(struct ffa_memory_region_constituent);
 
-    pages = (uint8_t *)val_memory_alloc(size);
+    pages = (uint8_t *)val_aligned_alloc(PAGE_SIZE_4K, size);
     if (!pages)
     {
         LOG(ERROR, "Memory allocation failed\n");
@@ -65,9 +65,9 @@ static uint32_t mem_donate_invalid_epid_check(void *tx_buf,
         status = VAL_ERROR_POINT(2);
     }
 
-    if (val_memory_free(pages, size))
+    if (val_free(pages))
     {
-        LOG(ERROR, "val_mem_free failed\n");
+        LOG(ERROR, "val_free failed\n");
         status = status ? status : VAL_ERROR_POINT(3);
     }
 
@@ -91,7 +91,7 @@ static uint32_t mem_donate_data_access_perm_check(void *tx_buf, ffa_endpoint_id_
     const uint32_t constituents_count = sizeof(constituents) /
                 sizeof(struct ffa_memory_region_constituent);
 
-    pages = (uint8_t *)val_memory_alloc(size);
+    pages = (uint8_t *)val_aligned_alloc(PAGE_SIZE_4K, size);
     if (!pages)
     {
         LOG(ERROR, "Memory allocation failed\n");
@@ -130,15 +130,15 @@ static uint32_t mem_donate_data_access_perm_check(void *tx_buf, ffa_endpoint_id_
 
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
     {
-        LOG(ERROR, "For MEM_DONATE, data access[1:0] perm must be b'00\n");
+        LOG(ERROR, "For MEM_DONATE, data access[1:0] perm must be b'00");
         status = VAL_ERROR_POINT(5);
     }
 
     LOG(DBG, "Mem Donate Access Perm Check Complete\n");
 
-    if (val_memory_free(pages, size))
+    if (val_free(pages))
     {
-        LOG(ERROR, "val_mem_free failed\n");
+        LOG(ERROR, "val_free failed\n");
         status = status ? status : VAL_ERROR_POINT(6);
     }
     return status;
@@ -160,7 +160,7 @@ static uint32_t mem_donate_mem_attribute_check(void *tx_buf, ffa_endpoint_id_t s
     const uint32_t constituents_count = sizeof(constituents) /
                 sizeof(struct ffa_memory_region_constituent);
 
-    pages = (uint8_t *)val_memory_alloc(size);
+    pages = (uint8_t *)val_aligned_alloc(PAGE_SIZE_4K, size);
     if (!pages)
     {
         LOG(ERROR, "Memory allocation failed\n");
@@ -199,15 +199,15 @@ static uint32_t mem_donate_mem_attribute_check(void *tx_buf, ffa_endpoint_id_t s
 
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
     {
-        LOG(ERROR, "For MEM_DONATE, memory type[5:4] must be b'00\n");
+        LOG(ERROR, "For MEM_DONATE, memory type[5:4] must be b'00");
         status = VAL_ERROR_POINT(8);
     }
 
     LOG(DBG, "Mem Donate Attribute Error Check Complete\n");
 
-    if (val_memory_free(pages, size))
+    if (val_free(pages))
     {
-        LOG(ERROR, "val_mem_free failed\n");
+        LOG(ERROR, "val_free failed\n");
         status = status ? status : VAL_ERROR_POINT(9);
     }
     return status;
@@ -288,7 +288,7 @@ static uint32_t mem_donate_instruction_access_perm_check(void *tx_buf, ffa_endpo
     const uint32_t constituents_count = sizeof(constituents) /
                 sizeof(struct ffa_memory_region_constituent);
 
-    pages = (uint8_t *)val_memory_alloc(size);
+    pages = (uint8_t *)val_aligned_alloc(PAGE_SIZE_4K, size);
     if (!pages)
     {
         LOG(ERROR, "Memory allocation failed\n");
@@ -327,15 +327,15 @@ static uint32_t mem_donate_instruction_access_perm_check(void *tx_buf, ffa_endpo
 
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
     {
-        LOG(ERROR, "For MEM_DONATE, instruction access[3:2] perm must be b'00\n");
+        LOG(ERROR, "For MEM_DONATE, instruction access[3:2] perm must be b'00");
         status = VAL_ERROR_POINT(12);
     }
 
     LOG(DBG, "Mem Donate Instruction Access Check Complete\n");
 
-    if (val_memory_free(pages, size))
+    if (val_free(pages))
     {
-        LOG(ERROR, "val_mem_free failed\n");
+        LOG(ERROR, "val_free failed\n");
         status = status ? status : VAL_ERROR_POINT(13);
     }
 
@@ -360,7 +360,7 @@ static uint32_t mem_donate_invalid_ep_count_check(void *tx_buf, ffa_endpoint_id_
     const uint32_t constituents_count = sizeof(constituents) /
                 sizeof(struct ffa_memory_region_constituent);
 
-    pages = (uint8_t *)val_memory_alloc(size);
+    pages = (uint8_t *)val_aligned_alloc(PAGE_SIZE_4K, size);
     if (!pages)
     {
         LOG(ERROR, "Memory allocation failed\n");
@@ -407,9 +407,9 @@ static uint32_t mem_donate_invalid_ep_count_check(void *tx_buf, ffa_endpoint_id_
 
     LOG(DBG, "Mem Donate Invalid EP Check Complete\n");
 
-    if (val_memory_free(pages, size))
+    if (val_free(pages))
     {
-        LOG(ERROR, "val_mem_free failed\n");
+        LOG(ERROR, "val_free failed\n");
         status = status ? status : VAL_ERROR_POINT(16);
     }
 
@@ -434,7 +434,7 @@ static uint32_t mem_donate_invalid_ep_desc_offset_check(void *tx_buf, ffa_endpoi
     const uint32_t constituents_count = sizeof(constituents) /
                 sizeof(struct ffa_memory_region_constituent);
 
-    pages = (uint8_t *)val_memory_alloc(size);
+    pages = (uint8_t *)val_aligned_alloc(PAGE_SIZE_4K, size);
     if (!pages)
     {
         LOG(ERROR, "Memory allocation failed\n");
@@ -481,9 +481,9 @@ static uint32_t mem_donate_invalid_ep_desc_offset_check(void *tx_buf, ffa_endpoi
 
     LOG(DBG, "Mem Donate EP Desc Offset Check Complete\n");
 
-    if (val_memory_free(pages, size))
+    if (val_free(pages))
     {
-        LOG(ERROR, "val_mem_free failed\n");
+        LOG(ERROR, "val_free failed\n");
         status = status ? status : VAL_ERROR_POINT(19);
     }
 
@@ -498,8 +498,8 @@ static uint32_t ffa_mem_donate_helper(uint32_t test_run_data, uint32_t fid)
     mb_buf_t mb;
     uint64_t size = 0x1000;
 
-    mb.send = val_memory_alloc(size);
-    mb.recv = val_memory_alloc(size);
+    mb.send = val_aligned_alloc(PAGE_SIZE_4K, size);
+    mb.recv = val_aligned_alloc(PAGE_SIZE_4K, size);
     if (mb.send == NULL || mb.recv == NULL)
     {
         LOG(ERROR, "Failed to allocate RxTx buffer\n");
@@ -563,9 +563,9 @@ rxtx_unmap:
     }
 
 free_memory:
-    if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
+    if (val_free(mb.recv) || val_free(mb.send))
     {
-        LOG(ERROR, "val_mem_free failed\n");
+        LOG(ERROR, "val_free failed\n");
         status = status ? status : VAL_ERROR_POINT(23);
     }
 

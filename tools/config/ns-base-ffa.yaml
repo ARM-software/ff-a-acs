@@ -1,0 +1,72 @@
+# Copyright (c) 2024, Arm Limited.
+# SPDX-License-Identifier: MIT
+
+%YAML 1.2
+---
+description: >-
+  Simple non-secure world environment based on TF-A running on FVP.
+  Allows easy specification of the kernel image and command line,
+  and rootfs at runtime (see rtvars).
+
+  An extra rtvar is added (DTB) which allows specification of a custom device
+  tree. By default (if not overriding the rtvar), the upstream kernel device
+  tree is used. DT is enabled by default.
+
+  By default (if not overriding the rtvars) a sensible command line is used that
+  will set up the console for logging and attempt to mount the rootfs image from
+  the FVP's virtio block device. However the default rootfs image is empty, so
+  the kernel will panic when attempting to mount; the user must supply a rootfs
+  if it is required that the kernel completes its boot. No default kernel image
+  is supplied and the config will refuse to run unless it is explicitly
+  specified.
+
+  When booting with device tree, a directory can optionally be shared from the
+  host system into the Linux environment running in the FVP. To do so, set the
+  SHARE rtvar to the desired directory, then mount the share inside the FVP with
+  the following (or automate it in fstab):
+
+  .. code-block:: shell
+    # mkdir /share
+    # mount -t 9p -o trans=virtio,version=9p2000.L FM /share
+
+layers:
+  - FVP_Base_RevC-2xAEMvA-base.yaml
+  - tfa-base.yaml
+
+# TODO: merge into tfa-base.yaml
+build:
+  tfa:
+    params:
+      PLAT: ${btvar:TF_PLAT}
+      DEBUG: $$DEBUG
+      V: $$DEBUG
+      BL33: ${artifact:FFA_ACS_VM1}
+    prebuild:
+      - test ${btvar:TF_BUILD} = debug && DEBUG=1 || DEBUG=0
+    artifacts:
+      FIP:  ${param:builddir}/${btvar:TF_PLAT}/${btvar:TF_BUILD}/fip.bin
+      BL1:  ${param:builddir}/${btvar:TF_PLAT}/${btvar:TF_BUILD}/bl1.bin
+      BL2:  ${param:builddir}/${btvar:TF_PLAT}/${btvar:TF_BUILD}/bl2.bin
+      BL31: ${param:builddir}/${btvar:TF_PLAT}/${btvar:TF_BUILD}/bl31.bin
+
+buildex:
+  btvars:
+    TF_PLAT:
+      type: string
+      value: fvp
+    TF_BUILD:
+      type: string
+      value: release
+
+run:
+  rtvars:
+    BL1:
+      type: path
+      value: ${artifact:BL1}
+    FIP:
+      type: path
+      value: ${artifact:FIP}
+
+  params:
+    -C bp.secureflashloader.fname: ${rtvar:BL1}
+    -C bp.flashloader0.fname: ${rtvar:FIP}

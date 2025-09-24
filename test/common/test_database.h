@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -260,6 +260,7 @@ DECLARE_TEST_FN(notification_set);
 DECLARE_TEST_FN(notification_info_get);
 DECLARE_TEST_FN(sp_signals_vm_sp);
 DECLARE_TEST_FN(notification_comp);
+DECLARE_TEST_FN(sp_signals_vm);
 #endif
 
 #if (SUITE == all || SUITE == interrupts)

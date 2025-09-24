@@ -26,8 +26,8 @@ static uint32_t donate_input_error_checks4_helper(uint32_t test_run_data, uint32
     const uint32_t constituents_count = sizeof(constituents) /
                 sizeof(struct ffa_memory_region_constituent);
 
-    mb.send = val_memory_alloc(size);
-    mb.recv = val_memory_alloc(size);
+    mb.send = val_aligned_alloc(PAGE_SIZE_4K, size);
+    mb.recv = val_aligned_alloc(PAGE_SIZE_4K, size);
     if (mb.send == NULL || mb.recv == NULL)
     {
         LOG(ERROR, "Failed to allocate RxTx buffer\n");
@@ -119,7 +119,7 @@ static uint32_t donate_input_error_checks4_helper(uint32_t test_run_data, uint32
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_DENIED))
     {
         LOG(ERROR, "Mem Reclaim must return DENIED if zero memory before reclaim flag is not set\
-                                            for owner read only access err %x", payload.arg2);
+                                            for owner read only access err %x\n", payload.arg2);
         status = VAL_ERROR_POINT(5);
         goto rxtx_unmap;
     }
@@ -147,7 +147,7 @@ rxtx_unmap:
     }
 
 free_memory:
-    if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
+    if (val_free(mb.recv) || val_free(mb.send))
     {
         LOG(ERROR, "free_rxtx_buffers failed\n");
         status = status ? status : VAL_ERROR_POINT(8);

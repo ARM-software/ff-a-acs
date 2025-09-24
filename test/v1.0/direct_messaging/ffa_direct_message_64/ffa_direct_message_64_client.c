@@ -25,19 +25,22 @@ uint32_t ffa_direct_message_64_client(uint32_t test_run_data)
         goto exit;
     }
 
-    req_data_64.arg1 = ((uint32_t)val_get_endpoint_id(client_logical_id) << 16) |
+    val_memset(&payload, 0, sizeof(ffa_args_t));
+    val_memcpy(&payload, &req_data_64, sizeof(ffa_args_t));
+
+    payload.arg1 = ((uint32_t)val_get_endpoint_id(client_logical_id) << 16) |
                             val_get_endpoint_id(server_logical_id);
-    val_ffa_msg_send_direct_req_64(&req_data_64);
-    if (req_data_64.fid != FFA_MSG_SEND_DIRECT_RESP_32)
+    val_ffa_msg_send_direct_req_64(&payload);
+    if (payload.fid != FFA_MSG_SEND_DIRECT_RESP_32)
     {
 #if (PLATFORM_FFA_V >= FFA_V_1_1)
-        if  (req_data_64.fid == FFA_YIELD_32)
+        if  (payload.fid == FFA_YIELD_32)
         {
-            req_data_64.arg1 = ((uint32_t)val_get_endpoint_id(server_logical_id) << 16);
-            val_ffa_run(&req_data_64);
-            if (req_data_64.fid != FFA_MSG_SEND_DIRECT_RESP_64)
+            payload.arg1 = ((uint32_t)val_get_endpoint_id(server_logical_id) << 16);
+            val_ffa_run(&payload);
+            if (payload.fid != FFA_MSG_SEND_DIRECT_RESP_64)
             {
-                LOG(ERROR, "FFA_RUN Failed err %x\n", req_data_64.fid);
+                LOG(ERROR, "FFA_RUN Failed err %x\n", payload.fid);
                 status = VAL_ERROR_POINT(2);
                 goto exit;
             }
@@ -46,7 +49,7 @@ uint32_t ffa_direct_message_64_client(uint32_t test_run_data)
 #endif
         {
             LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x\n",
-            req_data_64.fid, req_data_64.arg2);
+            payload.fid, payload.arg2);
             status = VAL_ERROR_POINT(3);
             goto exit;
         }
@@ -54,18 +57,18 @@ uint32_t ffa_direct_message_64_client(uint32_t test_run_data)
     }
 
     LOG(DBG, "req data arg3 %x arg4 %x arg5 %x arg 6 %x arg7 %x\n",
-        req_data_64.arg3, req_data_64.arg4, req_data_64.arg5, req_data_64.arg6, req_data_64.arg7);
+        payload.arg3, payload.arg4, payload.arg5, payload.arg6, payload.arg7);
 
     LOG(DBG, "expected resp arg3 %x arg4 %x arg5 %x arg 6 %x arg7 %x\n",
         expected_resp_data_64.arg3, expected_resp_data_64.arg4, expected_resp_data_64.arg5,
         expected_resp_data_64.arg6, expected_resp_data_64.arg7);
 
     /* Direct respond received, Compare the respond req_data_64 */
-    if (req_data_64.arg3 != expected_resp_data_64.arg3 ||
-        req_data_64.arg4 != expected_resp_data_64.arg4 ||
-        req_data_64.arg5 != expected_resp_data_64.arg5 ||
-        req_data_64.arg6 != expected_resp_data_64.arg6 ||
-        req_data_64.arg7 != expected_resp_data_64.arg7)
+    if (payload.arg3 != expected_resp_data_64.arg3 ||
+        payload.arg4 != expected_resp_data_64.arg4 ||
+        payload.arg5 != expected_resp_data_64.arg5 ||
+        payload.arg6 != expected_resp_data_64.arg6 ||
+        payload.arg7 != expected_resp_data_64.arg7)
     {
         LOG(ERROR, "Direct response data mismatched\n");
         status = VAL_ERROR_POINT(4);

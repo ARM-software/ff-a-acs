@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -48,11 +48,7 @@ void val_secure_intr_disable(uint32_t int_id, enum interrupt_pin pin)
 
 uint64_t val_sleep(uint32_t ms)
 {
-#ifndef TARGET_LINUX
     return pal_sleep(ms);
-#else
-    return 0;
-#endif
 }
 
 uint32_t val_interrupt_get(void)
@@ -69,6 +65,7 @@ void val_sp_sleep(uint64_t ms)
 #ifndef TARGET_LINUX
     sp_sleep(ms);
 #else
+    (void)ms;
     return;
 #endif
 }

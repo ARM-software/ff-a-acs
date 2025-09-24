@@ -23,11 +23,11 @@ extern const uint32_t  total_tests;
 static uint32_t validate_test_config(uint32_t client_logical_id __UNUSED,
                                      uint32_t server_logical_id __UNUSED)
 {
-#if (PLATFORM_NS_HYPERVISOR_PRESENT == 0)
+#if (PLATFORM_NS_HYP_MULTI_VM == 0)
     if (client_logical_id == VM2 || client_logical_id == VM3
         || server_logical_id == VM2 || server_logical_id == VM3)
     {
-        LOG(TEST, "No support for ns-hyp, skipping the check for client %s server %s \n",
+        LOG(INFO, "No support for multiple VM in ns-hyp, skipping check for client %s server %s\n",
             val_get_endpoint_name(client_logical_id), val_get_endpoint_name(server_logical_id));
         return VAL_SKIP_CHECK;
     }
@@ -40,7 +40,7 @@ static uint32_t validate_test_config(uint32_t client_logical_id __UNUSED,
         || client_logical_id == SP3 || server_logical_id == SP3
         || client_logical_id == SP4 || server_logical_id == SP4)
     {
-        LOG(TEST, "No support for FFA S-ENDPOINT, skipping the check for client %s server %s \n",
+        LOG(INFO, "No support for FFA S-ENDPOINT, skipping the check for client %s server %s \n",
             val_get_endpoint_name(client_logical_id), val_get_endpoint_name(server_logical_id));
         return VAL_SKIP_CHECK;
     }
@@ -51,7 +51,7 @@ static uint32_t validate_test_config(uint32_t client_logical_id __UNUSED,
         || server_logical_id == SP2 || server_logical_id == SP3
         || client_logical_id == SP4 || server_logical_id == SP4)
     {
-        LOG(TEST, "Both SP & SPMC at EL1 config isn't supported, skipping the check\n");
+        LOG(INFO, "Both SP & SPMC at EL1 config isn't supported, skipping the check\n");
         return VAL_SKIP_CHECK;
     }
 #endif
@@ -59,7 +59,7 @@ static uint32_t validate_test_config(uint32_t client_logical_id __UNUSED,
 #if (PLATFORM_SP_SEND_DIRECT_REQ == 0)
     if (client_logical_id <= SP4 && server_logical_id != NO_SERVER_EP)
     {
-        LOG(TEST, "SP doesn't support DIRECT_REQ, skipping the check\n");
+        LOG(INFO, "SP doesn't support DIRECT_REQ, skipping the check\n");
         return VAL_SKIP_CHECK;
     }
 #endif
@@ -67,11 +67,12 @@ static uint32_t validate_test_config(uint32_t client_logical_id __UNUSED,
 #if (PLATFORM_VM_SEND_DIRECT_RESP == 0)
     if (server_logical_id > SP4 && server_logical_id != NO_SERVER_EP)
     {
-        LOG(TEST, "NS-ENDPOINT doesn't support DIRECT_RESP,skipping the check\n");
+        LOG(INFO, "NS-ENDPOINT doesn't support DIRECT_RESP,skipping the check\n");
         return VAL_SKIP_CHECK;
     }
 #endif
-    return VAL_SUCCESS;
+
+    return val_check_ep_compile_status(client_logical_id, server_logical_id);
 }
 
 /**
@@ -141,6 +142,7 @@ void val_run_test_suite(void)
      */
     if (my_logical_id == VM1)
     {
+        val_ep_info_relayer_sync();
         val_test_dispatch();
     }
     else
@@ -180,6 +182,8 @@ void val_test_dispatch(void)
     uint32_t          test_result, test_num, suite_num, i, reboot_run = 0;
     uint32_t          test_num_start = 0, test_num_end = 0;
     test_entry_fptr_t test_entry_fn_ptr;
+
+    val_send_sync_ep_info();
 
     if (val_get_last_run_test_info(&test_info))
     {
@@ -347,7 +351,8 @@ void val_test_dispatch(void)
 void val_wait_for_test_fn_req(void)
 {
     ffa_args_t        payload;
-    uint32_t          test_run_data;
+    uint32_t          test_run_data = 0;
+    uint32_t          service_data = 0;
     uint32_t          status = VAL_ERROR;
     ffa_endpoint_id_t target_id, my_id;
     uint32_t          buffer;
@@ -370,8 +375,9 @@ void val_wait_for_test_fn_req(void)
         target_id = SENDER_ID(payload.arg1);
         my_id = RECEIVER_ID(payload.arg1);
         test_run_data = (uint32_t)payload.arg3;
+        service_data = (uint32_t)payload.arg3 & 0xFFFF;
 
-        switch (test_run_data)
+        switch (service_data)
         {
             case NVM_WRITE_SERVICE:
             buffer = (uint32_t) payload.arg6;
@@ -410,6 +416,13 @@ void val_wait_for_test_fn_req(void)
             {
                VAL_PANIC("Watchdog disable failed");
             }
+            val_memset(&payload, 0, sizeof(ffa_args_t));
+            payload.arg1 = ((uint32_t)my_id << 16) | target_id;
+            val_ffa_msg_send_direct_resp_32(&payload);
+            break;
+
+            case EP_INFO_SYNC_SERVICE:
+            val_sync_ep_info_service(&payload);
             val_memset(&payload, 0, sizeof(ffa_args_t));
             payload.arg1 = ((uint32_t)my_id << 16) | target_id;
             val_ffa_msg_send_direct_resp_32(&payload);
@@ -503,7 +516,8 @@ uint32_t val_execute_test(
         }
         else
         {
-            LOG(ERROR, "Invalid fid received, fid=0x%x\n", payload.fid);
+            LOG(ERROR, "Invalid fid received, fid=0x%x arg1=0x%x arg2=0x%x\n", \
+                payload.fid,  payload.arg1, payload.arg2);
             status = VAL_ERROR;
             goto exit;
         }
@@ -590,7 +604,6 @@ ffa_args_t val_resp_client_fn_direct(uint32_t test_run_data,
     payload.arg5 = arg5;
     payload.arg6 = arg6;
     payload.arg7 = arg7;
-
     val_ffa_msg_send_direct_resp_32(&payload);
     return payload;
 }

@@ -6,10 +6,22 @@
 #-------------------------------------------------------------------------------
 
 project(vm1 LANGUAGES C ASM)
-
+if(${TARGET_LINUX} STREQUAL 1)
+set(EXE_NAME "acs-linux-app")
+else()
 set(EXE_NAME "${PROJECT_NAME}")
+endif()
 
 add_definitions(-DVM1_COMPILE)
+
+if(${TARGET_LINUX} STREQUAL 1)
+add_definitions(-DTARGET_LINUX=${TARGET_LINUX})
+add_definitions(-DTARGET_LINUX_ENV=1)
+set(VM_TARGET_LINUX_APP 1)
+set(SOURCES
+    ${ROOT_DIR}/linux-acs/ffa-acs-drv/main.c
+)
+endif()
 
 set(PAL_LIB ${EXE_NAME}_pal_lib)
 set(COMMON_VAL_LIB ${EXE_NAME}_common_val_lib)
@@ -22,9 +34,48 @@ if(DEFINED VM1_FFA_V)
     message(STATUS "[ACS] : VM1 PLATFORM_FFA_V is set to ${VM1_FFA_V}")
 endif()
 
+if(${TARGET_LINUX} STREQUAL 1)
+include(${ROOT_DIR}/linux-acs/ffa-acs-drv/pal.cmake)
+else()
 include(${ROOT_DIR}/platform/pal_baremetal/${TARGET}/pal.cmake)
+endif()
+
 include(${COMMON_VAL_PATH}/common_val.cmake)
 include(${ROOT_DIR}/val/val.cmake)
 include(${ROOT_DIR}/test/test.cmake)
 
+if(${TARGET_LINUX} STREQUAL 1)
+    set(CMAKE_EXE_LINKER_FLAGS "-static -Wl,--no-dynamic-linker")
+
+    # Add executable
+    add_executable(${EXE_NAME} ${SOURCES})
+
+    target_include_directories(${EXE_NAME} PUBLIC
+        ${CMAKE_CURRENT_BINARY_DIR}
+        ${ROOT_DIR}/val/inc/
+        ${ROOT_DIR}/linux-acs/ffa-acs-drv/inc/
+        ${ROOT_DIR}/platform/common/inc/
+        ${COMMON_VAL_PATH}/inc/
+    )
+
+    # Link dependency
+    target_link_libraries(${TEST_LIB} PRIVATE ${VAL_LIB} ${COMMON_VAL_LIB} ${PAL_LIB} )
+
+    # Link libraries
+    target_link_libraries(${EXE_NAME} PRIVATE ${VAL_LIB} ${TEST_LIB})
+
+    # Create the dump info
+    add_custom_command(OUTPUT ${EXE_NAME}.dump
+        COMMAND ${GNUARM_OBJDUMP} ${GNUARM_OBJDUMP_FLAGS} ${EXE_NAME}.elf > ${EXE_NAME}.dump
+        DEPENDS ${EXE_NAME})
+
+    # Copy the binary to common output dir
+    add_custom_command(OUTPUT ${EXE_NAME}_copy_elf COMMAND ${CMAKE_COMMAND} -E copy
+        ${CMAKE_CURRENT_BINARY_DIR}/${EXE_NAME}.elf ${BUILD}/output/ DEPENDS ${EXE_NAME})
+
+    # Group into a single custom target
+    add_custom_target(process_elf ALL DEPENDS ${EXE_NAME}.dump
+        ${EXE_NAME}_copy_elf ${EXE_NAME}.elf)
+else()
 create_executable(${EXE_NAME})
+endif()

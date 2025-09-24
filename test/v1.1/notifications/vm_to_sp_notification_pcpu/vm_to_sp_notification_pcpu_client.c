@@ -7,7 +7,7 @@
 
 #include "test_database.h"
 
-#ifndef TARGET_LINUX
+#if (PLATFORM_NS_HYPERVISOR_PRESENT == 0)
 static volatile uint32_t sri_flag;
 static int sri_irq_handler(void)
 {
@@ -25,9 +25,9 @@ uint32_t vm_to_sp_notification_pcpu_client(uint32_t test_run_data)
     uint32_t server_logical_id = GET_SERVER_LOGIC_ID(test_run_data);
     ffa_endpoint_id_t sender = val_get_endpoint_id(client_logical_id);
     ffa_endpoint_id_t recipient = val_get_endpoint_id(server_logical_id);
+#if (PLATFORM_NS_HYPERVISOR_PRESENT == 0)
     uint32_t id_list_count = 0;
     uint32_t expected_id_list_count = 0x1;
-#ifndef TARGET_LINUX
     uint32_t sri_id;
 #endif
     uint64_t notifications_bitmap = FFA_NOTIFICATION(12);
@@ -42,7 +42,7 @@ uint32_t vm_to_sp_notification_pcpu_client(uint32_t test_run_data)
         goto exit;
     }
 
-#ifndef TARGET_LINUX
+#if (PLATFORM_NS_HYPERVISOR_PRESENT == 0)
     sri_id = ffa_feature_intid(payload);
     if (val_irq_register_handler(sri_id, sri_irq_handler))
     {
@@ -79,7 +79,7 @@ uint32_t vm_to_sp_notification_pcpu_client(uint32_t test_run_data)
         goto bitmap_destroy;
     }
 
-#ifndef TARGET_LINUX
+#if (PLATFORM_NS_HYPERVISOR_PRESENT == 0)
     val_irq_enable(sri_id, 0xA);
 #endif
     /* Signal per-cpu notification */
@@ -96,7 +96,7 @@ uint32_t vm_to_sp_notification_pcpu_client(uint32_t test_run_data)
         goto bitmap_destroy;
     }
 
-#ifndef TARGET_LINUX
+#if (PLATFORM_NS_HYPERVISOR_PRESENT == 0)
     if (sri_flag == 1) {
         LOG(DBG, "SRI inerrupt handled\n");
     } else {
@@ -105,7 +105,6 @@ uint32_t vm_to_sp_notification_pcpu_client(uint32_t test_run_data)
         goto bitmap_destroy;
     }
     val_irq_disable(sri_id);
-#endif
 
     val_memset(&payload, 0, sizeof(ffa_args_t));
     val_ffa_notification_info_get_64(&payload);
@@ -127,6 +126,7 @@ uint32_t vm_to_sp_notification_pcpu_client(uint32_t test_run_data)
         status = VAL_ERROR_POINT(8);
         goto bitmap_destroy;
     }
+#endif
 
     /* Schedule the receiver to handle pending notification */
     val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -148,9 +148,7 @@ bitmap_destroy:
         LOG(ERROR, "Bitmap destroy failed err %x\n", payload.arg2);
         status = status ? status : VAL_ERROR_POINT(10);
     }
-#endif
 
-#ifndef TARGET_LINUX
     if (val_irq_unregister_handler(sri_id))
     {
         LOG(ERROR, "IRQ handler unregister failed\n");

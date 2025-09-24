@@ -23,7 +23,7 @@ static uint32_t mem_share_invalid_epid_check(void *tx_buf,
     const uint32_t constituents_count = sizeof(constituents) /
                 sizeof(struct ffa_memory_region_constituent);
 
-    pages = (uint8_t *)val_memory_alloc(size);
+    pages = (uint8_t *)val_aligned_alloc(PAGE_SIZE_4K, size);
     if (!pages)
     {
         LOG(ERROR, "Memory allocation failed\n");
@@ -70,9 +70,9 @@ static uint32_t mem_share_invalid_epid_check(void *tx_buf,
         status = VAL_ERROR_POINT(2);
     }
 
-    if (val_memory_free(pages, size))
+    if (val_free(pages))
     {
-        LOG(ERROR, "val_mem_free failed\n");
+        LOG(ERROR, "val_free failed\n");
         status = status ? status : VAL_ERROR_POINT(3);
     }
 
@@ -91,7 +91,7 @@ static uint32_t mem_share_zero_flag_check(void *tx_buf, ffa_endpoint_id_t sender
     const uint32_t constituents_count = sizeof(constituents) /
                 sizeof(struct ffa_memory_region_constituent);
 
-    pages = (uint8_t *)val_memory_alloc(size);
+    pages = (uint8_t *)val_aligned_alloc(PAGE_SIZE_4K, size);
     if (!pages)
     {
         LOG(ERROR, "Memory allocation failed\n");
@@ -141,9 +141,9 @@ static uint32_t mem_share_zero_flag_check(void *tx_buf, ffa_endpoint_id_t sender
     }
     LOG(DBG, "Mem Share Check for Zero Flag Complete\n");
 
-    if (val_memory_free(pages, size))
+    if (val_free(pages))
     {
-        LOG(ERROR, "val_mem_free failed\n");
+        LOG(ERROR, "val_free failed\n");
         status = status ? status : VAL_ERROR_POINT(6);
     }
 
@@ -162,7 +162,7 @@ static uint32_t mem_share_inst_perm_check(void *tx_buf, ffa_endpoint_id_t sender
     const uint32_t constituents_count = sizeof(constituents) /
                 sizeof(struct ffa_memory_region_constituent);
 
-    pages = (uint8_t *)val_memory_alloc(size);
+    pages = (uint8_t *)val_aligned_alloc(PAGE_SIZE_4K, size);
     if (!pages)
     {
         LOG(ERROR, "Memory allocation failed\n");
@@ -211,9 +211,9 @@ static uint32_t mem_share_inst_perm_check(void *tx_buf, ffa_endpoint_id_t sender
     }
     LOG(DBG, "Mem Share Check for Inst Perm Complete\n");
 
-    if (val_memory_free(pages, size))
+    if (val_free(pages))
     {
-        LOG(ERROR, "val_mem_free failed\n");
+        LOG(ERROR, "val_free failed\n");
         status = status ? status : VAL_ERROR_POINT(9);
     }
 
@@ -287,8 +287,8 @@ static uint32_t ffa_mem_share_helper(uint32_t test_run_data, uint32_t fid)
     mb_buf_t mb;
     uint64_t size = 0x1000;
 
-    mb.send = val_memory_alloc(size);
-    mb.recv = val_memory_alloc(size);
+    mb.send = val_aligned_alloc(PAGE_SIZE_4K, size);
+    mb.recv = val_aligned_alloc(PAGE_SIZE_4K, size);
     if (mb.send == NULL || mb.recv == NULL)
     {
         LOG(ERROR, "Failed to allocate RxTx buffer\n");
@@ -333,9 +333,9 @@ rxtx_unmap:
     }
 
 free_memory:
-    if (val_memory_free(mb.recv, size) || val_memory_free(mb.send, size))
+    if (val_free(mb.recv) || val_free(mb.send))
     {
-        LOG(ERROR, "val_mem_free failed\n");
+        LOG(ERROR, "val_free failed\n");
         status = status ? status : VAL_ERROR_POINT(14);
     }
 

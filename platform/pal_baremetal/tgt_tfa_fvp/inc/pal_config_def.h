@@ -26,8 +26,14 @@
  * granule used. The image size requirement could be
  * more in the case of 16KB or 64KB translation granule.
  */
+
 // Common macro for all test SPs image entry point offset
+#if (PLATFORM_SPMC_EL == 2)
 #define PLATFORM_SP_IMAGE_OFFSET 0x4000
+#else
+#define PLATFORM_SP_IMAGE_OFFSET 0x0
+#endif
+
 // Common macro for all test VMs image entry point offset
 #define PLATFORM_VM_IMAGE_OFFSET 0x0
 
@@ -36,6 +42,8 @@
 #define PAGE_SIZE_4K        0x1000
 #define PAGE_SIZE_16K       (4 * 0x1000)
 #define PAGE_SIZE_64K       (16 * 0x1000)
+
+#define PLATFORM_HEAP_BUF_SIZE 512*1024
 
 /*
  * Retrieving of memory region by specifying address ranges.
@@ -63,7 +71,12 @@
  */
 
 /* Non-secure UART assigned to VM1 - PL011_UART2_BASE */
+#ifdef XEN_SUPPORT
+#define PLATFORM_NS_UART_BASE    0x22000000
+#else
 #define PLATFORM_NS_UART_BASE    0x1c0b0000
+#endif
+
 #define PLATFORM_NS_UART_SIZE    0x10000
 
 /* Secure UART assigned to SP1 - PL011_UART2_BASE */
@@ -119,6 +132,15 @@
 /*******************************************************************************
  * GIC-400 & interrupt handling related constants
  ******************************************************************************/
+#if defined(VM1_COMPILE) && defined(XEN_SUPPORT)
+/* Xen guest GIC memory map */
+#define GICD_BASE       0x03001000
+#define GICR_BASE       0x03020000
+#define GICC_BASE       0x03002000
+#define GICD_SIZE       0x10000
+#define GICR_SIZE       0x100000
+#define GICC_SIZE       0x2000
+#else
 /* Base FVP compatible GIC memory map */
 #define GICD_BASE       0x2f000000
 #define GICR_BASE       0x2f100000
@@ -126,6 +148,7 @@
 #define GICD_SIZE       0x10000
 #define GICR_SIZE       0x100000
 #define GICC_SIZE       0x2000
+#endif
 
 /* Non-secure EL1 physical timer interrupt */
 #define IRQ_PHY_TIMER_EL1           30

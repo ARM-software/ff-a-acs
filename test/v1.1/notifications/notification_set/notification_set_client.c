@@ -22,9 +22,11 @@ uint32_t notification_set_client(uint32_t test_run_data)
     uint64_t notifications_bm_invalid = FFA_NOTIFICATION(16);
     ffa_endpoint_id_t receiver_vcpuid = 0x2;
 
+
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 = sender;
     payload.arg2 = 1;
+#if (PLATFORM_NS_HYPERVISOR_PRESENT == 0)
     val_ffa_notification_bitmap_create(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
@@ -32,6 +34,7 @@ uint32_t notification_set_client(uint32_t test_run_data)
         status = VAL_ERROR_POINT(1);
         goto exit;
     }
+#endif
 
     val_select_server_fn_direct(test_run_data, 0, 0, 0, 0);
 
@@ -134,6 +137,7 @@ uint32_t notification_set_client(uint32_t test_run_data)
 bitmap_destroy:
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 = sender;
+#if (PLATFORM_NS_HYPERVISOR_PRESENT == 0)
     val_ffa_notification_bitmap_destroy(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
@@ -142,6 +146,7 @@ bitmap_destroy:
     }
 
 exit:
+#endif
     payload = val_select_server_fn_direct(test_run_data, 0, 0, 0, 0);
 
     return status ? status : (uint32_t)payload.arg3;

@@ -21,10 +21,19 @@
 #endif
 
 /* Macro to print the message and control the verbosity */
-#define PAL_LOG(fmt, x, y)                                                                    \
-    do {                                                                                      \
-        PRINT_VM_ID();                                                                        \
-        pal_printf(fmt, x, y);                                                                \
-    } while (0);
+#if (TARGET_LINUX == 1) && defined(VM1_COMPILE)
+#define PAL_LOG(fmt, ...)                                                      \
+    do {                                                                                  \
+        PRINT_VM_ID();                                                                \
+        pal_printf(fmt, ##__VA_ARGS__);                                    \
+    } while (0)
+
+#else
+#define PAL_LOG(fmt, x, y)                                                                \
+    do {                                                                                  \
+        PRINT_VM_ID();                                                                    \
+        pal_printf(fmt, x, y);                                                            \
+    } while (0)
 
 #endif
+#endif/* _PAL_LOG_H_ */

@@ -11,6 +11,10 @@ set(EXE_NAME "${PROJECT_NAME}")
 
 add_definitions(-DSP1_COMPILE)
 
+if(${TARGET_LINUX} STREQUAL 1)
+add_definitions(-DTARGET_LINUX_ENV=1)
+endif()
+
 set(VAL_LIB ${EXE_NAME}_val_lib)
 set(PAL_LIB ${EXE_NAME}_pal_lib)
 set(COMMON_VAL_LIB ${EXE_NAME}_common_val_lib)
