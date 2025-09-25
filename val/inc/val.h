@@ -9,11 +9,8 @@
 #define _VAL_H_
 
 #include "pal_interfaces.h"
-#ifndef TARGET_LINUX
 #include "pal_spm_helpers.h"
-#endif
 #include "val_def.h"
-#include "val_common.h"
 #include "val_log.h"
 #include "val_common_framework.h"
 
@@ -29,6 +26,7 @@
 #define NVM_READ_SERVICE   0xFFBB
 #define WD_ENABLE_SERVICE  0xFFCC
 #define WD_DISABLE_SERVICE 0xFFDD
+#define EP_INFO_SYNC_SERVICE 0xFFEE
 
 #define TEST_PASS_WITH_SKIP        0x10
 

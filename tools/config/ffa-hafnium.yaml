@@ -1,0 +1,37 @@
+# Copyright (c) 2024, Arm Limited.
+# SPDX-License-Identifier: MIT
+
+%YAML 1.2
+---
+description: >-
+  Build Hafnium on top of TF-A.
+  TODO: merge into hafnium-base.yaml, given the latter already has TF-A params.
+
+layers:
+  - arch/v8.5.yaml
+  - hafnium-base.yaml
+
+build:
+  hafnium:
+    artifacts:
+      # Debugging symbols
+      HAFNIUM_ELF: ${param:builddir}/secure_aem_v8a_fvp_vhe_clang/hafnium.elf
+
+  tfa:
+    params:
+      SPD: spmd
+      SPMC_AT_EL3: 0
+      SPMD_SPM_AT_SEL2: 1
+      BL32: ${artifact:HAFNIUM}
+      SP_LAYOUT_FILE: ${btvar:TFA_SP_LAYOUT}
+    prebuild:
+      - test "${btvar:FFA_SPMC_AT_EL}" = 2
+
+buildex:
+  btvars:
+    FFA_SPMC_AT_EL:
+      type: string
+      value: '2'
+    TFA_SP_LAYOUT:
+      type: path
+      value: ''

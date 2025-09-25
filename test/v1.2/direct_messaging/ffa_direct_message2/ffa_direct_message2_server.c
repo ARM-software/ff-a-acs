@@ -144,11 +144,13 @@ uint32_t ffa_direct_message2_server(ffa_args_t args)
     LOG(DBG, "FFA MSG_WAIT Check Complete\n");
 
 exit:
-    resp_data_64.arg1 = ((uint32_t)receiver << 16) | sender;
-    val_ffa_msg_send_direct_resp2_64(&resp_data_64);
-    if (resp_data_64.fid == FFA_ERROR_32)
+    val_memset(&payload, 0, sizeof(ffa_args_t));
+    val_memcpy(&payload, &resp_data_64, sizeof(ffa_args_t));
+    payload.arg1 = ((uint32_t)receiver << 16) | sender;
+    val_ffa_msg_send_direct_resp2_64(&payload);
+    if (payload.fid == FFA_ERROR_32)
     {
-        LOG(ERROR, "Direct response failed err %x\n", resp_data_64.arg2);
+        LOG(ERROR, "Direct response failed err %x\n", payload.arg2);
         status = status ? status : VAL_ERROR_POINT(10);
     }
     (void)req_data_64;

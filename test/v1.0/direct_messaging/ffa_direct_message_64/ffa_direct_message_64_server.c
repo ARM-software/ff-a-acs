@@ -129,8 +129,10 @@ uint32_t ffa_direct_message_64_server(ffa_args_t args)
         goto exit;
     }
 exit:
-    resp_data_64.arg1 = ((uint32_t)receiver << 16) | sender;
-    val_ffa_msg_send_direct_resp_64(&resp_data_64);
+    val_memset(&payload, 0, sizeof(ffa_args_t));
+    val_memcpy(&payload, &resp_data_64, sizeof(ffa_args_t));
+    payload.arg1 = ((uint32_t)receiver << 16) | sender;
+    val_ffa_msg_send_direct_resp_64(&payload);
 
     (void)req_data_64;
     return status;

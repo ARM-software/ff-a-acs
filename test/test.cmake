@@ -30,29 +30,42 @@ file(GLOB TEST_SRC
 )
 endif()
 
-if((${PLATFORM_FFA_V_ALL} EQUAL 1) OR (${PLATFORM_FFA_V_1_2} EQUAL 1))
-    list(APPEND TEST_SRC ${ROOT_DIR}/test/common/test_database_v_1_2.c)
-elseif(${PLATFORM_FFA_V_MULTI} EQUAL 1)
-    list(APPEND TEST_SRC ${ROOT_DIR}/test/common/test_database_v_multi.c)
-elseif(${PLATFORM_FFA_V_1_1} EQUAL 1)
-    list(APPEND TEST_SRC ${ROOT_DIR}/test/common/test_database_v_1_1.c)
-elseif(${PLATFORM_FFA_V_1_0} EQUAL 1)
-    list(APPEND TEST_SRC ${ROOT_DIR}/test/common/test_database_v_1_0.c)
+if(${TARGET_LINUX} STREQUAL 1)
+    list(APPEND TEST_SRC ${ROOT_DIR}/test/common/test_database_v_1_2_linux.c)
+elseif(${XEN_SUPPORT} STREQUAL 1)
+    list(APPEND TEST_SRC ${ROOT_DIR}/test/common/test_database_v_1_2_xen.c)
+else()
+    if((${PLATFORM_FFA_V_ALL} EQUAL 1) OR (${PLATFORM_FFA_V_1_2} EQUAL 1))
+        list(APPEND TEST_SRC ${ROOT_DIR}/test/common/test_database_v_1_2.c)
+    elseif(${PLATFORM_FFA_V_MULTI} EQUAL 1)
+        list(APPEND TEST_SRC ${ROOT_DIR}/test/common/test_database_v_multi.c)
+    elseif(${PLATFORM_FFA_V_1_1} EQUAL 1)
+        list(APPEND TEST_SRC ${ROOT_DIR}/test/common/test_database_v_1_1.c)
+    elseif(${PLATFORM_FFA_V_1_0} EQUAL 1)
+        list(APPEND TEST_SRC ${ROOT_DIR}/test/common/test_database_v_1_0.c)
+    endif()
 endif()
-
 
 # Create TEST library
 add_library(${TEST_LIB} STATIC ${TEST_SRC})
 
-target_include_directories(${TEST_LIB} PRIVATE
+set(MY_INCLUDE_DIRS
     ${CMAKE_CURRENT_BINARY_DIR}
     ${ROOT_DIR}/val/inc/
     ${ROOT_DIR}/platform/common/inc/
-    ${ROOT_DIR}/platform/common/inc/aarch64/
-    ${ROOT_DIR}/platform/pal_baremetal/${TARGET}/inc/
-    ${ROOT_DIR}/platform/driver/inc/
     ${ROOT_DIR}/test/common/
+    ${ROOT_DIR}/platform/pal_baremetal/${TARGET}/inc/
     ${COMMON_VAL_PATH}/inc/
 )
 
+if(DEFINED VM_TARGET_LINUX_APP)
+    list(APPEND MY_INCLUDE_DIRS ${ROOT_DIR}/linux-acs/ffa-acs-drv/inc/)
+else()
+    list(APPEND MY_INCLUDE_DIRS
+        ${ROOT_DIR}/platform/common/inc/aarch64/
+        ${ROOT_DIR}/platform/driver/inc/)
+endif()
+target_include_directories(${TEST_LIB} PRIVATE ${MY_INCLUDE_DIRS})
+
+unset(MY_INCLUDE_DIRS)
 unset(TEST_SRC)

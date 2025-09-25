@@ -37,24 +37,27 @@ uint32_t ffa_direct_message2_client(uint32_t test_run_data)
         goto exit;
     }
 
-    req_data_64.arg1 = ((uint32_t)val_get_endpoint_id(client_logical_id) << 16) |
+    val_memset(&payload, 0, sizeof(ffa_args_t));
+    val_memcpy(&payload, &req_data_64, sizeof(ffa_args_t));
+
+    payload.arg1 = ((uint32_t)val_get_endpoint_id(client_logical_id) << 16) |
                             val_get_endpoint_id(server_logical_id);
-    req_data_64.arg2 = ((uint64_t)info_ptr[server_logical_id].uuid[1] << 32) |
+    payload.arg2 = ((uint64_t)info_ptr[server_logical_id].uuid[1] << 32) |
                        ((uint64_t)info_ptr[server_logical_id].uuid[0] & 0xFFFFFFFF);
-    req_data_64.arg3 = ((uint64_t)info_ptr[server_logical_id].uuid[3] << 32) |
+    payload.arg3 = ((uint64_t)info_ptr[server_logical_id].uuid[3] << 32) |
                        ((uint64_t)info_ptr[server_logical_id].uuid[2] & 0xFFFFFFFF);
 
-    val_ffa_msg_send_direct_req2_64(&req_data_64);
-    if (req_data_64.fid != FFA_MSG_SEND_DIRECT_RESP2_64)
+    val_ffa_msg_send_direct_req2_64(&payload);
+    if (payload.fid != FFA_MSG_SEND_DIRECT_RESP2_64)
     {
-        if  (req_data_64.fid == FFA_YIELD_32)
+        if  (payload.fid == FFA_YIELD_32)
         {
             LOG(DBG, "FFA_YIELD Received\n");
-            req_data_64.arg1 = ((uint32_t)val_get_endpoint_id(server_logical_id) << 16);
-            val_ffa_run((ffa_args_t *)&req_data_64);
-            if (req_data_64.fid != FFA_MSG_SEND_DIRECT_RESP2_64)
+            payload.arg1 = ((uint32_t)val_get_endpoint_id(server_logical_id) << 16);
+            val_ffa_run((ffa_args_t *)&payload);
+            if (payload.fid != FFA_MSG_SEND_DIRECT_RESP2_64)
             {
-                LOG(ERROR, "FFA_RUN Failed err %x\n", req_data_64.fid);
+                LOG(ERROR, "FFA_RUN Failed err %x\n", payload.fid);
                 status = VAL_ERROR_POINT(2);
                 goto exit;
             }
@@ -62,7 +65,7 @@ uint32_t ffa_direct_message2_client(uint32_t test_run_data)
         else
         {
             LOG(ERROR, "Direct request failed, fid=0x%x, err 0x%x\n",
-            req_data_64.fid, req_data_64.arg2);
+            payload.fid, payload.arg2);
             status = VAL_ERROR_POINT(3);
             goto exit;
         }
@@ -70,15 +73,15 @@ uint32_t ffa_direct_message2_client(uint32_t test_run_data)
     }
 
     LOG(DBG, "req data arg3:0x%lx arg4:0x%lx arg5:0x%lx arg6:0x%lx arg7:0x%lx\n",
-        req_data_64.arg3, req_data_64.arg4, req_data_64.arg5, req_data_64.arg6, req_data_64.arg7);
+        payload.arg3, payload.arg4, payload.arg5, payload.arg6, payload.arg7);
 
     LOG(DBG, "req data arg8:0x%lx arg9:0x%lx arg10:0x%lx arg11:0x%lx arg12:0x%lx\n",
-        req_data_64.ext_args.arg8, req_data_64.ext_args.arg9, req_data_64.ext_args.arg10,
-        req_data_64.ext_args.arg11, req_data_64.ext_args.arg12);
+        payload.ext_args.arg8, payload.ext_args.arg9, payload.ext_args.arg10,
+        payload.ext_args.arg11, payload.ext_args.arg12);
 
     LOG(DBG, "req data arg13:0x%lx arg14:0x%lx arg15:0x%lx arg16:0x%lx arg17:0x%lx\n",
-        req_data_64.ext_args.arg13, req_data_64.ext_args.arg14, req_data_64.ext_args.arg15,
-        req_data_64.ext_args.arg16, req_data_64.ext_args.arg17);
+        payload.ext_args.arg13, payload.ext_args.arg14, payload.ext_args.arg15,
+        payload.ext_args.arg16, payload.ext_args.arg17);
 
     LOG(DBG, "expected resp arg3:0x%lx arg4:0x%lx arg5:0x%lx arg6:0x%lx arg7:0x%lx\n",
         expected_resp_data_64.arg3, expected_resp_data_64.arg4, expected_resp_data_64.arg5,
@@ -95,21 +98,21 @@ uint32_t ffa_direct_message2_client(uint32_t test_run_data)
         expected_resp_data_64.ext_args.arg17);
 
     /* Direct respond received, Compare the respond req_data_64 */
-    if (req_data_64.arg3 != expected_resp_data_64.arg3   ||
-        req_data_64.arg4 != expected_resp_data_64.arg4   ||
-        req_data_64.arg5 != expected_resp_data_64.arg5   ||
-        req_data_64.arg6 != expected_resp_data_64.arg6   ||
-        req_data_64.arg7 != expected_resp_data_64.arg7   ||
-        req_data_64.ext_args.arg8 != expected_resp_data_64.ext_args.arg8   ||
-        req_data_64.ext_args.arg9 != expected_resp_data_64.ext_args.arg9   ||
-        req_data_64.ext_args.arg10 != expected_resp_data_64.ext_args.arg10 ||
-        req_data_64.ext_args.arg11 != expected_resp_data_64.ext_args.arg11 ||
-        req_data_64.ext_args.arg12 != expected_resp_data_64.ext_args.arg12 ||
-        req_data_64.ext_args.arg13 != expected_resp_data_64.ext_args.arg13 ||
-        req_data_64.ext_args.arg14 != expected_resp_data_64.ext_args.arg14 ||
-        req_data_64.ext_args.arg15 != expected_resp_data_64.ext_args.arg15 ||
-        req_data_64.ext_args.arg16 != expected_resp_data_64.ext_args.arg16 ||
-        req_data_64.ext_args.arg17 != expected_resp_data_64.ext_args.arg17)
+    if (payload.arg3 != expected_resp_data_64.arg3   ||
+        payload.arg4 != expected_resp_data_64.arg4   ||
+        payload.arg5 != expected_resp_data_64.arg5   ||
+        payload.arg6 != expected_resp_data_64.arg6   ||
+        payload.arg7 != expected_resp_data_64.arg7   ||
+        payload.ext_args.arg8 != expected_resp_data_64.ext_args.arg8   ||
+        payload.ext_args.arg9 != expected_resp_data_64.ext_args.arg9   ||
+        payload.ext_args.arg10 != expected_resp_data_64.ext_args.arg10 ||
+        payload.ext_args.arg11 != expected_resp_data_64.ext_args.arg11 ||
+        payload.ext_args.arg12 != expected_resp_data_64.ext_args.arg12 ||
+        payload.ext_args.arg13 != expected_resp_data_64.ext_args.arg13 ||
+        payload.ext_args.arg14 != expected_resp_data_64.ext_args.arg14 ||
+        payload.ext_args.arg15 != expected_resp_data_64.ext_args.arg15 ||
+        payload.ext_args.arg16 != expected_resp_data_64.ext_args.arg16 ||
+        payload.ext_args.arg17 != expected_resp_data_64.ext_args.arg17)
     {
         LOG(ERROR, "Direct response data mismatched\n");
         status = VAL_ERROR_POINT(4);
@@ -120,9 +123,9 @@ uint32_t ffa_direct_message2_client(uint32_t test_run_data)
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 = ((uint32_t)val_get_endpoint_id(server_logical_id) << 16) |
                             val_get_endpoint_id(client_logical_id);
-    req_data_64.arg2 = ((uint64_t)info_ptr[server_logical_id].uuid[1] << 32) |
+    payload.arg2 = ((uint64_t)info_ptr[server_logical_id].uuid[1] << 32) |
                        ((uint64_t)info_ptr[server_logical_id].uuid[0] & 0xFFFFFFFF);
-    req_data_64.arg3 = ((uint64_t)info_ptr[server_logical_id].uuid[3] << 32) |
+    payload.arg3 = ((uint64_t)info_ptr[server_logical_id].uuid[3] << 32) |
                        ((uint64_t)info_ptr[server_logical_id].uuid[2] & 0xFFFFFFFF);
     val_ffa_msg_send_direct_req2_64(&payload);
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))
@@ -154,9 +157,9 @@ uint32_t ffa_direct_message2_client(uint32_t test_run_data)
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 = ((uint32_t)val_get_endpoint_id(client_logical_id) << 16) |
                             val_get_endpoint_id(client_logical_id);
-    req_data_64.arg2 = ((uint64_t)info_ptr[server_logical_id].uuid[1] << 32) |
+    payload.arg2 = ((uint64_t)info_ptr[server_logical_id].uuid[1] << 32) |
                        ((uint64_t)info_ptr[server_logical_id].uuid[0] & 0xFFFFFFFF);
-    req_data_64.arg3 = ((uint64_t)info_ptr[server_logical_id].uuid[3] << 32) |
+    payload.arg3 = ((uint64_t)info_ptr[server_logical_id].uuid[3] << 32) |
                        ((uint64_t)info_ptr[server_logical_id].uuid[2] & 0xFFFFFFFF);
     val_ffa_msg_send_direct_req2_64(&payload);
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_INVALID_PARAMETERS))

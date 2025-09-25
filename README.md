@@ -125,6 +125,19 @@ The ACS tests may run at higher privilege level. An attacker can utilize these t
 
 Arm FF-A ACS is distributed under BSD-3-Clause License.
 
+### Other Projects
+ - Some source files originate from the [XEN Hypervisor Project](https://xenbits.xen.org/git-http/xen.git) and [Zephyr RTOS Project](https://github.com/zephyrproject-rtos/zephyr.git). These files are licensed under the Apache License, Version 2.0, and MIT License which are a permissive licenses compatible with BSD-3-Clause. Any contributions to this code must also be made under the terms of Apache License 2 and MIT respectively.
+ - These files are:
+    - platform/common/inc/xen/hypercall.h (Apache-2.0)
+    - platform/common/inc/xen/public/arch-arm.h (MIT)
+    - platform/common/inc/xen/public/event_channel.h (MIT)
+    - platform/common/inc/xen/public/hvm/hvm_op.h (MIT)
+    - platform/common/inc/xen/public/hvm/params.h (MIT)
+    - platform/common/inc/xen/public/io/console.h (MIT)
+    - platform/common/inc/xen/public/sched.h (MIT)
+    - platform/common/inc/xen/public/xen.h (MIT)
+    - platform/common/src/xen/hypercall.S (Apache-2.0)
+
 
 ## Feedback, contributions, and support
 

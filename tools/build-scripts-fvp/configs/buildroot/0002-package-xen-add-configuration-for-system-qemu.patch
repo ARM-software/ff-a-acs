@@ -1,0 +1,64 @@
+From 9849f0e7f802eee7518dcd82f0e111127c1550e7 Mon Sep 17 00:00:00 2001
+Message-Id: <9849f0e7f802eee7518dcd82f0e111127c1550e7.1707389451.git.bertrand.marquis@arm.com>
+In-Reply-To: <2d764981fad1c1ccb37498adc431d3c9a9a69c1d.1707389451.git.bertrand.marquis@arm.com>
+References: <2d764981fad1c1ccb37498adc431d3c9a9a69c1d.1707389451.git.bertrand.marquis@arm.com>
+From: Bertrand Marquis <bertrand.marquis@arm.com>
+Date: Thu, 8 Feb 2024 10:03:20 +0000
+Subject: [PATCH 2/3] package/xen: add configuration for system qemu
+
+Add a configuration option for xen to use qemu provided externally
+(using the qemu package) instead of building one during the xen tools
+build.
+
+Signed-off-by: Bertrand Marquis <bertrand.marquis@arm.com>
+---
+ package/xen/Config.in | 12 ++++++++++++
+ package/xen/xen.mk    |  7 ++++++-
+ 2 files changed, 18 insertions(+), 1 deletion(-)
+
+diff --git a/package/xen/Config.in b/package/xen/Config.in
+index af6acd35309a..2843c3370fcc 100644
+--- a/package/xen/Config.in
++++ b/package/xen/Config.in
+@@ -36,6 +36,18 @@ config BR2_PACKAGE_XEN_TOOLS
+ 	help
+ 	  The Xen tools can be accessed by the xl command.
+ 
++config BR2_PACKAGE_XEN_QEMU_SYSTEM
++	bool "Use system qemu"
++	depends on BR2_PACKAGE_XEN_TOOLS
++	select BR2_PACKAGE_QEMU
++	select BR2_PACKAGE_QEMU_SYSTEM
++	select BR2_PACKAGE_QEMU_CHOOSE_TARGETS
++	select BR2_PACKAGE_QEMU_TARGET_I386
++	select BR2_PACKAGE_QEMU_XEN
++	help
++	  Build qemu stand-alone instead of using the one built by Xen.
++
++
+ comment "xen tools need a toolchain w/ wchar, threads, dynamic library"
+ 	depends on !BR2_USE_WCHAR || !BR2_TOOLCHAIN_HAS_THREADS || \
+ 		BR2_STATIC_LIBS
+diff --git a/package/xen/xen.mk b/package/xen/xen.mk
+index 80412cca97cd..a2e7fef78994 100644
+--- a/package/xen/xen.mk
++++ b/package/xen/xen.mk
+@@ -49,9 +49,14 @@ XEN_DEPENDENCIES += \
+ ifeq ($(BR2_PACKAGE_ARGP_STANDALONE),y)
+ XEN_DEPENDENCIES += argp-standalone
+ endif
++ifeq ($(BR2_PACKAGE_XEN_QEMU_SYSTEM),y)
++XEN_CONF_OPTS += --with-system-qemu
++XEN_INSTALL_STAGING = YES
++else
++XEN_CONF_OPTS += --with-extra-qemu-configure-args="--disable-sdl --disable-opengl"
++endif
+ XEN_INSTALL_TARGET_OPTS += DESTDIR=$(TARGET_DIR) install-tools
+ XEN_MAKE_OPTS += dist-tools
+-XEN_CONF_OPTS += --with-extra-qemuu-configure-args="--disable-sdl --disable-opengl"
+ 
+ define XEN_INSTALL_INIT_SYSV
+ 	mv $(TARGET_DIR)/etc/init.d/xencommons $(TARGET_DIR)/etc/init.d/S50xencommons
+-- 
+2.25.1
+

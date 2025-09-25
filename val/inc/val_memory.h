@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -56,16 +56,42 @@ uint32_t val_mem_map_pgt(memory_region_descriptor_t *mem_desc);
 
 extern uint64_t tt_l0_base[];
 extern uint64_t tt_l1_base[];
+
 extern uint64_t tt_l2_base_1[];
 extern uint64_t tt_l2_base_2[];
 extern uint64_t tt_l2_base_3[];
 extern uint64_t tt_l2_base_4[];
 extern uint64_t tt_l2_base_5[];
 extern uint64_t tt_l2_base_6[];
+extern uint64_t tt_l2_base_7[];
+extern uint64_t tt_l2_base_8[];
+extern uint64_t tt_l2_base_9[];
+extern uint64_t tt_l2_base_10[];
+extern uint64_t tt_l2_base_11[];
+extern uint64_t tt_l2_base_12[];
+
 extern uint64_t tt_l3_base_1[];
 extern uint64_t tt_l3_base_2[];
 extern uint64_t tt_l3_base_3[];
 extern uint64_t tt_l3_base_4[];
 extern uint64_t tt_l3_base_5[];
 extern uint64_t tt_l3_base_6[];
+extern uint64_t tt_l3_base_7[];
+extern uint64_t tt_l3_base_8[];
+extern uint64_t tt_l3_base_9[];
+extern uint64_t tt_l3_base_10[];
+extern uint64_t tt_l3_base_11[];
+extern uint64_t tt_l3_base_12[];
+extern uint64_t tt_l3_base_13[];
+extern uint64_t tt_l3_base_14[];
+extern uint64_t tt_l3_base_15[];
+extern uint64_t tt_l3_base_16[];
+extern uint64_t tt_l3_base_17[];
+extern uint64_t tt_l3_base_18[];
+extern uint64_t tt_l3_base_19[];
+extern uint64_t tt_l3_base_20[];
+extern uint64_t tt_l3_base_21[];
+extern uint64_t tt_l3_base_22[];
+extern uint64_t tt_l3_base_23[];
+extern uint64_t tt_l3_base_24[];
 #endif /* _VAL_MEMORY_H_ */

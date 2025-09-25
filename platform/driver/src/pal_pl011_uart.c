@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -17,6 +17,7 @@ static uint8_t is_uart_init_done;
 **/
 static void driver_uart_pl011_init(void)
 {
+#ifndef XEN_SUPPORT
     uint32_t bauddiv = (UART_PL011_CLK_IN_HZ * 4) / UART_PL011_BAUDRATE;
 
     /* Disable uart before programming */
@@ -37,6 +38,7 @@ static void driver_uart_pl011_init(void)
     /* Enable tx, rx, and uart overall */
     ((uart_t *)g_uart)->uartcr = UART_PL011_UARTCR_EN_MASK
                             | UART_PL011_UARTCR_TX_EN_MASK;
+#endif
 }
 
 /**
@@ -46,9 +48,12 @@ static void driver_uart_pl011_init(void)
 **/
 static int driver_uart_pl011_is_tx_empty(void)
 {
-    if ((((uart_t *)g_uart)->uartcr & UART_PL011_UARTCR_EN_MASK) &&
+    if (
+#ifndef XEN_SUPPORT
+            (((uart_t *)g_uart)->uartcr & UART_PL011_UARTCR_EN_MASK) &&
         /* UART is enabled */
         (((uart_t *)g_uart)->uartcr & UART_PL011_UARTCR_TX_EN_MASK) &&
+#endif
         /* Transmit is enabled */
         ((((uart_t *)g_uart)->uartfr & UART_PL011_UARTFR_TX_FIFO_FULL) == 0))
     {

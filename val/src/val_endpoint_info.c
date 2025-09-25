@@ -1,116 +1,14 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
  */
 
+#include "val.h"
 #include "val_endpoint_info.h"
-
-static val_endpoint_info_t endpoint_info_table[] = {
-    {"", 0, 0, 0, 0, 0, {0} },
-    {
-        "SP1",
-        PLATFORM_SP1_ID,
-        VAL_TG0_4K,
-#if (PLATFORM_SP_EL == EL1)
-        EL1_64,
-#else
-        EL0_64,
-#endif
-        PLATFORM_SP1_EC_COUNT,
-        PLATFORM_SP1_EP_PROPERTIES,
-        PLATFORM_SP1_UUID,
-    },
-    {
-        "SP2",
-        PLATFORM_SP2_ID,
-        VAL_TG0_4K,
-#if (PLATFORM_SP_EL == EL1)
-        EL1_64,
-#else
-        EL0_64,
-#endif
-        PLATFORM_SP2_EC_COUNT,
-        PLATFORM_SP2_EP_PROPERTIES,
-        PLATFORM_SP2_UUID,
-    },
-    {
-        "SP3",
-        PLATFORM_SP3_ID,
-        VAL_TG0_4K,
-#if (PLATFORM_SP_EL == EL1)
-        EL1_64,
-#else
-        EL0_64,
-#endif
-        PLATFORM_SP3_EC_COUNT,
-        PLATFORM_SP3_EP_PROPERTIES,
-        PLATFORM_SP3_UUID,
-    },
-    {
-        "SP4",
-        PLATFORM_SP4_ID,
-        VAL_TG0_4K,
-#if (PLATFORM_SP_EL == EL1)
-        EL1_64,
-#else
-        EL0_64,
-#endif
-        PLATFORM_SP4_EC_COUNT,
-        PLATFORM_SP4_EP_PROPERTIES,
-        PLATFORM_SP4_UUID,
-    },
-	{
-        "VM1",
-#if (PLATFORM_NS_HYPERVISOR_PRESENT == 1)
-        PLATFORM_VM1_ID,
-#else
-        0x0,
-#endif
-        VAL_TG0_4K,
-        EL1_64,
-        PLATFORM_VM1_EC_COUNT,
-        PLATFORM_VM1_EP_PROPERTIES,
-        PLATFORM_VM1_UUID,
-    },
-    {
-        "VM2",
-#if (PLATFORM_NS_HYPERVISOR_PRESENT == 1)
-        PLATFORM_VM2_ID,
-        VAL_TG0_4K,
-        EL1_64,
-        PLATFORM_VM2_EC_COUNT,
-        PLATFORM_VM2_EP_PROPERTIES,
-        PLATFORM_VM2_UUID,
-#else
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        {0x0}
-#endif
-    },
-    {
-        "VM3",
-#if (PLATFORM_NS_HYPERVISOR_PRESENT == 1)
-        PLATFORM_VM3_ID,
-        VAL_TG0_4K,
-        EL1_64,
-        PLATFORM_VM3_EC_COUNT,
-        PLATFORM_VM3_EP_PROPERTIES,
-        PLATFORM_VM3_UUID,
-#else
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        0x0,
-        {0x0}
-#endif
-    },
-};
+#include "pal_config_def.h"
+#include "val_endpoints.h"
 
 /**
  *   @brief    - Convert the logical endpoint id into actual id
@@ -119,6 +17,10 @@ static val_endpoint_info_t endpoint_info_table[] = {
 **/
 ffa_endpoint_id_t val_get_endpoint_id(uint32_t logical_id)
 {
+    uint32_t total = val_get_endpoint_info_table_count();
+
+    // Validate the logical ID against the table bounds
+    assert(logical_id < total);
     return endpoint_info_table[logical_id].id;
 }
 
@@ -162,7 +64,7 @@ ffa_endpoint_id_t val_get_curr_endpoint_logical_id(void)
         logical_id++;
     }
 
-    VAL_PANIC("\tError: Couldn't find correct logical_id.\n");
+    LOG(ERROR, "\tError: Couldn't find correct logical_id. %x\n", val_get_curr_endpoint_id());
     return logical_id;
 }
 
@@ -181,10 +83,15 @@ char *val_get_curr_endpoint_name(void)
  *   @param    - logical_id
  *   @return   - Endpoint name associated with given logical_id
 **/
+#define EPX(name, val) case val: { return #name; }
 char *val_get_endpoint_name(uint32_t logical_id)
 {
-    return endpoint_info_table[logical_id].name;
+    switch (logical_id) {
+    ENDPOINT_LIST
+    default : return "INV";
+    }
 }
+#undef EPX
 
 /**
  *   @brief    - Returns the current endpoint tg0
@@ -204,6 +111,10 @@ uint64_t val_get_curr_endpoint_tt_tg0(void)
 **/
 void val_set_endpoint_tt_tg0(uint32_t logical_id, uint8_t tg0)
 {
+    uint32_t total = val_get_endpoint_info_table_count();
+
+    // Validate the logical ID against the table bounds
+    assert(logical_id < total);
     endpoint_info_table[logical_id].tg0 = tg0;
 }
 
@@ -224,8 +135,13 @@ uint8_t val_get_curr_endpoint_el_info(void)
 **/
 uint8_t val_get_endpoint_el_info(uint32_t logical_id)
 {
+    uint32_t total = val_get_endpoint_info_table_count();
+
+    // Validate the logical ID against the table bounds
+    assert(logical_id < total);
     return endpoint_info_table[logical_id].el_info;
 }
+
 /**
  *   @brief    - Returns the endpoint info structure pointer.
  *   @param    - void.
@@ -234,6 +150,18 @@ uint8_t val_get_endpoint_el_info(uint32_t logical_id)
 val_endpoint_info_t *val_get_endpoint_info(void)
 {
     return endpoint_info_table;
+}
+
+/**
+ * @brief  Returns the number of entries in the endpoint info table.
+ * @param  void
+ * @return Number of entries in the endpoint info table.
+ */
+uint32_t val_get_endpoint_info_table_count(void)
+{
+    size_t count = sizeof(endpoint_info_table) / sizeof(endpoint_info_table[0]);
+
+    return (uint32_t)count;
 }
 
 /**
@@ -273,8 +201,10 @@ uint32_t val_assign_tg0_to_endpoint(void)
         val_set_endpoint_tt_tg0(SP3, VAL_TG0_64K);
         val_set_endpoint_tt_tg0(SP4, VAL_TG0_64K);
         val_set_endpoint_tt_tg0(VM1, VAL_TG0_64K);
+#if (PLATFORM_NS_HYP_MULTI_VM == 1)
         val_set_endpoint_tt_tg0(VM2, VAL_TG0_64K);
         val_set_endpoint_tt_tg0(VM3, VAL_TG0_64K);
+#endif
     }
     else if (tg0_16k)
     {
@@ -283,8 +213,10 @@ uint32_t val_assign_tg0_to_endpoint(void)
         val_set_endpoint_tt_tg0(SP3, VAL_TG0_16K);
         val_set_endpoint_tt_tg0(SP4, VAL_TG0_16K);
         val_set_endpoint_tt_tg0(VM1, VAL_TG0_16K);
+#if (PLATFORM_NS_HYP_MULTI_VM == 1)
         val_set_endpoint_tt_tg0(VM2, VAL_TG0_16K);
         val_set_endpoint_tt_tg0(VM3, VAL_TG0_16K);
+#endif
     }
     else
     {
@@ -309,4 +241,48 @@ uint32_t val_curr_endpoint_page_size(void)
         return (64 * 1024);
     else
         return (16 * 1024);
+}
+
+/**
+ * @brief  Returns the number of secure partitions in the endpoint info table.
+ *
+ * This function iterates through the endpoint_info_table and counts how many
+ * entries have the 'is_secure' flag set, indicating they represent secure partitions.
+ *
+ * @param  void
+ * @return Number of secure partitions.
+ */
+uint32_t val_get_secure_partition_count(void)
+{
+    uint32_t count = 0;
+    size_t total = val_get_endpoint_info_table_count(); // Total number of endpoint entries
+
+    // Iterate and count only those entries that are compiled and secure
+    for (size_t i = 0; i < total; i++) {
+        if (endpoint_info_table[i].is_valid && endpoint_info_table[i].is_secure)
+            count++;
+    }
+
+    return count;
+}
+
+/**
+ * @brief    Returns the deployment status of a partition given its logical ID.
+ *
+ * This function checks whether the logical ID is valid and returns the
+ * compile status for that endpoint from the endpoint info table.
+ *
+ * @param    logical_id Logical index of the endpoint in the info table.
+ * @return   0 if not valid, 1 if valid.
+ */
+uint32_t val_is_partition_valid(uint32_t logical_id)
+{
+    uint32_t total = val_get_endpoint_info_table_count();
+
+    // Validate the logical ID against the table bounds
+    if (logical_id >= total)
+        return 0; // Invalid ID
+
+    // Return the is_valid status (assumed to be a separate member)
+    return endpoint_info_table[logical_id].is_valid ? 1 : 0;
 }

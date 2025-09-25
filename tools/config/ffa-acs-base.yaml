@@ -1,0 +1,107 @@
+# Copyright (c) 2024, Arm Limited.
+# SPDX-License-Identifier: MIT
+
+%YAML 1.2
+---
+description: >-
+  FF-A ACS (Architecture compliance testsuite) is used to very the compliance
+  with the FF-A specification of partition manager (Secure and Non-secure).
+
+concrete: true
+
+build:
+  ffa-acs:
+    repo:
+      # remote: ssh://ap-gerrit-1.ap01.arm.com:29418/avk/syscomp_psa_a
+      # revision: master
+      remote: https://github.com/ARM-software/ff-a-acs
+      revision: main
+
+    toolchain: aarch64-none-elf-
+
+    params:
+      -DCROSS_COMPILE: aarch64-none-elf-
+      -DPLATFORM_NS_HYPERVISOR_PRESENT: ${btvar:FFA_ACS_NS_HYP}
+      -DENABLE_BTI: 'ON'
+      -DVERBOSE: '1'
+      -DXEN_SUPPORT: ${btvar:FFA_ACS_XEN}
+      -DCMAKE_BUILD_TYPE: 'Debug'
+      -DPLATFORM_FFA_V_1_0: ${btvar:FFA_ACS_V10}
+      -DPLATFORM_FFA_V_1_1: ${btvar:FFA_ACS_V11}
+      -DPLATFORM_FFA_V_ALL: ${btvar:FFA_ACS_VALL}
+      -DPLATFORM_SP_EL: ${btvar:FFA_ACS_SP_EL}
+      -DSUITE: ${btvar:FFA_ACS_SUITE}
+
+    prebuild:
+      - test ${btvar:FFA_ACS_SP_EL} = 0 && ACS_EL_SUFFIX=_el0 || ACS_EL_SUFFIX=
+      # TODO: find a way to compile all testsuites in
+      - cd ${param:builddir} && cmake ${param:sourcedir} -G"Ninja" ${param:join_equal}
+
+    build:
+      - ninja -C${param:builddir} -j${param:jobs}
+
+    postbuild:
+      # Copy and rename SPMC manifest as shell variables can't be resolved in artifacts
+      # TODO: how should fvp_spmc_manifest_linux.dts be handled?
+      - rsync -a ${param:sourcedir}/platform/manifest/tgt_tfa_fvp/fvp_spmc_manifest$${ACS_EL_SUFFIX}.dts ${artifact:FFA_ACS_MANIF_DTS}
+      # Copy SP manifests
+      - mkdir -p ${param:builddir}/output/v12/
+      - rsync -a ${param:sourcedir}/platform/manifest/tgt_tfa_fvp/v12/sp*.dts ${param:builddir}/output/v12/.
+      # Copy SP layout and edit relative paths
+      - cat ${param:sourcedir}/platform/manifest/tgt_tfa_fvp/sp_layout_v12$${ACS_EL_SUFFIX}.json |
+        sed -e "s,\.\..*/output/,," > ${artifact:FFA_ACS_SP_LAYOUT}
+
+    artifacts:
+      FFA_ACS_SP_LAYOUT: ${param:builddir}/output/sp_layout_el0_v12.json
+      FFA_ACS_MANIF_DTS: ${param:builddir}/output/fvp_spmc_manifest_el0.dts
+      FFA_ACS_SP1: ${param:builddir}/output/sp1.bin
+      FFA_ACS_SP2: ${param:builddir}/output/sp2.bin
+      FFA_ACS_SP3: ${param:builddir}/output/sp3.bin
+      FFA_ACS_SP4: ${param:builddir}/output/sp4.bin
+      FFA_ACS_VM1: ${param:builddir}/output/vm1.bin
+
+  tfa:
+    params:
+      ARM_SPMC_MANIFEST_DTS: ${artifact:FFA_ACS_MANIF_DTS}
+      ARM_BL2_SP_LIST_DTS: ${param:builddir}/${btvar:TF_PLAT}/${btvar:TF_BUILD}/sp_list_fragment.dts
+
+buildex:
+  btvars:
+    TF_PLAT:
+      type: string
+      value: fvp
+    TF_BUILD:
+      type: string
+      value: release
+    TFA_SP_LAYOUT:
+      type: path
+      value: ${artifact:FFA_ACS_SP_LAYOUT}
+
+    FFA_ACS_NS_HYP:
+      type: string
+      value: '0'
+
+    FFA_ACS_XEN:
+      type: string
+      value: '0'
+
+    FFA_ACS_V10:
+      type: string
+      value: '0'
+
+    FFA_ACS_V11:
+      type: string
+      value: '0'
+
+    FFA_ACS_VALL:
+      type: string
+      value: '1'
+
+    # Currently does not work with SP EL0
+    FFA_ACS_SP_EL:
+      type: string
+      value: '0'
+
+    FFA_ACS_SUITE:
+      type: string
+      value: 'all'

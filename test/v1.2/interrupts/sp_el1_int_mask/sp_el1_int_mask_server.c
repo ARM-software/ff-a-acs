@@ -44,7 +44,10 @@ uint32_t sp_el1_int_mask_server(ffa_args_t args)
     /* Mask Interrupts to current PE */
     LOG(DBG, "System Timer IRQ Enabled, masking interrupt\n");
     spm_interrupt_deactivate(PALTFORM_AP_REFCLK_CNTPSIRQ1);
+
+#ifndef TARGET_LINUX
     disable_irq();
+#endif
 
     /* Wait for WD interrupt */
     val_sp_sleep(AP_REF_CLK_WAIT);
