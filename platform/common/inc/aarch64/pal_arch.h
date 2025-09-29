@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -63,6 +63,8 @@
                  (MPIDR_AFFLVL_MASK << MPIDR_AFF2_SHIFT) | \
                  (MPIDR_AFFLVL_MASK << MPIDR_AFF1_SHIFT) | \
                  (MPIDR_AFFLVL_MASK << MPIDR_AFF0_SHIFT))
+
+#define TARGET_CPU_ON_MASK (MPID_MASK & ~MPIDR_MT_MASK)
 
 #define MPIDR_AFF_ID(mpid, n)                    \
     (((mpid) >> MPIDR_AFF_SHIFT(n)) & MPIDR_AFFLVL_MASK)
