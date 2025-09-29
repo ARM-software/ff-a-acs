@@ -101,6 +101,7 @@ uint32_t ffa_direct_message_64_client(uint32_t test_run_data)
         goto exit;
     }
 
+#if (PLATFORM_FFA_V < FFA_V_1_2)
     /* Input parameter w2 reserved (MBZ) */
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 = ((uint32_t)val_get_endpoint_id(client_logical_id) << 16) |
@@ -114,6 +115,7 @@ uint32_t ffa_direct_message_64_client(uint32_t test_run_data)
         status = VAL_ERROR_POINT(7);
         goto exit;
     }
+#endif
 
 exit:
     (void)resp_data_64;
