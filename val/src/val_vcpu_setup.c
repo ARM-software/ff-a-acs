@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021, 2025, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -44,7 +44,7 @@ uint64_t val_get_mpid(uint32_t cpuid)
 **/
 uint32_t val_power_on_cpu(uint32_t target_cpuid)
 {
-    return pal_power_on_cpu(val_get_mpid(target_cpuid));
+    return pal_power_on_cpu(val_get_mpid(target_cpuid) & TARGET_CPU_ON_MASK);
 }
 
 /**
