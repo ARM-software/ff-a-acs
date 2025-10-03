@@ -11,6 +11,10 @@
 
 void val_init_event(event_t *event)
 {
+    if (event == NULL) {
+        LOG(ERR, "val_init_event: event is NULL\n", 0, 0);
+        return;
+    }
     event->cnt = 0;
     event->lock.lock = 0;
 }
@@ -41,6 +45,10 @@ void val_spin_unlock(s_lock_t *lock)
 
 static void send_event_common(event_t *event, unsigned int inc)
 {
+    if (event == NULL) {
+        LOG(ERR, "send_event_common: event is NULL\n", 0, 0);
+        return;
+    }
     val_spin_lock(&event->lock);
     event->cnt += inc;
     val_spin_unlock(&event->lock);
@@ -58,24 +66,40 @@ static void send_event_common(event_t *event, unsigned int inc)
 
 void val_send_event(event_t *event)
 {
+    if (event == NULL) {
+        LOG(ERR, "val_send_event: event is NULL\n", 0, 0);
+        return;
+    }
     LOG(DBG, "Sending event %x\n", (uint64_t) event, 0);
     send_event_common(event, 1);
 }
 
 void val_send_event_to_all(event_t *event)
 {
+    if (event == NULL) {
+        LOG(ERR, "val_send_event_to_all: event is NULL\n", 0, 0);
+        return;
+    }
     //LOG("Sending event %p to all CPUs\n", (void *) event);
     send_event_common(event, val_get_no_of_cpus());
 }
 
 void val_send_event_to(event_t *event, unsigned int cpus_count)
 {
+    if (event == NULL) {
+        LOG(ERR, "val_send_event_to: event is NULL\n", 0, 0);
+        return;
+    }
     //LOG("Sending event %p to %u CPUs\n", (void *) event, cpus_count);
     send_event_common(event, cpus_count);
 }
 
 void val_wait_for_event(event_t *event)
 {
+    if (event == NULL) {
+        LOG(ERR, "val_wait_for_event: event is NULL\n", 0, 0);
+        return;
+    }
     unsigned int event_received = 0;
 
     LOG(DBG, "Waiting for event %x\n", (uint64_t) event, 0);
