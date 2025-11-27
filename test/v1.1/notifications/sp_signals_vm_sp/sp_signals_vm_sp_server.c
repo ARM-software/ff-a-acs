@@ -61,7 +61,9 @@ static uint32_t sp1_entry_func(ffa_args_t args)
     ffa_endpoint_id_t receiver = (args.arg1 >> 16) & 0xffff;
     ffa_endpoint_id_t receiver_1 = val_get_endpoint_id(SP2);
     ffa_notification_bitmap_t notifications_bitmap_1;
+#if (PLATFORM_PER_VCPU_NOTIFICATION_SUPPORT == 1)
     ffa_notification_bitmap_t notifications_bitmap_2;
+#endif
     ffa_notification_bitmap_t notifications_bitmap_3;
     uint32_t flags;
 
@@ -81,7 +83,9 @@ static uint32_t sp1_entry_func(ffa_args_t args)
     VM1 per-vCPU Notification - bitmap_2
     SP2 Global Notification   - bitmap_3 */
     notifications_bitmap_1 = payload.arg3;
+#if (PLATFORM_PER_VCPU_NOTIFICATION_SUPPORT == 1)
     notifications_bitmap_2 = payload.arg4;
+#endif
     notifications_bitmap_3 = payload.arg5;
 
     /* Register T-WD handler for Secure Interrupt */
@@ -125,14 +129,14 @@ static uint32_t sp1_entry_func(ffa_args_t args)
     {
         goto free_interrupt;
     }
-
+#if (PLATFORM_PER_VCPU_NOTIFICATION_SUPPORT == 1)
     flags = FFA_NOTIFICATIONS_FLAG_PER_VCPU | FFA_NOTIFICATIONS_FLAG_DELAY_SRI;
     status = notification_set_helper(notifications_bitmap_2, flags, sender, receiver);
     if (status)
     {
         goto free_interrupt;
     }
-
+#endif
     flags = FFA_NOTIFICATIONS_FLAG_DELAY_SRI;
     status = notification_set_helper(notifications_bitmap_3, flags, sender, receiver_1);
     if (status)

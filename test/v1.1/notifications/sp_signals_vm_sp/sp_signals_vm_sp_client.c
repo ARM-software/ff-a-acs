@@ -74,7 +74,9 @@ uint32_t sp_signals_vm_sp_client(uint32_t test_run_data)
     VM1 per-vCPU Notification - 1
     SP2 Global Notification   - 5 */
     uint64_t notifications_bitmap_1 = FFA_NOTIFICATION(0);
+#if (PLATFORM_PER_VCPU_NOTIFICATION_SUPPORT == 1)
     uint64_t notifications_bitmap_2 = FFA_NOTIFICATION(1);
+#endif
     uint64_t notifications_bitmap_3 = FFA_NOTIFICATION(5);
 
     /* Query SRI Feature */
@@ -124,9 +126,11 @@ uint32_t sp_signals_vm_sp_client(uint32_t test_run_data)
     if (status != VAL_SUCCESS)
         goto bitmap_destroy;
 
+#if (PLATFORM_PER_VCPU_NOTIFICATION_SUPPORT == 1)
     status = notification_bind_unbind_helper(notifications_bitmap_2, true, 0x1, sender, recipient);
     if (status != VAL_SUCCESS)
         goto bitmap_destroy;
+#endif
 
 #ifndef TARGET_LINUX
     /* Enable Schedule Receiver Interrupt */
@@ -137,7 +141,11 @@ uint32_t sp_signals_vm_sp_client(uint32_t test_run_data)
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 =  ((uint32_t)sender << 16) | recipient;
     payload.arg3 =  notifications_bitmap_1;
+#if (PLATFORM_PER_VCPU_NOTIFICATION_SUPPORT == 1)
     payload.arg4 =  notifications_bitmap_2;
+#else
+    payload.arg4 =  0;
+#endif
     payload.arg5 =  notifications_bitmap_3;
     val_ffa_msg_send_direct_req_64(&payload);
     if (payload.fid == FFA_ERROR_32)
@@ -184,7 +192,7 @@ uint32_t sp_signals_vm_sp_client(uint32_t test_run_data)
         status = VAL_ERROR_POINT(8);
         goto unbind;
     }
-
+#if (PLATFORM_PER_VCPU_NOTIFICATION_SUPPORT == 1)
     LOG(DBG, "notifications_bitmap_1 %x notifications_bitmap_2 %x payload.arg2 %x\n",
         notifications_bitmap_1, notifications_bitmap_2, (uint32_t)payload.arg2);
 
@@ -194,7 +202,18 @@ uint32_t sp_signals_vm_sp_client(uint32_t test_run_data)
         LOG(ERROR, "Not received expected notification err %x\n", payload.arg2);
         status = VAL_ERROR_POINT(9);
     }
+#else
+    LOG(DBG, "notifications_bitmap_1 %x payload.arg2 %x\n",
+        notifications_bitmap_1, (uint32_t)payload.arg2);
 
+    /* Compare Notification bitmap */
+    if ((notifications_bitmap_1) != (uint32_t)payload.arg2)
+    {
+        LOG(ERROR, "Not received expected notification err %x\n", payload.arg2);
+        status = VAL_ERROR_POINT(9);
+    }
+
+#endif
     /* Call SP2 to process notification from SP1 */
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 =  ((uint32_t)sender << 16) | recipient_1;
@@ -221,8 +240,10 @@ unbind:
     ret = notification_bind_unbind_helper(notifications_bitmap_1, false, 0x0, sender, recipient);
     status = status ? status : ret;
 
+#if (PLATFORM_PER_VCPU_NOTIFICATION_SUPPORT == 1)
     ret = notification_bind_unbind_helper(notifications_bitmap_2, false, 0x1, sender, recipient);
     status = status ? status : ret;
+#endif
 
 bitmap_destroy:
 #if (PLATFORM_NS_HYPERVISOR_PRESENT == 0)

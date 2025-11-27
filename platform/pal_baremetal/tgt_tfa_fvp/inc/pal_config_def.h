@@ -187,6 +187,9 @@
  */
 #define PLATFORM_NO_OF_CPUS 8
 
+/* Per-vCPU Notification Support */
+#define PLATFORM_PER_VCPU_NOTIFICATION_SUPPORT 0
+
 #ifndef __ASSEMBLER__
 extern uint8_t pal_misc_buffer[256];
 #define PLATFORM_SHARED_REGION_BASE (void*)pal_misc_buffer

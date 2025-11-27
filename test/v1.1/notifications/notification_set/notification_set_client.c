@@ -20,7 +20,10 @@ uint32_t notification_set_client(uint32_t test_run_data)
     uint64_t notifications_bm_global = FFA_NOTIFICATION(12);
     uint64_t notifications_bm_pcpu = FFA_NOTIFICATION(13);
     uint64_t notifications_bm_invalid = FFA_NOTIFICATION(16);
+
+#if (PLATFORM_PER_VCPU_NOTIFICATION_SUPPORT == 1)
     ffa_endpoint_id_t receiver_vcpuid = 0x2;
+#endif
 
 
     val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -77,6 +80,8 @@ uint32_t notification_set_client(uint32_t test_run_data)
         goto bitmap_destroy;
     }
 
+
+#if (PLATFORM_PER_VCPU_NOTIFICATION_SUPPORT == 1)
     /* Per-vCPU notification flag = b'0 and Receiver vCPU ID != 0 */
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 = ((uint32_t)sender << 16) | recipient;
@@ -121,6 +126,7 @@ uint32_t notification_set_client(uint32_t test_run_data)
         status = VAL_ERROR_POINT(7);
         goto bitmap_destroy;
     }
+#endif
 
     /* DENIED: Sender not permitted to signal the notification to the receiver */
     val_memset(&payload, 0, sizeof(ffa_args_t));

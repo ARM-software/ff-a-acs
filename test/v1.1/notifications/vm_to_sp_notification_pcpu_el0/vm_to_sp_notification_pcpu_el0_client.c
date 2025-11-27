@@ -32,6 +32,11 @@ uint32_t vm_to_sp_notification_pcpu_el0_client(uint32_t test_run_data)
 #endif
     uint64_t notifications_bitmap = FFA_NOTIFICATION(12);
 
+#if (PLATFORM_PER_VCPU_NOTIFICATION_SUPPORT == 0)
+   LOG(WARN, "No Support for per vCPU Notification\n", 0);
+   return VAL_SKIP_CHECK;
+#endif
+
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 = FFA_FEATURE_SRI;
     val_ffa_features(&payload);

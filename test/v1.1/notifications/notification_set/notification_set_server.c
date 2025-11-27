@@ -14,7 +14,10 @@ uint32_t notification_set_server(ffa_args_t args)
     ffa_endpoint_id_t sender = args.arg1 & 0xffff;
     ffa_endpoint_id_t receiver = (args.arg1 >> 16) & 0xffff;
     ffa_notification_bitmap_t notifications_bm_global;
+
+#if (PLATFORM_PER_VCPU_NOTIFICATION_SUPPORT == 1)
     ffa_notification_bitmap_t notifications_bm_pcpu;
+#endif
 
     /* Wait for the message. */
     val_memset(&payload, 0, sizeof(ffa_args_t));
@@ -28,7 +31,11 @@ uint32_t notification_set_server(ffa_args_t args)
     }
 
     notifications_bm_global = payload.arg3;
+
+#if (PLATFORM_PER_VCPU_NOTIFICATION_SUPPORT == 1)
     notifications_bm_pcpu = payload.arg4;
+#endif
+
     /* Bind the global notification */
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 = (uint32_t)((receiver << 16) | (sender));
@@ -43,6 +50,7 @@ uint32_t notification_set_server(ffa_args_t args)
         goto exit;
     }
 
+#if (PLATFORM_PER_VCPU_NOTIFICATION_SUPPORT == 1)
     /* Bind the per-cpu notification */
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 = (uint32_t)((receiver << 16) | (sender));
@@ -56,6 +64,7 @@ uint32_t notification_set_server(ffa_args_t args)
         status = VAL_ERROR_POINT(3);
         goto unbind_global;
     }
+#endif
 
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 =  ((uint32_t)sender << 16) | receiver;
@@ -66,6 +75,7 @@ uint32_t notification_set_server(ffa_args_t args)
         status =  VAL_ERROR_POINT(4);
     }
 
+#if (PLATFORM_PER_VCPU_NOTIFICATION_SUPPORT == 1)
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 = (uint32_t)((receiver << 16) | (sender));
     payload.arg2 = 0;
@@ -77,6 +87,9 @@ uint32_t notification_set_server(ffa_args_t args)
         LOG(ERROR, "Failed notification unbind err %x\n", payload.arg2);
         status = status ? status : VAL_ERROR_POINT(5);
     }
+#else
+    goto unbind_global;
+#endif
 
 unbind_global:
     val_memset(&payload, 0, sizeof(ffa_args_t));
