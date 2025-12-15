@@ -41,9 +41,7 @@ FFA_BUILD=ff-a-acs
 
 REPO_URL="https://github.com/ARM-software/ff-a-acs.git"
 REVISION="main"
-LINUX_REPO_URL="https://gitlab.arm.com/linux-arm/linux-acs.git"
-LINUX_REVISION="master"
-FFA_ACS_TAG="ffa_acs_linux_user_v1"
+FFA_ACS_TAG="ffa_acs_linux_user_v2"
 
 # Check if ACS_DIR_OVERRIDE is set, otherwise use default
 if [ -n "$ACS_DIR_OVERRIDE" ]; then
@@ -108,12 +106,10 @@ CMD_ACS_BAREMETAL="-DCROSS_COMPILE=$TOOLCHAIN \
 if [ ! -d "$ACS_DIR" ]; then
     git clone --branch "$REVISION" "$REPO_URL" "$ACS_DIR"
     cd $ACS_DIR;
+    git submodule update --init;
     git checkout $FFA_ACS_TAG
-    git clone --branch "$LINUX_REVISION" "$LINUX_REPO_URL"
     cd $LINUX_REPO
     git checkout $FFA_ACS_TAG
-    cd $ACS_DIR;
-    git submodule update --init;
     cd $WORKSPACE
 fi
 

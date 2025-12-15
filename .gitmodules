@@ -1,3 +1,6 @@
 [submodule "val_common"]
 	path = val_common
 	url = https://github.com/ARM-software/psa-acs-common-val.git
+[submodule "linux-acs"]
+	path = linux-acs
+	url = https://gitlab.arm.com/linux-arm/linux-acs.git
