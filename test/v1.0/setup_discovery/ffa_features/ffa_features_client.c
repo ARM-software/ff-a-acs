@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2026, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -451,6 +451,30 @@ uint32_t ffa_features_client(uint32_t test_run_data)
         }
     }
 
+#if PLATFORM_FFA_V >= FFA_V_1_2
+
+    status_6 = ffa_feature_query(FFA_MSG_SEND_DIRECT_REQ2_64, "FFA_MSG_SEND_DIRECT_REQ2_64");
+    status_7 = ffa_feature_query(FFA_MSG_SEND_DIRECT_RESP2_64, "FFA_MSG_SEND_DIRECT_RESP2_64");
+    /* Cross check with manifest field value. Following must be
+     * supported if direct request is supported */
+    if (messaging_type & FFA_DIRECT_REQUEST2_SEND)
+    {
+        if (status_6)
+        {
+            LOG(ERROR, "Invalid return code for direct messaging 2 ABIs\n");
+            return VAL_ERROR_POINT(24);
+        }
+    }
+    else
+    {
+        if (!status_6)
+        {
+            LOG(ERROR, "Invalid return code for direct messaging 2 ABIs\n");
+            return VAL_ERROR_POINT(25);
+        }
+    }
+#endif
+
 #if !defined(XEN_SUPPORT) && !(TARGET_LINUX_ENV == 1)
     /* Cross check with manifest field value. Following must be
      * supported if direct respond is supported */
@@ -473,32 +497,11 @@ uint32_t ffa_features_client(uint32_t test_run_data)
 #endif
 
     /* Either of the messaging method must be supported */
-    if ((status_1 == VAL_SKIP_CHECK) && (status_2 == VAL_SKIP_CHECK))
+    if ((status_1 == VAL_SKIP_CHECK) && (status_2 == VAL_SKIP_CHECK) && (status_4 == VAL_SKIP_CHECK)
+		    && (status_6 == VAL_SKIP_CHECK))
     {
         LOG(ERROR, "Either of the messaging method must be supported\n");
         return VAL_ERROR_POINT(23);
-    }
-
-
-    status_2 = ffa_feature_query(FFA_MSG_SEND_DIRECT_REQ2_64, "FFA_MSG_SEND_DIRECT_REQ2_64");
-    status_3 = ffa_feature_query(FFA_MSG_SEND_DIRECT_RESP2_64, "FFA_MSG_SEND_DIRECT_RESP2_64");
-    /* Cross check with manifest field value. Following must be
-     * supported if direct request is supported */
-    if (messaging_type & FFA_DIRECT_REQUEST2_SEND)
-    {
-        if (status_2)
-        {
-            LOG(ERROR, "Invalid return code for direct messaging 2 ABIs\n");
-            return VAL_ERROR_POINT(24);
-        }
-    }
-    else
-    {
-        if (!status_2)
-        {
-            LOG(ERROR, "Invalid return code for direct messaging 2 ABIs\n");
-            return VAL_ERROR_POINT(25);
-        }
     }
 
 #if 0 // TODO: XEN Support Missing

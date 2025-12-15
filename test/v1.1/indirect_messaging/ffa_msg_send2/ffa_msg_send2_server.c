@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2025, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2024-2026, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -28,6 +28,7 @@ uint32_t ffa_msg_send2_server(ffa_args_t args)
     uint32_t i;
     uint8_t *pages = NULL;
     uint64_t size = 0x1000;
+    uint32_t payload_offset;
     ffa_partition_rxtx_header_t *partition_message_header;
     uint32_t msg_size;
     ffa_notification_bitmap_t notifications_bitmap = 0;
@@ -121,7 +122,8 @@ uint32_t ffa_msg_send2_server(ffa_args_t args)
 
     partition_message_header = (ffa_partition_rxtx_header_t *)mb.recv;
     msg_size = partition_message_header->size;
-    pages = (uint8_t *)mb.recv + sizeof(ffa_partition_rxtx_header_t);
+    payload_offset = partition_message_header->offset;
+    pages = (uint8_t *)mb.recv + payload_offset;
 
     /* Check the content of memory equal to the data set by receiver. */
     for (i = 0; i < msg_size; ++i)
