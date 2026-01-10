@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2025, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2024-2026, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -146,7 +146,9 @@ uint32_t ffa_msg_wait_rx_buff_rel_server(ffa_args_t args)
     /* Call ffa msg wait to check for buffer ownership release */
     LOG(DBG, "Relinquish Complete, FFA_MSG_WAIT without rx buffer release\n");
     val_memset(&payload, 0, sizeof(ffa_args_t));
+#if PLATFORM_FFA_V >= FFA_V_1_2
     payload.arg2 = 0x1;
+#endif
     val_ffa_msg_wait(&payload);
     if (payload.fid != FFA_MSG_SEND_DIRECT_REQ_64)
     {
@@ -155,12 +157,14 @@ uint32_t ffa_msg_wait_rx_buff_rel_server(ffa_args_t args)
         goto rx_release;
     }
 
+#if PLATFORM_FFA_V >= FFA_V_1_2
     /* Release rx buffer for new memory transaction */
     if (val_rx_release())
     {
         LOG(ERROR, "val_rx_release failed\n");
         status = status ? status : VAL_ERROR_POINT(10);
     }
+#endif
 
     /* Respond back to client */
     val_memset(&payload, 0, sizeof(ffa_args_t));

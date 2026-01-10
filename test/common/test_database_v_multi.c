@@ -237,7 +237,7 @@ const test_db_t test_list[] = {
 #endif
 #endif
 
-/* The below test is only in version 1.2 FFA-ACS
+/* The below test is only in version 1.2 FFA-ACS */
 
 #if (SUITE == all || SUITE == setup_discovery)
     CLIENT_TEST_FN_ONLY(TESTSUITE_SETUP_DISCOVERY, ffa_version_negotiation),
@@ -247,9 +247,9 @@ const test_db_t test_list[] = {
 #endif
 
 #if (SUITE == all || SUITE == memory_manage)
-   CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, mem_share_impdef),
-    CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, mem_lend_impdef),
-    CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, mem_donate_impdef),
+//    CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, mem_share_impdef),
+//    CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, mem_lend_impdef),
+//    CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, mem_donate_impdef),
     CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, share_multi_borrower_flag_check),
 #endif
 
@@ -262,9 +262,8 @@ const test_db_t test_list[] = {
 #endif
 
 #if (SUITE == all || SUITE == direct_messaging)
-    CLIENT_SERVER_TEST_FN(TESTSUITE_DIRECT_MESSAGING, ffa_direct_message2),
+//    CLIENT_SERVER_TEST_FN(TESTSUITE_DIRECT_MESSAGING, ffa_direct_message2),
 #endif
-*/
 #endif
 
     {0, "", NULL, NULL, NULL, NULL, NULL},
