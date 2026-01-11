@@ -53,9 +53,7 @@ static uint32_t ffa_feature_query(uint32_t fid, char *str)
         case FFA_RX_RELEASE_32:
         case FFA_PARTITION_INFO_GET_32:
         case FFA_ID_GET_32:
-        case FFA_MSG_WAIT_32:
         case FFA_RXTX_UNMAP_32:
-        case FFA_RUN_32:
             if (payload.fid == FFA_ERROR_32)
             {
                 LOG(ERROR, "fid = 0x%x must be supported\n", fid);
@@ -69,7 +67,6 @@ static uint32_t ffa_feature_query(uint32_t fid, char *str)
                 LOG(ERROR, "reserved registers must be zero\n");
                 status = VAL_ERROR_POINT(3);
             }
-
             break;
 
         /* FF-A mandatory features - Atleast either of
@@ -152,6 +149,8 @@ static uint32_t ffa_feature_query(uint32_t fid, char *str)
 
         /* FF-A optional features */
         case FFA_MSG_POLL_32:
+        case FFA_RUN_32:
+        case FFA_MSG_WAIT_32:
         case FFA_YIELD_32:
         case FFA_MSG_SEND_32:
         case FFA_MSG_SEND2_32:
@@ -164,6 +163,23 @@ static uint32_t ffa_feature_query(uint32_t fid, char *str)
         case FFA_MEM_RETRIEVE_RESP_32:
         case FFA_MEM_RELINQUISH_32:
         case FFA_MEM_RECLAIM_32:
+        case FFA_PARTITION_INFO_GET_REGS_64:
+        case FFA_SPM_ID_GET_32:
+        case FFA_CONSOLE_LOG_32:
+        case FFA_CONSOLE_LOG_64:
+        case FFA_MEM_PERM_GET_64:
+        case FFA_MEM_PERM_SET_64:
+        case FFA_MEM_PERM_GET_32:
+        case FFA_MEM_PERM_SET_32:
+        case FFA_NOTIFICATION_BIND:
+        case FFA_NOTIFICATION_UNBIND:
+        case FFA_NOTIFICATION_SET:
+        case FFA_NOTIFICATION_GET:
+        case FFA_NOTIFICATION_INFO_GET_32:
+        case FFA_NOTIFICATION_INFO_GET_64:
+        case FFA_NOTIFICATION_BITMAP_CREATE:
+        case FFA_NOTIFICATION_BITMAP_DESTROY:
+
             if (payload.fid == FFA_ERROR_32)
             {
                 status = VAL_SKIP_CHECK;
@@ -189,6 +205,7 @@ static uint32_t ffa_feature_query(uint32_t fid, char *str)
                 status = VAL_SKIP_CHECK;
                 break;
             }
+#if (PLATFORM_FFA_V <= FFA_V_1_1)
             /* Check for Dynamically allocated buffer support w2[0] */
             data = VAL_EXTRACT_BITS(payload.arg2, 0, 0);
             LOG(DBG, str);
@@ -206,7 +223,17 @@ static uint32_t ffa_feature_query(uint32_t fid, char *str)
             if (data || payload.arg3)
                 status = VAL_ERROR_POINT(9);
             break;
+#else
+            /* Check output w2-w7 reserved(MBZ) */
+            output_reserve_count = 6;
+            if (val_reserve_param_check(payload, output_reserve_count))
+            {
+                LOG(ERROR, "reserved registers must be zero\n");
+                status = VAL_ERROR_POINT(9);
+            }
 
+            break;
+#endif
         case FFA_MEM_RETRIEVE_REQ_64:
         case FFA_MEM_RETRIEVE_REQ_32:
             if (payload.fid == FFA_ERROR_32)
@@ -256,7 +283,9 @@ uint32_t ffa_features_client(uint32_t test_run_data)
     uint32_t status_1, status_2, status_3, status_4, status_5, status_6, status_7;
     uint32_t status_8, status_9, status_10, status_11;
     uint32_t output_reserve_count;
-    uint32_t messaging_type;
+    uint32_t final_test_status = 0;
+    uint32_t memory_management_support = 1;
+    uint32_t messaging_type, notification_support;
     uint32_t client_logical_id = GET_CLIENT_LOGIC_ID(test_run_data);
     val_endpoint_info_t *ep_info;
 
@@ -268,67 +297,92 @@ uint32_t ffa_features_client(uint32_t test_run_data)
     }
 
     messaging_type = ep_info[client_logical_id].ep_properties;
+    notification_support = ep_info[client_logical_id].ep_properties;
 
     status_1 = ffa_feature_query(FFA_ERROR_32, "FFA_ERROR_32");
-    if (status_1)
+
+    if (status_1 == VAL_ERROR_POINT(2))
+        final_test_status = 1;
+    else if (status_1)
         return status_1;
 
     status_1 = ffa_feature_query(FFA_SUCCESS_32, "FFA_SUCCESS_32");
     status_2 = ffa_feature_query(FFA_SUCCESS_64, "FFA_SUCCESS_64");
 
-    if ((status_1 && status_2) ||
-        (status_1 == VAL_ERROR_POINT(1)) ||
-        (status_2 == VAL_ERROR_POINT(1)))
+    if ((status_1 != 0 && status_1 != VAL_SKIP_CHECK) &&
+        (status_2 != 0 && status_2 != VAL_SKIP_CHECK))
         return VAL_ERROR_POINT(12);
 
+    if (status_1 == VAL_SKIP_CHECK && status_2 == VAL_SKIP_CHECK) {
+        LOG(WARN, "FFA_SUCCESS_32 or FFA_SUCCESS_64 atleast one must be supported\n");
+        final_test_status = 1;
+    }
+
     status_1 = ffa_feature_query(FFA_INTERRUPT_32, "FFA_INTERRUPT_32");
-    if (status_1)
+    if (status_1 == VAL_ERROR_POINT(2))
+        final_test_status = 1;
+    else if (status_1)
         return status_1;
 
     status_1 = ffa_feature_query(FFA_VERSION_32, "FFA_VERSION_32");
-    if (status_1)
+    if (status_1 == VAL_ERROR_POINT(2))
+        final_test_status = 1;
+    else if (status_1)
         return status_1;
 
     status_1 = ffa_feature_query(FFA_FEATURES_32, "FFA_FEATURES_32");
-    if (status_1)
+    if (status_1 == VAL_ERROR_POINT(2))
+        final_test_status = 1;
+    else if (status_1)
         return status_1;
 
     status_1 = ffa_feature_query(FFA_RX_RELEASE_32, "FFA_RX_RELEASE_32");
-    if (status_1)
+    if (status_1 == VAL_ERROR_POINT(2))
+        final_test_status = 1;
+    else if (status_1)
         return status_1;
 
     val_reprogram_watchdog();
 
     status_1 = ffa_feature_query(FFA_RXTX_UNMAP_32, "FFA_RXTX_UNMAP_32");
-    if (status_1)
+    if (status_1 == VAL_ERROR_POINT(2))
+        final_test_status = 1;
+    else if (status_1)
         return status_1;
 
     status_1 = ffa_feature_query(FFA_PARTITION_INFO_GET_32, "FFA_PARTITION_INFO_GET_32");
-    if (status_1)
+    if (status_1 == VAL_ERROR_POINT(2))
+        final_test_status = 1;
+    else if (status_1)
         return status_1;
 
     status_1 = ffa_feature_query(FFA_ID_GET_32, "FFA_ID_GET_32");
-    if (status_1)
+    if (status_1 == VAL_ERROR_POINT(2))
+        final_test_status = 1;
+    else if (status_1)
         return status_1;
 
-    if (VAL_IS_ENDPOINT_SECURE(client_logical_id))
-    {
-        status_1 = ffa_feature_query(FFA_MSG_WAIT_32, "FFA_MSG_WAIT_32");
-        if (status_1)
-            return status_1;
-    }
+
+    status_1 = ffa_feature_query(FFA_MSG_WAIT_32, "FFA_MSG_WAIT_32");
+    if (status_1 != VAL_SKIP_CHECK && status_1 != 0)
+        return status_1;
+
 
     status_1 = ffa_feature_query(FFA_RUN_32, "FFA_RUN_32");
-    if (status_1)
+    if (status_1 != VAL_SKIP_CHECK && status_1 != 0)
         return status_1;
+
 
     status_1 = ffa_feature_query(FFA_RXTX_MAP_32, "FFA_RXTX_MAP_32");
     status_2 = ffa_feature_query(FFA_RXTX_MAP_64, "FFA_RXTX_MAP_64");
-
-    if ((status_1 && status_2) ||
-        (status_1 == VAL_ERROR_POINT(1)) ||
-        (status_2 == VAL_ERROR_POINT(1)))
+    if ((status_1 != 0 && status_1 != VAL_SKIP_CHECK) &&
+        (status_2 != 0 && status_2 != VAL_SKIP_CHECK))
         return VAL_ERROR_POINT(13);
+
+    if (status_1 == VAL_SKIP_CHECK && status_2 == VAL_SKIP_CHECK) {
+        LOG(WARN, "FFA_RXTX_MAP_32 or FFA_RXTX_MAP_64 atleast one must be supported\n");
+        final_test_status = 1;
+    }
 
     val_reprogram_watchdog();
 
@@ -343,40 +397,57 @@ uint32_t ffa_features_client(uint32_t test_run_data)
     if (status_1 && status_2 && status_3
          && status_4 && status_5 && status_6)
     {
-           LOG(ERROR, "At least one of the memory manage ABI must be supported\n");
-           return VAL_ERROR_POINT(14);
+           LOG(WARN, "No memory manage ABI was supported\n");
+           memory_management_support = 0;
+    }
+
+    if ((status_1 != 0 && status_1 != VAL_SKIP_CHECK) &&
+        (status_2 != 0 && status_2 != VAL_SKIP_CHECK) &&
+        (status_3 != 0 && status_3 != VAL_SKIP_CHECK) &&
+        (status_4 != 0 && status_4 != VAL_SKIP_CHECK) &&
+        (status_5 != 0 && status_5 != VAL_SKIP_CHECK) &&
+        (status_6 != 0 && status_6 != VAL_SKIP_CHECK)) {
+            return VAL_ERROR_POINT(14);
     }
 
     val_reprogram_watchdog();
 
-    status_7 = ffa_feature_query(FFA_MEM_RETRIEVE_REQ_64, "FFA_MEM_RETRIEVE_REQ_64");
-    status_8 = ffa_feature_query(FFA_MEM_RETRIEVE_REQ_32, "FFA_MEM_RETRIEVE_REQ_32");
-    status_9 = ffa_feature_query(FFA_MEM_RETRIEVE_RESP_32, "FFA_MEM_RETRIEVE_RESP_32");
-    status_10 = ffa_feature_query(FFA_MEM_RELINQUISH_32, "FFA_MEM_RELINQUISH_32");
-    status_11 = ffa_feature_query(FFA_MEM_RECLAIM_32, "FFA_MEM_RECLAIM_32");
+    if (memory_management_support == 1) {
 
-    (void) status_7;
-    (void) status_8;
-    (void) status_9;
-    (void) status_10;
-    (void) status_11;
+        status_7 = ffa_feature_query(FFA_MEM_RETRIEVE_REQ_64, "FFA_MEM_RETRIEVE_REQ_64");
+        status_8 = ffa_feature_query(FFA_MEM_RETRIEVE_REQ_32, "FFA_MEM_RETRIEVE_REQ_32");
+        status_9 = ffa_feature_query(FFA_MEM_RETRIEVE_RESP_32, "FFA_MEM_RETRIEVE_RESP_32");
+        status_10 = ffa_feature_query(FFA_MEM_RELINQUISH_32, "FFA_MEM_RELINQUISH_32");
+        status_11 = ffa_feature_query(FFA_MEM_RECLAIM_32, "FFA_MEM_RECLAIM_32");
+
+        (void) status_7;
+        (void) status_8;
+        (void) status_9;
+        (void) status_10;
+        (void) status_11;
 
 #if !defined(XEN_SUPPORT) && !(TARGET_LINUX_ENV == 1)
-    /* If 64 bit manage ABI supported */
-    if (!status_1 || !status_3 || !status_5)
-    {
-        if (status_7 || status_9 || status_10 || status_11)
-           return VAL_ERROR_POINT(15);
-    }
+        /* If 64 bit manage ABI supported */
+        if (!status_1 || !status_3 || !status_5)
+        {
+            if (status_7 || status_9 || status_10 || status_11) {
+               LOG(WARN, "RETRIEVE/RELINQUISH/RECLAIM all must be supported\n");
+               final_test_status = 1;
+            }
+        }
 
-    /* If 32 bit manage ABI supported */
-    if (!status_2 || !status_4 || !status_6)
-    {
-        if (status_8 || status_9 || status_10 || status_11)
-           return VAL_ERROR_POINT(16);
-    }
+        /* If 32 bit manage ABI supported */
+        if (!status_2 || !status_4 || !status_6)
+        {
+            if (status_8 || status_9 || status_10 || status_11) {
+               LOG(WARN, "RETRIEVE/RELINQUISH/RECLAIM all must be supported\n");
+               final_test_status = 1;
+            }
+
+        }
 #endif
-    val_reprogram_watchdog();
+    }
+     val_reprogram_watchdog();
 
 #if PLATFORM_FFA_V == FFA_V_1_0
     status_1 = ffa_feature_query(FFA_MSG_SEND_32, "FFA_MSG_SEND_32");
@@ -389,7 +460,7 @@ uint32_t ffa_features_client(uint32_t test_run_data)
         if (status_1 || status_2)
         {
             LOG(ERROR, "Invalid return code for indirect messaging ABIs\n");
-            return VAL_ERROR_POINT(17);
+            final_test_status = 1;
         }
     }
     else
@@ -397,7 +468,7 @@ uint32_t ffa_features_client(uint32_t test_run_data)
         if (!status_1 || !status_2)
         {
             LOG(ERROR, "Invalid return code for indirect messaging ABIs\n");
-            return VAL_ERROR_POINT(18);
+            final_test_status = 1;
         }
     }
 #else
@@ -408,22 +479,16 @@ uint32_t ffa_features_client(uint32_t test_run_data)
         if (status_1)
         {
             LOG(ERROR, "Invalid return code for indirect messaging ABIs\n");
-            return VAL_ERROR_POINT(17);
+            final_test_status = 1;
 
         }
     }
 
-    if (VAL_IS_ENDPOINT_SECURE(client_logical_id))
-    {
-        status_2 = ffa_feature_query(FFA_YIELD_32, "FFA_YIELD_32");
-        if (status_2)
-        {
-            LOG(ERROR, "Invalid return code for FFA_YIELD_32 ABI\n");
-            return VAL_ERROR_POINT(17);
-
-        }
-    }
 #endif
+    status_2 = ffa_feature_query(FFA_YIELD_32, "FFA_YIELD_32");
+    if (status_1 != VAL_SKIP_CHECK && status_1 != 0)
+        return status_1;
+
 
     val_reprogram_watchdog();
 
@@ -439,7 +504,7 @@ uint32_t ffa_features_client(uint32_t test_run_data)
         if (status_2 && status_4)
         {
             LOG(ERROR, "Invalid return code for direct messaging ABIs\n");
-            return VAL_ERROR_POINT(19);
+            final_test_status = 1;
         }
     }
     else
@@ -447,33 +512,10 @@ uint32_t ffa_features_client(uint32_t test_run_data)
         if (!status_2 || !status_4)
         {
             LOG(ERROR, "Invalid return code for direct messaging ABIs\n");
-            return VAL_ERROR_POINT(20);
+            final_test_status = 1;
         }
     }
 
-#if PLATFORM_FFA_V >= FFA_V_1_2
-
-    status_6 = ffa_feature_query(FFA_MSG_SEND_DIRECT_REQ2_64, "FFA_MSG_SEND_DIRECT_REQ2_64");
-    status_7 = ffa_feature_query(FFA_MSG_SEND_DIRECT_RESP2_64, "FFA_MSG_SEND_DIRECT_RESP2_64");
-    /* Cross check with manifest field value. Following must be
-     * supported if direct request is supported */
-    if (messaging_type & FFA_DIRECT_REQUEST2_SEND)
-    {
-        if (status_6)
-        {
-            LOG(ERROR, "Invalid return code for direct messaging 2 ABIs\n");
-            return VAL_ERROR_POINT(24);
-        }
-    }
-    else
-    {
-        if (!status_6)
-        {
-            LOG(ERROR, "Invalid return code for direct messaging 2 ABIs\n");
-            return VAL_ERROR_POINT(25);
-        }
-    }
-#endif
 
 #if !defined(XEN_SUPPORT) && !(TARGET_LINUX_ENV == 1)
     /* Cross check with manifest field value. Following must be
@@ -483,7 +525,7 @@ uint32_t ffa_features_client(uint32_t test_run_data)
         if (status_3 && status_5)
         {
             LOG(ERROR, "Invalid return code for direct messaging ABIs\n");
-            return VAL_ERROR_POINT(21);
+            final_test_status = 1;
         }
     }
     else
@@ -491,42 +533,174 @@ uint32_t ffa_features_client(uint32_t test_run_data)
         if (!status_3 || !status_5)
         {
             LOG(ERROR, "Invalid return code for direct messaging ABIs\n");
-            return VAL_ERROR_POINT(22);
+            final_test_status = 1;
+        }
+    }
+
+#endif
+
+
+
+#if PLATFORM_FFA_V >= FFA_V_1_2
+
+    status_6 = ffa_feature_query(FFA_MSG_SEND_DIRECT_REQ2_64, "FFA_MSG_SEND_DIRECT_REQ2_64");
+    status_7 = ffa_feature_query(FFA_MSG_SEND_DIRECT_RESP2_64, "FFA_MSG_SEND_DIRECT_RESP2_64");
+
+#if !defined(XEN_SUPPORT) && !(TARGET_LINUX_ENV == 1)
+    /* Cross check with manifest field value. Following must be
+     * supported if direct request is supported */
+    if (messaging_type & FFA_DIRECT_REQUEST2_SEND)
+    {
+        if (status_6)
+        {
+            LOG(ERROR, "Invalid return code for direct messaging 2 ABIs\n");
+            final_test_status = 1;
+        }
+    }
+    else
+    {
+        if (!status_6)
+        {
+            LOG(ERROR, "Invalid return code for direct messaging 2 ABIs\n");
+            final_test_status = 1;
+        }
+    }
+
+    if (messaging_type & FFA_RECEIPT_DIRECT_REQUEST2_SUPPORT)
+    {
+        if (status_7)
+        {
+            LOG(ERROR, "Invalid return code for direct messaging 2 ABIs\n");
+            final_test_status = 1;
+        }
+    }
+    else
+    {
+        if (!status_7)
+        {
+            LOG(ERROR, "Invalid return code for direct messaging 2 ABIs\n");
+            final_test_status = 1;
         }
     }
 #endif
+#endif
 
-    /* Either of the messaging method must be supported */
-    if ((status_1 == VAL_SKIP_CHECK) && (status_2 == VAL_SKIP_CHECK) && (status_4 == VAL_SKIP_CHECK)
-		    && (status_6 == VAL_SKIP_CHECK))
+#if PLATFORM_FFA_V >= FFA_V_1_2
+    if ((status_1 == VAL_SKIP_CHECK) && (status_2 == VAL_SKIP_CHECK) &&
+        (status_4 == VAL_SKIP_CHECK) && (status_6 == VAL_SKIP_CHECK))
+#else
+    if ((status_1 == VAL_SKIP_CHECK) && (status_2 == VAL_SKIP_CHECK) &&
+       (status_4 == VAL_SKIP_CHECK))
+#endif
     {
         LOG(ERROR, "Either of the messaging method must be supported\n");
-        return VAL_ERROR_POINT(23);
+        final_test_status = 1;
     }
 
 #if 0 // TODO: XEN Support Missing
+#endif
+
+    val_reprogram_watchdog();
+
+#if PLATFORM_FFA_V >= FFA_V_1_2
+    status_1 = ffa_feature_query(FFA_PARTITION_INFO_GET_REGS_64, "FFA_PARTITION_INFO_GET_REGS_64");
+    if (status_1 != VAL_SKIP_CHECK && status_1 != 0)
+        return status_1;
+
+    if (VAL_IS_ENDPOINT_SECURE(client_logical_id))
+    {
+        status_1 = ffa_feature_query(FFA_CONSOLE_LOG_32, "FFA_CONSOLE_LOG_32");
+        if (status_1 != VAL_SKIP_CHECK && status_1 != 0)
+            return status_1;
+
+        status_1 = ffa_feature_query(FFA_CONSOLE_LOG_64, "FFA_CONSOLE_LOG_64");
+        if (status_1 != VAL_SKIP_CHECK && status_1 != 0)
+            return status_1;
+    }
+#endif
+
+#if PLATFORM_FFA_V >= FFA_V_1_1
+    status_1 = ffa_feature_query(FFA_SPM_ID_GET_32, "FFA_SPM_ID_GET_32");
+    if (status_1 != VAL_SKIP_CHECK && status_1 != 0)
+        return status_1;
+
+    if (VAL_IS_ENDPOINT_SECURE(client_logical_id))
+    {
+        status_1 = ffa_feature_query(FFA_MEM_PERM_SET_32, "FFA_MEM_PERM_SET_32");
+        if (status_1 != VAL_SKIP_CHECK && status_1 != 0)
+            return status_1;
+
+        status_1 = ffa_feature_query(FFA_MEM_PERM_GET_32, "FFA_MEM_PERM_GET_32");
+        if (status_1 != VAL_SKIP_CHECK && status_1 != 0)
+            return status_1;
+
+        status_1 = ffa_feature_query(FFA_MEM_PERM_SET_64, "FFA_MEM_PERM_SET_64");
+        if (status_1 != VAL_SKIP_CHECK && status_1 != 0)
+            return status_1;
+
+        status_1 = ffa_feature_query(FFA_MEM_PERM_GET_64, "FFA_MEM_PERM_GET_64");
+        if (status_1 != VAL_SKIP_CHECK && status_1 != 0)
+            return status_1;
+    }
+#endif
+    val_reprogram_watchdog();
+
+#if PLATFORM_FFA_V >= FFA_V_1_1
+    /* Notification ABI */
+
+    status_1 = ffa_feature_query(FFA_NOTIFICATION_BIND, "FFA_NOTIFICATION_BIND");
+    status_2 = ffa_feature_query(FFA_NOTIFICATION_UNBIND, "FFA_NOTIFICATION_UNBIND");
+    status_3 = ffa_feature_query(FFA_NOTIFICATION_SET, "FFA_NOTIFICATION_SET");
+    status_4 = ffa_feature_query(FFA_NOTIFICATION_GET, "FFA_NOTIFICATION_GET");
+
+    if ((status_1 != 0 && status_1 != VAL_SKIP_CHECK) &&
+        (status_2 != 0 && status_2 != VAL_SKIP_CHECK) &&
+        (status_3 != 0 && status_3 != VAL_SKIP_CHECK) &&
+        (status_4 != 0 && status_4 != VAL_SKIP_CHECK))
+        return VAL_ERROR_POINT(15);
+
+    if (!(VAL_IS_ENDPOINT_SECURE(client_logical_id)))
+    {
+        status_5 = ffa_feature_query(FFA_NOTIFICATION_INFO_GET_32, "FFA_NOTIFICATION_INFO_GET_32");
+        status_6 = ffa_feature_query(FFA_NOTIFICATION_INFO_GET_64, "FFA_NOTIFICATION_INFO_GET_64");
+        if ((status_5 != 0 && status_5 != VAL_SKIP_CHECK) &&
+            (status_6 != 0 && status_6 != VAL_SKIP_CHECK))
+            return VAL_ERROR_POINT(16);
+    }
+
+#if (PLATFORM_NS_HYPERVISOR_PRESENT == 0)
+        status_7 = ffa_feature_query(FFA_NOTIFICATION_BITMAP_CREATE,
+                                     "FFA_NOTIFICATION_BITMAP_CREATE");
+        status_8 = ffa_feature_query(FFA_NOTIFICATION_BITMAP_DESTROY,
+                                     "FFA_NOTIFICATION_BITMAP_DESTROY");
+
+        if ((status_7 != 0 && status_7 != VAL_SKIP_CHECK) &&
+            (status_8 != 0 && status_8 != VAL_SKIP_CHECK))
+            return VAL_ERROR_POINT(17);
+#endif
+#if !defined(XEN_SUPPORT) && !(TARGET_LINUX_ENV == 1)
     /* Cross check with manifest field value. Following must be
-     * supported if direct respond is supported */
-    if (messaging_type & FFA_RECEIPT_DIRECT_REQUEST2_SUPPORT)
+     * supported if notification is supported */
+    if (notification_support & FFA_NOTIFICATION_SUPPORT)
     {
         if (status_3)
         {
-            LOG(ERROR, "Invalid return code for direct messaging 2 ABIs\n");
-            return VAL_ERROR_POINT(26);
+            LOG(ERROR, "Invalid return code for Notification ABIs\n");
+            final_test_status = 1;
         }
     }
     else
     {
         if (!status_3)
         {
-            LOG(ERROR, "Invalid return code for direct messaging 2 ABIs\n");
-            return VAL_ERROR_POINT(27);
+            LOG(ERROR, "Invalid return code for Notification ABIs\n");
+            final_test_status = 1;
         }
     }
 #endif
+#endif
 
     val_reprogram_watchdog();
-
     LOG(DBG, "VAL Watchdog Reprogram Complete\n");
 
     /* Check invalid FID */
@@ -535,7 +709,7 @@ uint32_t ffa_features_client(uint32_t test_run_data)
     val_ffa_features(&payload);
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_NOT_SUPPORTED))
     {
-        return VAL_ERROR_POINT(28);
+        final_test_status = 1;
     }
 
     /* FFA_NORMAL_WORLD_RESUME_32 must be not supported at instances
@@ -546,14 +720,36 @@ uint32_t ffa_features_client(uint32_t test_run_data)
     val_ffa_features(&payload);
     if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_NOT_SUPPORTED))
     {
-        return VAL_ERROR_POINT(29);
+        LOG(ERROR, "FFA_NORMAL_WORLD_RESUME ABI should not be supported\n");
+        final_test_status = 1;
     }
-
     /* Check output w4-w7 reserved(MBZ) */
     output_reserve_count = 4;
     if (val_reserve_param_check(payload, output_reserve_count))
-        return VAL_ERROR_POINT(30);
+        return VAL_ERROR_POINT(18);
 
+
+#if PLATFORM_FFA_V >= FFA_V_1_1
+    /* FFA_RX_ACQUIRE_32 must be not supported at instances
+     * other than secure and non-secure physical instance
+     */
+    val_memset(&payload, 0, sizeof(ffa_args_t));
+    payload.arg1 = FFA_RX_ACQUIRE_32;
+    val_ffa_features(&payload);
+    if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_NOT_SUPPORTED))
+    {
+        LOG(ERROR, "FFA_RX_ACQUIRE_32 should not be supported\n");
+        final_test_status = 1;
+    }
+    /* Check output w4-w7 reserved(MBZ) */
+    output_reserve_count = 4;
+    if (val_reserve_param_check(payload, output_reserve_count))
+        return VAL_ERROR_POINT(19);
+
+#endif
     (void)test_run_data;
+    if (final_test_status)
+        return VAL_ERROR_POINT(20);
+
     return VAL_SUCCESS;
 }

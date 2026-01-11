@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2024, 2026, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -58,6 +58,7 @@
 #define FFA_MEM_RECLAIM_32           0x84000077
 #define FFA_NORMAL_WORLD_RESUME_32   0x8400007C
 #define FFA_SECONDARY_EP_REGISTER_32 0x84000087
+#define FFA_RX_ACQUIRE_32            0x84000084
 #define FFA_SPM_ID_GET_32            0x84000085
 #define FFA_MSG_SEND2_32             0x84000086
 #define FFA_MEM_PERM_GET_32          0x84000088
