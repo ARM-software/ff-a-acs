@@ -386,7 +386,7 @@ foreach(clean_item ${CLEAN_LIST})
 endforeach()
 ###
 
-set(MANIFEST_PATHS ${ROOT_DIR}/platform/manifest/tgt_tfa_fvp/v12/)
+set(MANIFEST_PATHS ${ROOT_DIR}/platform/manifest/tgt_tfa_fvp/)
 
 # Ensure Python is available
 find_program(PYTHON_EXECUTABLE python3)
@@ -403,7 +403,8 @@ file(MAKE_DIRECTORY "${FFA_GEN_OUTPUT_DIR}")
 execute_process(
     COMMAND ${PYTHON_EXECUTABLE}
             ${ROOT_DIR}/tools/python/ffa_endpoints.py
-            ${MANIFEST_PATHS} ${PLATFORM_SP_EL} ${FFA_GEN_OUTPUT_DIR}
+            ${MANIFEST_PATHS} ${PLATFORM_SP_EL} ${FFA_GEN_OUTPUT_DIR} ${${VM1_FFA_V}}
+            ${${SP1_FFA_V}} ${${SP2_FFA_V}} ${${SP3_FFA_V}} ${${SP4_FFA_V}}
     RESULT_VARIABLE gen_result
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )

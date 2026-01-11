@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2025, Arm Limited or its affiliates. All rights reserved.
+# Copyright (c) 2025-2026, Arm Limited or its affiliates. All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
+"""Generate FF-A endpoint information from DTS manifests."""
+
 import os
 import re
 import glob
-import sys
 from datetime import datetime
+import argparse
 
 # Bit shift used to encode exec_state in el_info field
 EL_WIDTH_SHIFT = 4
@@ -20,6 +22,14 @@ EXCEPTION_LEVEL_MAP = {
     1: 0,  # S_EL0 → EL0
     2: 1   # S_EL1 → EL1
 }
+
+def ffa_version_to_dir(version):
+    if version == "11":
+        return "v11"
+    elif version == "12":
+        return "v12"
+    else:
+        raise ValueError(f"Unsupported FF-A version: {version}")
 
 # Generate a license header string with the current year
 def generate_license_header():
@@ -39,8 +49,8 @@ def extract_field(content, pattern, default=None, cast=lambda x: x):
     return cast(match.group(1)) if match else default
 
 # Parse a single DTS manifest file and return a dictionary of extracted fields
-def parse_manifest(path, el_mode):
-    with open(path, 'r') as f:
+def parse_manifest(path):
+    with open(path, 'r', encoding="utf-8") as f:
         content = f.read()
 
     # Extract UUID field and convert it into a list of 32-bit integers
@@ -66,14 +76,21 @@ def parse_manifest(path, el_mode):
     el_info = ((exec_state == 0) << EL_WIDTH_SHIFT) | exc_level
 
     # Calculate endpoint property bitmask
-    ep = 0
-    if messaging & 0x001: ep |= 1 << 0  # direct_msg
-    if messaging & 0x002: ep |= 1 << 1  # indirect_msg
-    if messaging & 0x004: ep |= 1 << 2  # doorbell
-    if notification:      ep |= 1 << 3  # notification supported
-    if exec_state == 0:   ep |= 1 << 8  # AArch64
-    if messaging & 0x200: ep |= 1 << 9  # memory share
-    if messaging & 0x400: ep |= 1 << 10 # memory lend
+    end_point = 0
+    if messaging & 0x001:
+        end_point |= 1 << 0  # direct_msg
+    if messaging & 0x002:
+        end_point |= 1 << 1  # indirect_msg
+    if messaging & 0x004:
+        end_point |= 1 << 2  # doorbell
+    if notification:
+        end_point |= 1 << 3  # notification supported
+    if exec_state == 0:
+        end_point |= 1 << 8  # AArch64
+    if messaging & 0x200:
+        end_point |= 1 << 9  # memory share
+    if messaging & 0x400:
+        end_point |= 1 << 10 # memory lend
 
     # Extract name from filename:
     #  - Remove '_el0' or '_el1' suffix (case-insensitive)
@@ -95,7 +112,7 @@ def parse_manifest(path, el_mode):
     print(f"  el_info      = 0x{el_info:02x}")
     print(f"  messaging    = 0x{messaging:03x}")
     print(f"  notification = {'Yes' if notification else 'No'}")
-    print(f"  ep_properties = 0x{ep:08x}")
+    print(f"  ep_properties = 0x{end_point:08x}")
     print(f"  uuid         = {', '.join(f'0x{u:08x}' for u in uuid)}")
     print("-" * 50)
 
@@ -107,7 +124,7 @@ def parse_manifest(path, el_mode):
         "tg0": tg0,
         "el_info": el_info,
         "ec_count": ec_count,
-        "ep_properties": ep,
+        "ep_properties": end_point,
         "uuid": uuid
     }
 
@@ -147,7 +164,7 @@ def write_c_output(entries, output_c):
     ffa_array_decl = '#include "val_endpoints.h"\n\nval_endpoint_info_t endpoint_info_table[] = {\n'
     footer = "\n};\n"
 
-    with open(output_c, "w") as f:
+    with open(output_c, "w", encoding="utf-8") as f:
         f.write(header)
         f.write("\n")
         f.write(ffa_array_decl)
@@ -187,33 +204,54 @@ extern val_endpoint_info_t endpoint_info_table[FFA_ENDPOINT_COUNT];
 
 #endif /* FFA_ENDPOINTS_H */
 """
-    with open(output_h, "w") as f:
+    with open(output_h, "w", encoding="utf-8") as f:
         f.write(content)
 
 # Main entry point
-def main(manifest_dir, el_mode_str, output_dir):
+def main(base_manifest_dir, el_mode_str, output_dir,vm1_v,
+         sp1_v,sp2_v,sp3_v,sp4_v):
+
     el_mode = int(el_mode_str)
     if el_mode not in (0, 1):
         print("EL mode must be 0 (el0) or 1 (el1)")
         return
 
-    # Recursively find all .dts files in manifest_dir
-    all_files = glob.glob(os.path.join(manifest_dir, "*.dts"))
+    endpoint_versions = {
+        "VM1": vm1_v,
+        "SP1": sp1_v,
+        "SP2": sp2_v,
+        "SP3": sp3_v,
+        "SP4": sp4_v,
+    }
 
-    # Filter by exception level based on suffix (_el0)
-    filtered = [
-        f for f in all_files if (
-            f.lower().endswith('_el0.dts') if el_mode == 0 else not f.lower().endswith('_el0.dts')
-        )
-    ]
+    all_filtered = []
 
-    ordered_files = classify_and_sort(filtered)
+    for ep_name, ep_version in endpoint_versions.items():
+        version_dir = ffa_version_to_dir(ep_version)
+
+        # Example: base_manifest_dir/v12 or base_manifest_dir/v11
+        manifest_dir = os.path.join(base_manifest_dir, version_dir)
+
+        # Find only this endpoint DTS
+        pattern = os.path.join(manifest_dir, f"{ep_name.lower()}*.dts")
+        all_files = glob.glob(pattern)
+
+        # Filter by EL
+        filtered = [
+            f for f in all_files if (
+                f.lower().endswith("_el0.dts")
+                    if el_mode == 0 else not f.lower().endswith("_el0.dts"))
+        ]
+
+        all_filtered.extend(filtered)
+
+    ordered_files = classify_and_sort(all_filtered)
     entries = []
     vm1_present = False
 
     for path in ordered_files:
         # Parse each DTS and build entry
-        entry = parse_manifest(path, el_mode)
+        entry = parse_manifest(path)
         entries.append(entry)
 
         # Check if VM1 is already included
@@ -242,7 +280,35 @@ def main(manifest_dir, el_mode_str, output_dir):
 
 # Handle command-line execution
 if __name__ == "__main__":
-    if len(sys.argv) != 4:
-        print("Usage: python generate_ffa_endpoints.py <manifest_dir> <el: 0|1> <output_dir>")
-    else:
-        main(sys.argv[1], sys.argv[2], sys.argv[3])
+    parser = argparse.ArgumentParser(
+        description="Generate FF-A endpoints"
+    )
+    print("\nGenerate FF-A endpoints:")
+    # Required arguments
+    parser.add_argument("manifest_dir")
+    parser.add_argument("el", choices=["0", "1"])
+    parser.add_argument("output_dir")
+
+    # Optional positional arguments
+    parser.add_argument("VM1_V", nargs="?", default="12")
+    parser.add_argument("SP1_V", nargs="?", default="12")
+    parser.add_argument("SP2_V", nargs="?", default="12")
+    parser.add_argument("SP3_V", nargs="?", default="12")
+    parser.add_argument("SP4_V", nargs="?", default="12")
+
+    args = parser.parse_args()
+
+    # PRINT ALL VALUES HERE
+    for k, v in vars(args).items():
+        print(f"  {k} = {v}")
+
+    main(
+        args.manifest_dir,
+        args.el,
+        args.output_dir,
+        args.VM1_V,
+        args.SP1_V,
+        args.SP2_V,
+        args.SP3_V,
+        args.SP4_V,
+    )
