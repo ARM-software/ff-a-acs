@@ -1,6 +1,6 @@
 #!/bin/bash
 #-------------------------------------------------------------------------------
-# Copyright (c) 2025, Arm Limited or its affiliates. All rights reserved.
+# Copyright (c) 2025-2026, Arm Limited or its affiliates. All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
@@ -29,13 +29,13 @@ if [ ${#MISSING_PACKAGES[@]} -ne 0 ]; then
 fi
 
 # Install Python package
-pip3 install --user fdt
+pip3 install fdt
 
 # --------------------------------------------------------------------------------------------------
 # Validate
 if [ -z "${WORKSPACE}" ]; then
-  echo "WORKSPACE is not set. Please set the variable and try again."
-  exit 1
+    echo "WORKSPACE is not set. Please set the variable and try again."
+    exit 1
 fi
 
 # Set up toolchain directory
@@ -78,11 +78,11 @@ echo "Verifying Arm GNU Toolchain installation..."
 command -v aarch64-none-linux-gnu-gcc &>/dev/null || { echo "Arm GNU Toolchain installation failed."; exit 1; }
 echo "Arm GNU Toolchain installed successfully."
 
-# LLVM Clang
-LLVM_VERSION="18.1.8"
-LLVM_URL="https://github.com/llvm/llvm-project/releases/download/llvmorg-${LLVM_VERSION}/clang+llvm-${LLVM_VERSION}-x86_64-linux-gnu-ubuntu-18.04.tar.xz"
+#LLVM Clang
+LLVM_VERSION="21.1.0"
+LLVM_URL="https://github.com/llvm/llvm-project/releases/download/llvmorg-${LLVM_VERSION}/LLVM-${LLVM_VERSION}-Linux-X64.tar.xz"
 download_and_extract "$LLVM_URL"
-export PATH=$TOOLCHAIN_BASE_DIR/clang+llvm-${LLVM_VERSION}-x86_64-linux-gnu-ubuntu-18.04/bin:$PATH
+export PATH=$TOOLCHAIN_BASE_DIR/LLVM-${LLVM_VERSION}-Linux-X64/bin:$PATH
 clang --version;
 echo "Verifying LLVM Clang installation..."
 command -v clang &>/dev/null || { echo "LLVM Clang installation failed."; exit 1; }

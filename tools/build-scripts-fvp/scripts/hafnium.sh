@@ -1,6 +1,6 @@
 #!/bin/bash
 #-------------------------------------------------------------------------------
-# Copyright (c) 2025, Arm Limited or its affiliates. All rights reserved.
+# Copyright (c) 2025-2026, Arm Limited or its affiliates. All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
@@ -27,8 +27,8 @@ check_tool_exists() {
 # Precompile Checks
 
 if [ -z "${WORKSPACE}" ]; then
-  echo "WORKSPACE is not set. Please set the variable and try again."
-  exit 1
+    echo "WORKSPACE is not set. Please set the variable and try again."
+    exit 1
 fi
 
 if [ "$SPM_EL_LEVEL" = "3" ]; then
@@ -44,10 +44,11 @@ check_tool_exists clang;
 # Build Setup
 
 REPO_URL="https://git.trustedfirmware.org/hafnium/hafnium.git"
-REVISION="v2.13.0"
+REVISION="v2.14.0"
 
 BUILDDIR="$WORKSPACE/hafnium-build/hafnium/out"
 HAFNIUM_DIR="$WORKSPACE/hafnium-build/hafnium/"
+HAFNIUM_PATCH="$WORKSPACE/acs-build/ff-a-acs/tools/build-scripts-fvp/scripts/hafnium_backward_compatibility.patch"
 
 # --------------------------------------------------------------------------------------------------
 # Build
@@ -55,6 +56,9 @@ HAFNIUM_DIR="$WORKSPACE/hafnium-build/hafnium/"
 # Clone repository if needed
 if [ ! -d "$HAFNIUM_DIR" ]; then
     git clone --depth 1 --branch "$REVISION" "$REPO_URL" "$HAFNIUM_DIR"
+    cd "$HAFNIUM_DIR"
+    git apply "$HAFNIUM_PATCH"
+    cd -
     export PATH=$PWD/prebuilts/linux-x64/dtc:$PATH;
     git -C $HAFNIUM_DIR submodule update --init;
 fi
