@@ -31,65 +31,114 @@
 #define FFA_ERROR_ABORTED            0xfffffff8 //-8
 #define FFA_ERROR_NODATA             0xfffffff7 //-9
 
-/* FFA 32 bit- function ids. */
-#define FFA_ERROR_32                 0x84000060
-#define FFA_SUCCESS_32               0x84000061
-#define FFA_INTERRUPT_32             0x84000062
-#define FFA_VERSION_32               0x84000063
-#define FFA_FEATURES_32              0x84000064
-#define FFA_RX_RELEASE_32            0x84000065
-#define FFA_RXTX_MAP_32              0x84000066
-#define FFA_RXTX_UNMAP_32            0x84000067
-#define FFA_PARTITION_INFO_GET_32    0x84000068
-#define FFA_ID_GET_32                0x84000069
-#define FFA_MSG_POLL_32              0x8400006A
-#define FFA_MSG_WAIT_32              0x8400006B
-#define FFA_YIELD_32                 0x8400006C
-#define FFA_RUN_32                   0x8400006D
-#define FFA_MSG_SEND_32              0x8400006E
-#define FFA_MSG_SEND_DIRECT_REQ_32   0x8400006F
-#define FFA_MSG_SEND_DIRECT_RESP_32  0x84000070
-#define FFA_MEM_DONATE_32            0x84000071
-#define FFA_MEM_LEND_32              0x84000072
-#define FFA_MEM_SHARE_32             0x84000073
-#define FFA_MEM_RETRIEVE_REQ_32      0x84000074
-#define FFA_MEM_RETRIEVE_RESP_32     0x84000075
-#define FFA_MEM_RELINQUISH_32        0x84000076
-#define FFA_MEM_RECLAIM_32           0x84000077
-#define FFA_NORMAL_WORLD_RESUME_32   0x8400007C
-#define FFA_SECONDARY_EP_REGISTER_32 0x84000087
-#define FFA_RX_ACQUIRE_32            0x84000084
-#define FFA_SPM_ID_GET_32            0x84000085
-#define FFA_MSG_SEND2_32             0x84000086
-#define FFA_MEM_PERM_GET_32          0x84000088
-#define FFA_MEM_PERM_SET_32          0x84000089
-#define FFA_CONSOLE_LOG_32           0x8400008A
 
-#define FFA_NOTIFICATION_BITMAP_CREATE   0x8400007D
-#define FFA_NOTIFICATION_BITMAP_DESTROY  0x8400007E
-#define FFA_NOTIFICATION_BIND            0x8400007F
-#define FFA_NOTIFICATION_UNBIND          0x84000080
-#define FFA_NOTIFICATION_SET             0x84000081
-#define FFA_NOTIFICATION_GET             0x84000082
-#define FFA_NOTIFICATION_INFO_GET_32     0x84000083
+/* ffa_fid_list */
+#define FFA_FID_LIST(X) \
+    /* FF-A 32-bit function IDs */ \
+    X(FFA_ERROR_32,                 0x84000060) \
+    X(FFA_SUCCESS_32,               0x84000061) \
+    X(FFA_INTERRUPT_32,             0x84000062) \
+    X(FFA_VERSION_32,               0x84000063) \
+    X(FFA_FEATURES_32,              0x84000064) \
+    X(FFA_RX_RELEASE_32,            0x84000065) \
+    X(FFA_RXTX_MAP_32,              0x84000066) \
+    X(FFA_RXTX_UNMAP_32,            0x84000067) \
+    X(FFA_PARTITION_INFO_GET_32,    0x84000068) \
+    X(FFA_ID_GET_32,                0x84000069) \
+    X(FFA_MSG_POLL_32,              0x8400006A) \
+    X(FFA_MSG_WAIT_32,              0x8400006B) \
+    X(FFA_YIELD_32,                 0x8400006C) \
+    X(FFA_RUN_32,                   0x8400006D) \
+    X(FFA_MSG_SEND_32,              0x8400006E) \
+    X(FFA_MSG_SEND_DIRECT_REQ_32,   0x8400006F) \
+    X(FFA_MSG_SEND_DIRECT_RESP_32,  0x84000070) \
+    X(FFA_MEM_DONATE_32,            0x84000071) \
+    X(FFA_MEM_LEND_32,              0x84000072) \
+    X(FFA_MEM_SHARE_32,             0x84000073) \
+    X(FFA_MEM_RETRIEVE_REQ_32,      0x84000074) \
+    X(FFA_MEM_RETRIEVE_RESP_32,     0x84000075) \
+    X(FFA_MEM_RELINQUISH_32,        0x84000076) \
+    X(FFA_MEM_RECLAIM_32,           0x84000077) \
+    X(FFA_NORMAL_WORLD_RESUME_32,   0x8400007C) \
+    \
+    X(FFA_NOTIFICATION_BITMAP_CREATE,  0x8400007D) \
+    X(FFA_NOTIFICATION_BITMAP_DESTROY, 0x8400007E) \
+    X(FFA_NOTIFICATION_BIND,           0x8400007F) \
+    X(FFA_NOTIFICATION_UNBIND,         0x84000080) \
+    X(FFA_NOTIFICATION_SET,            0x84000081) \
+    X(FFA_NOTIFICATION_GET,            0x84000082) \
+    X(FFA_NOTIFICATION_INFO_GET_32,    0x84000083) \
+    \
+    X(FFA_RX_ACQUIRE_32,            0x84000084) \
+    X(FFA_SPM_ID_GET_32,            0x84000085) \
+    X(FFA_MSG_SEND2_32,             0x84000086) \
+    X(FFA_SECONDARY_EP_REGISTER_32, 0x84000087) \
+    X(FFA_MEM_PERM_GET_32,          0x84000088) \
+    X(FFA_MEM_PERM_SET_32,          0x84000089) \
+    X(FFA_CONSOLE_LOG_32,           0x8400008A) \
+    \
+    /* FF-A 64-bit function IDs */ \
+    X(FFA_SUCCESS_64,               0xC4000061) \
+    X(FFA_RXTX_MAP_64,              0xC4000066) \
+    X(FFA_MSG_SEND_DIRECT_REQ_64,   0xC400006F) \
+    X(FFA_MSG_SEND_DIRECT_RESP_64,  0xC4000070) \
+    X(FFA_MEM_DONATE_64,            0xC4000071) \
+    X(FFA_MEM_LEND_64,              0xC4000072) \
+    X(FFA_MEM_SHARE_64,             0xC4000073) \
+    X(FFA_MEM_RETRIEVE_REQ_64,      0xC4000074) \
+    X(FFA_SECONDARY_EP_REGISTER_64, 0xC4000087) \
+    X(FFA_NOTIFICATION_INFO_GET_64, 0xC4000083) \
+    X(FFA_MEM_PERM_GET_64,          0xC4000088) \
+    X(FFA_MEM_PERM_SET_64,          0xC4000089) \
+    X(FFA_CONSOLE_LOG_64,           0xC400008A) \
+    X(FFA_MSG_SEND_DIRECT_REQ2_64,  0xC400008D) \
+    X(FFA_MSG_SEND_DIRECT_RESP2_64, 0xC400008E) \
+    X(FFA_PARTITION_INFO_GET_REGS_64, 0xC400008B)
 
-/* FFA 64 bit- function identifiers. */
-#define FFA_SUCCESS_64               0xC4000061
-#define FFA_RXTX_MAP_64              0xC4000066
-#define FFA_MSG_SEND_DIRECT_REQ_64   0xC400006F
-#define FFA_MSG_SEND_DIRECT_RESP_64  0xC4000070
-#define FFA_MEM_DONATE_64            0xC4000071
-#define FFA_MEM_LEND_64              0xC4000072
-#define FFA_MEM_SHARE_64             0xC4000073
-#define FFA_MEM_RETRIEVE_REQ_64      0xC4000074
-#define FFA_SECONDARY_EP_REGISTER_64 0xC4000087
-#define FFA_NOTIFICATION_INFO_GET_64 0xC4000083
-#define FFA_MEM_PERM_GET_64          0xC4000088
-#define FFA_MEM_PERM_SET_64          0xC4000089
-#define FFA_CONSOLE_LOG_64           0xC400008A
-#define FFA_MSG_SEND_DIRECT_REQ2_64  0xC400008D
-#define FFA_MSG_SEND_DIRECT_RESP2_64 0xC400008E
-#define FFA_PARTITION_INFO_GET_REGS_64    0xC400008B
+/* Masks to separate ABI information and function number from FF-A FIDs */
+#define FFA_FID_UPPER_MASK        0xFFFF0000
+#define FFA_FID_LOWER_MASK        0x0000FFFF
+
+
+/* ABI prefixes encoded in the upper bits of FF-A function IDs */
+#define FFA_FID_ABI32_PREFIX      0x84000000
+#define FFA_FID_ABI64_PREFIX      0xC4000000
+
+
+/* Special marker used by VAL to skip ABI checking (not a real FF-A FID) */
+#define FFA_FID_SKIP_CHECK        0xABCDEFFF
+
+
+/* ANY-ABI FF-A FIDs:
+ * Used for tests that must run on both 32-bit and 64-bit ABIs.
+ * The ABI bits are masked so only the function number is matched.
+ */
+#define FFA_MEM_SHARE_ANY                 (FFA_MEM_SHARE_32 & FFA_FID_LOWER_MASK)
+#define FFA_MEM_LEND_ANY                  (FFA_MEM_LEND_32  & FFA_FID_LOWER_MASK)
+#define FFA_MEM_DONATE_ANY                (FFA_MEM_DONATE_32 & FFA_FID_LOWER_MASK)
+#define FFA_MEM_RETRIEVE_REQ_ANY          (FFA_MEM_RETRIEVE_REQ_32 & FFA_FID_LOWER_MASK)
+#define FFA_MSG_SEND_DIRECT_REQ_ANY       (FFA_MSG_SEND_DIRECT_REQ_32 & FFA_FID_LOWER_MASK)
+#define FFA_NOTIFICATION_INFO_GET_ANY     (FFA_NOTIFICATION_INFO_GET_32 & FFA_FID_LOWER_MASK)
+#define FFA_CONSOLE_LOG_ANY               (FFA_CONSOLE_LOG_32 & FFA_FID_LOWER_MASK)
+
+
+/* FF-A Function Enum*/
+typedef enum {
+#define X(name, val) name = val,
+    FFA_FID_LIST(X)
+#undef X
+} ffa_func_id_t;
+
+/* FF-A Function Array */
+static const ffa_func_id_t ffa_supported_fids[] = {
+#define X(name, val) name,
+    FFA_FID_LIST(X)
+#undef X
+};
+
+#define FFA_SUPPORTED_FID_COUNT \
+    (sizeof(ffa_supported_fids) / sizeof(ffa_supported_fids[0]))
+
 
 #define SENDER_ID(x)    (x >> 16) & 0xffff
 #define RECEIVER_ID(x)  (x & 0xffff)

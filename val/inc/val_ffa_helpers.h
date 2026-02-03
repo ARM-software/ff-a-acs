@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2026, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -534,4 +534,7 @@ uint32_t val_is_ffa_feature_supported(uint32_t fid);
 
 uint32_t val_ffa_mem_handle_share(ffa_endpoint_id_t sender, ffa_endpoint_id_t recipient,
                                   ffa_memory_handle_t handle);
+
+void val_ffa_mark_supported_fid(ffa_func_id_t fid, bool supported);
+
 #endif /* VAL_FFA_HELPERS_H */

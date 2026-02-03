@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2026, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -61,6 +61,7 @@ typedef struct {
     server_test_t       server_fn;
     sec_cpu_client_test_t      sec_cpu_client_fn;
     sec_cpu_server_test_t      sec_cpu_server_fn;
+    uint32_t            test_fid;
 } test_db_t;
 
 /* Test fn types */

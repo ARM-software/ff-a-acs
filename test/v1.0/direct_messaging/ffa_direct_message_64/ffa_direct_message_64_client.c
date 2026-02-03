@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2026, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -31,7 +31,7 @@ uint32_t ffa_direct_message_64_client(uint32_t test_run_data)
     payload.arg1 = ((uint32_t)val_get_endpoint_id(client_logical_id) << 16) |
                             val_get_endpoint_id(server_logical_id);
     val_ffa_msg_send_direct_req_64(&payload);
-    if (payload.fid != FFA_MSG_SEND_DIRECT_RESP_32)
+    if (payload.fid != FFA_MSG_SEND_DIRECT_RESP_64)
     {
 #if (PLATFORM_FFA_V >= FFA_V_1_1)
         if  (payload.fid == FFA_YIELD_32)

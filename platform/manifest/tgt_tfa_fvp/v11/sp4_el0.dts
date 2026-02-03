@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2025, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2024-2026, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -23,6 +23,7 @@
     xlat-granule = <0>; /* 4KiB */
     boot-order = <3>;
     messaging-method = <0x3>; /* Direct messaging/Direct messaging-2 only */
+    notification-support;
     ns-interrupts-action = <0>; /* Non secure interrupts are queued. */
 
     /* Boot protocol */

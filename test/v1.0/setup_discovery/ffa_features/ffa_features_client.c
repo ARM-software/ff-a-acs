@@ -31,10 +31,12 @@ static uint32_t ffa_feature_query(uint32_t fid, char *str)
     if (payload.fid == FFA_ERROR_32 && (payload.arg2 == FFA_ERROR_NOT_SUPPORTED))
     {
         LOG(DBG, "%s -> feature not supported\n", str);
+        val_ffa_mark_supported_fid(fid, 0);
     }
     else if (payload.fid == FFA_SUCCESS_32 || payload.fid == FFA_SUCCESS_64)
     {
         LOG(DBG, "%s -> feature supported\n", str);
+	val_ffa_mark_supported_fid(fid, 1);
     }
     else
     {

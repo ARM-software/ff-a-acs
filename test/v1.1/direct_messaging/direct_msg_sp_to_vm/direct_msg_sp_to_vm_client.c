@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2025, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2024-2026, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -36,9 +36,9 @@ uint32_t direct_msg_sp_to_vm_client(uint32_t test_run_data)
 #endif
 
 
-    if (val_is_ffa_feature_supported(FFA_MSG_SEND2_32))
+    if (val_is_ffa_feature_supported(FFA_NOTIFICATION_INFO_GET_64))
     {
-        LOG(ERROR, "FFA_MSG_SEND2_32 not supported, skipping the test\n");
+        LOG(ERROR, "FFA_NOTIFICATION_INFO_GET_64 is not supported for validating FFA_MSG_SEND2\n");
         return VAL_SKIP_CHECK;
     }
 
