@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2025, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2024-2026, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -7,7 +7,7 @@
 
 #include "test_database.h"
 
-uint32_t mem_security_state_ns_bit_server(ffa_args_t args)
+uint32_t mem_security_state_ns_bit_retrieve_check_server(ffa_args_t args)
 {
     ffa_args_t payload;
     uint32_t status = VAL_SUCCESS;

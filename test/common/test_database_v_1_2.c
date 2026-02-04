@@ -22,6 +22,7 @@ const test_db_t test_list[] = {
     {0, "", NULL, NULL, NULL, NULL, NULL, 0},
 
     CLIENT_TEST_FN_ONLY(TESTSUITE_SETUP_DISCOVERY, ffa_features, FFA_FID_SKIP_CHECK),
+
 #if (PLATFORM_FFA_V_ALL == 1)
 #if (SUITE == all || SUITE == setup_discovery)
     CLIENT_TEST_FN_ONLY(TESTSUITE_SETUP_DISCOVERY, ffa_version, FFA_VERSION_32),
@@ -324,7 +325,14 @@ const test_db_t test_list[] = {
 #endif
 
 #if (SUITE == all || SUITE == memory_manage)
-    CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, mem_security_state_ns_bit, FFA_FID_SKIP_CHECK),
+    CLIENT_SERVER_TEST_FN(
+       TESTSUITE_MEMORY_MANAGE, mem_security_state_ns_bit_retrieve_check, FFA_MEM_RETRIEVE_REQ_32),
+    CLIENT_TEST_FN_ONLY(
+        TESTSUITE_MEMORY_MANAGE, mem_security_state_ns_bit_share_invalid, FFA_MEM_SHARE_32),
+    CLIENT_TEST_FN_ONLY(
+        TESTSUITE_MEMORY_MANAGE, mem_security_state_ns_bit_lend_invalid, FFA_MEM_LEND_32),
+    CLIENT_TEST_FN_ONLY(
+        TESTSUITE_MEMORY_MANAGE, mem_security_state_ns_bit_donate_invalid, FFA_MEM_DONATE_32),
 #if (PLATFORM_SP_EL == 0)
     CLIENT_TEST_FN_ONLY(TESTSUITE_MEMORY_MANAGE, ffa_mem_perm_set, FFA_FID_SKIP_CHECK),
     CLIENT_TEST_FN_ONLY(TESTSUITE_MEMORY_MANAGE, ffa_mem_perm_get, FFA_FID_SKIP_CHECK),

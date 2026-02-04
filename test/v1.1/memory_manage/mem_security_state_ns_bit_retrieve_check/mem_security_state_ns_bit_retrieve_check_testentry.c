@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2024, 2026, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -7,7 +7,7 @@
 
 #include "test_database.h"
 
-void mem_security_state_ns_bit_testentry(uint32_t test_num)
+void mem_security_state_ns_bit_retrieve_check_testentry(uint32_t test_num)
 {
     /* Execute test for EP combination: client=VM1, server=SP2 */
     if (IS_TEST_FAIL(val_execute_test(test_num, VM1, SP2)))

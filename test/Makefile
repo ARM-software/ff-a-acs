@@ -1,5 +1,5 @@
 ##
- # Copyright (c) 2021-2024, Arm Limited or its affiliates. All rights reserved.
+ # Copyright (c) 2021-2024, 2026, Arm Limited or its affiliates. All rights reserved.
  #
  # SPDX-License-Identifier: BSD-3-Clause
  #
@@ -427,9 +427,16 @@ ffa_acs_test-objs += $(TEST_SRC1)/notifications/notification_bind/notification_b
                 $(TEST_SRC1)/notifications/vm_to_sp_notification_pcpu/vm_to_sp_notification_pcpu_client.o \
                 $(TEST_SRC1)/notifications/vm_to_sp_notification_pcpu/vm_to_sp_notification_pcpu_server.o
 
-ffa_acs_test-objs += $(TEST_SRC1)/memory_manage/mem_security_state_ns_bit/mem_security_state_ns_bit_client.o \
-                $(TEST_SRC1)/memory_manage/mem_security_state_ns_bit/mem_security_state_ns_bit_server.o \
-                $(TEST_SRC1)/memory_manage/mem_security_state_ns_bit/mem_security_state_ns_bit_testentry.o
+ffa_acs_test-objs += $(TEST_SRC1)/memory_manage/mem_security_state_ns_bit_retrieve_check/mem_security_state_ns_bit_retrieve_check_client.o \
+                $(TEST_SRC1)/memory_manage/mem_security_state_ns_bit_retrieve_check/mem_security_state_ns_bit_retrieve_check_server.o \
+                $(TEST_SRC1)/memory_manage/mem_security_state_ns_bit_retrieve_check/mem_security_state_ns_bit_retrieve_check_testentry.o \
+                $(TEST_SRC1)/memory_manage/mem_security_state_ns_bit_share_invalid/mem_security_state_ns_bit_share_invalid_client.o \
+                $(TEST_SRC1)/memory_manage/mem_security_state_ns_bit_share_invalid/mem_security_state_ns_bit_share_invalid_testentry.o \
+                $(TEST_SRC1)/memory_manage/mem_security_state_ns_bit_lend_invalid/mem_security_state_ns_bit_lend_invalid_client.o \
+                $(TEST_SRC1)/memory_manage/mem_security_state_ns_bit_lend_invalid/mem_security_state_ns_bit_lend_invalid_testentry.o \
+                $(TEST_SRC1)/memory_manage/mem_security_state_ns_bit_donate_invalid/mem_security_state_ns_bit_donate_invalid_client.o \
+                $(TEST_SRC1)/memory_manage/mem_security_state_ns_bit_donate_invalid/mem_security_state_ns_bit_donate_invalid_testentry.o
+
 
 ccflags-y=$(ACS_MACROS) $(ACS_INCLUDE) -Wall -Werror
 
