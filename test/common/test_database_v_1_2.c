@@ -240,7 +240,6 @@ const test_db_t test_list[] = {
 
     CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, mem_lend_mmio, FFA_MEM_LEND_ANY),
 #endif
-#endif
 
 #ifdef ACS_FFA_UNVERIFIED
     CLIENT_SERVER_TEST_FN(
@@ -292,7 +291,7 @@ const test_db_t test_list[] = {
     CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, mem_donate_mmio, FFA_MEM_DONATE_ANY),
     CLIENT_TEST_FN_ONLY(TESTSUITE_MEMORY_MANAGE, static_mapping_dma, FFA_MEM_SHARE_ANY),
 #endif
-
+#endif
 #endif
 
 #if (SUITE == all || SUITE == setup_discovery)
