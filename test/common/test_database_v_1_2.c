@@ -55,7 +55,7 @@ const test_db_t test_list[] = {
 #if (SUITE == all || SUITE == memory_manage)
     CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, ffa_mem_share, FFA_MEM_SHARE_ANY),
     CLIENT_SERVER_TEST_FN(
-        TESTSUITE_MEMORY_MANAGE, share_invalid_handle_tag, FFA_MEM_RETRIEVE_REQ_ANY),
+        TESTSUITE_MEMORY_MANAGE, share_invalid_handle_tag, FFA_MEM_SHARE_ANY),
     CLIENT_TEST_FN_ONLY(TESTSUITE_MEMORY_MANAGE, share_input_error_checks, FFA_MEM_SHARE_ANY),
     CLIENT_TEST_FN_ONLY(TESTSUITE_MEMORY_MANAGE, share_state_machine_2, FFA_MEM_SHARE_ANY),
     CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, share_state_machine_3, FFA_MEM_SHARE_ANY),
@@ -63,9 +63,9 @@ const test_db_t test_list[] = {
     CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, share_state_machine_5, FFA_MEM_SHARE_ANY),
     CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, share_rw_retrieve_ro, FFA_MEM_SHARE_ANY),
     CLIENT_SERVER_TEST_FN(
-        TESTSUITE_MEMORY_MANAGE, share_retrieve_align_hint_check, FFA_MEM_RETRIEVE_REQ_ANY),
+        TESTSUITE_MEMORY_MANAGE, share_retrieve_align_hint_check, FFA_MEM_SHARE_ANY),
     CLIENT_SERVER_TEST_FN(
-        TESTSUITE_MEMORY_MANAGE, share_relinquish_input_checks, FFA_MEM_RELINQUISH_32),
+        TESTSUITE_MEMORY_MANAGE, share_relinquish_input_checks, FFA_MEM_SHARE_ANY),
     CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, ffa_mem_lend, FFA_MEM_LEND_ANY),
 
     CLIENT_SERVER_TEST_FN(
@@ -132,7 +132,7 @@ const test_db_t test_list[] = {
 
     CLIENT_TEST_FN_ONLY(TESTSUITE_MEMORY_MANAGE, share_input_error_checks1, FFA_MEM_SHARE_ANY),
     CLIENT_SERVER_TEST_FN(
-        TESTSUITE_MEMORY_MANAGE, share_multiple_retrievals, FFA_MEM_RETRIEVE_REQ_ANY),
+        TESTSUITE_MEMORY_MANAGE, share_multiple_retrievals, FFA_MEM_SHARE_ANY),
     CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, lend_retrieve_input_checks5, FFA_MEM_LEND_ANY),
     CLIENT_TEST_FN_ONLY(TESTSUITE_MEMORY_MANAGE, donate_input_error_checks, FFA_MEM_DONATE_ANY),
     CLIENT_SERVER_TEST_FN(
@@ -404,7 +404,7 @@ const test_db_t test_list[] = {
 #if (PLATFORM_FFA_V_1_2 == 1 || PLATFORM_FFA_V_ALL == 1)
 #if (SUITE == all || SUITE == setup_discovery)
     CLIENT_TEST_FN_ONLY(TESTSUITE_SETUP_DISCOVERY, ffa_version_negotiation, FFA_VERSION_32),
-    CLIENT_SERVER_TEST_FN(TESTSUITE_SETUP_DISCOVERY, ffa_msg_wait_rx_buff_rel, FFA_FID_SKIP_CHECK),
+    CLIENT_SERVER_TEST_FN(TESTSUITE_SETUP_DISCOVERY, ffa_msg_wait_rx_buff_rel, FFA_MSG_WAIT_32),
     CLIENT_TEST_FN_ONLY(
         TESTSUITE_SETUP_DISCOVERY, ffa_partition_info_get_regs, FFA_PARTITION_INFO_GET_REGS_64),
     CLIENT_TEST_FN_ONLY(

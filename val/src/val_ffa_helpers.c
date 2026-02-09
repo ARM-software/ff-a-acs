@@ -319,6 +319,12 @@ uint32_t val_is_ffa_feature_supported(uint32_t fid)
                 ffa_args_t payload;
                 val_memset(&payload, 0, sizeof(ffa_args_t));
                 payload.arg1 = fid;
+#if (PLATFORM_FFA_V >= FFA_V_1_1)
+                if (fid == FFA_MEM_RETRIEVE_REQ_32 || fid == FFA_MEM_RETRIEVE_REQ_64)
+                {
+                    payload.arg2 = 0x2;
+                }
+#endif
                 val_ffa_features(&payload);
                 if (payload.fid == FFA_ERROR_32)
                     return VAL_ERROR;

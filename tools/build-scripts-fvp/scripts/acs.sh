@@ -148,7 +148,11 @@ rsync -av $BUILD_DIR_BAREMETAL/output/vm1.bin $WORKSPACE/output/
 rsync -av $SPMC_MANIFEST_DTS $WORKSPACE/output/
 
 # Copy SP Layout Json
-cat $SP_LAYOUT | sed -e "s,\.\..*/output/,," > "$WORKSPACE/output/sp_layout.json"
+cat "$SP_LAYOUT" | sed -e "s,\.\..*/output/,," \
+                    -e "s|\.\./\.\./\.\./platform/manifest/tgt_tfa_fvp/\(v1[12]\)/|\1/|g" \
+                    > "$WORKSPACE/output/sp_layout.json"
+
+
 
 # Copy SP Manifest
 rsync -av $SP_MANIFEST_V12 $WORKSPACE/output/

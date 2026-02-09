@@ -762,10 +762,24 @@ uint32_t ffa_features_client(uint32_t test_run_data)
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 = FFA_RX_ACQUIRE_32;
     val_ffa_features(&payload);
-    if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_NOT_SUPPORTED))
-    {
-        LOG(ERROR, "FFA_RX_ACQUIRE_32 should not be supported\n");
-        final_test_status = 1;
+    if (VAL_IS_ENDPOINT_SECURE(client_logical_id)) {
+        if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_NOT_SUPPORTED))
+        {
+            LOG(ERROR, "FFA_RX_ACQUIRE_32 should not be supported\n");
+            final_test_status = 1;
+        }
+    }
+    else {
+#if (PLATFORM_NS_HYPERVISOR_PRESENT == 1)
+        if ((payload.fid != FFA_ERROR_32) || (payload.arg2 != FFA_ERROR_NOT_SUPPORTED))
+        {
+            LOG(ERROR, "FFA_RX_ACQUIRE_32 should not be supported\n");
+            final_test_status = 1;
+        }
+#else
+        if (payload.fid != FFA_SUCCESS_32)
+            final_test_status = 1;
+#endif
     }
     /* Check output w4-w7 reserved(MBZ) */
     output_reserve_count = 4;

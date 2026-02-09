@@ -19,7 +19,7 @@ const test_suite_info_t test_suite_list[] = {
 
 const test_db_t test_list[] = {
     /* {suite_num, "testname", client_fn_list, server_fn_list} */
-    {0, "", NULL, NULL, NULL, NULL, NULL},
+    {0, "", NULL, NULL, NULL, NULL, NULL, 0},
 
     CLIENT_TEST_FN_ONLY(TESTSUITE_SETUP_DISCOVERY, ffa_features, FFA_FID_SKIP_CHECK),
 
@@ -54,7 +54,7 @@ const test_db_t test_list[] = {
 #if (SUITE == all || SUITE == memory_manage)
     CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, ffa_mem_share, FFA_MEM_SHARE_ANY),
     CLIENT_SERVER_TEST_FN(
-        TESTSUITE_MEMORY_MANAGE, share_invalid_handle_tag, FFA_MEM_RETRIEVE_REQ_ANY),
+        TESTSUITE_MEMORY_MANAGE, share_invalid_handle_tag, FFA_MEM_SHARE_ANY),
     CLIENT_TEST_FN_ONLY(TESTSUITE_MEMORY_MANAGE, share_input_error_checks, FFA_MEM_SHARE_ANY),
     CLIENT_TEST_FN_ONLY(TESTSUITE_MEMORY_MANAGE, share_state_machine_2, FFA_MEM_SHARE_ANY),
     CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, share_state_machine_3, FFA_MEM_SHARE_ANY),
@@ -62,9 +62,9 @@ const test_db_t test_list[] = {
     CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, share_state_machine_5, FFA_MEM_SHARE_ANY),
     CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, share_rw_retrieve_ro, FFA_MEM_SHARE_ANY),
     CLIENT_SERVER_TEST_FN(
-        TESTSUITE_MEMORY_MANAGE, share_retrieve_align_hint_check, FFA_MEM_RETRIEVE_REQ_ANY),
+        TESTSUITE_MEMORY_MANAGE, share_retrieve_align_hint_check, FFA_MEM_SHARE_ANY),
     CLIENT_SERVER_TEST_FN(
-        TESTSUITE_MEMORY_MANAGE, share_relinquish_input_checks, FFA_MEM_RELINQUISH_32),
+        TESTSUITE_MEMORY_MANAGE, share_relinquish_input_checks, FFA_MEM_SHARE_ANY),
     CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, ffa_mem_lend, FFA_MEM_LEND_ANY),
 
     CLIENT_SERVER_TEST_FN(
@@ -131,7 +131,7 @@ const test_db_t test_list[] = {
 
     CLIENT_TEST_FN_ONLY(TESTSUITE_MEMORY_MANAGE, share_input_error_checks1, FFA_MEM_SHARE_ANY),
     CLIENT_SERVER_TEST_FN(
-        TESTSUITE_MEMORY_MANAGE, share_multiple_retrievals, FFA_MEM_RETRIEVE_REQ_ANY),
+        TESTSUITE_MEMORY_MANAGE, share_multiple_retrievals, FFA_MEM_SHARE_ANY),
     CLIENT_SERVER_TEST_FN(TESTSUITE_MEMORY_MANAGE, lend_retrieve_input_checks5, FFA_MEM_LEND_ANY),
     CLIENT_TEST_FN_ONLY(TESTSUITE_MEMORY_MANAGE, donate_input_error_checks, FFA_MEM_DONATE_ANY),
     CLIENT_SERVER_TEST_FN(
@@ -400,7 +400,7 @@ const test_db_t test_list[] = {
 #endif // TARGET_LINUX
 #endif // PLATFORM_FFA_V_ALL == 1
 
-    {0, "", NULL, NULL, NULL, NULL, NULL},
+    {0, "", NULL, NULL, NULL, NULL, NULL, 0},
 };
 
 const uint32_t total_tests = sizeof(test_list)/sizeof(test_list[0]);

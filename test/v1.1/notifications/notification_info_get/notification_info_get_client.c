@@ -64,8 +64,7 @@ uint32_t notification_info_get_client(uint32_t test_run_data)
 
     status_64 = val_is_ffa_feature_supported(FFA_NOTIFICATION_INFO_GET_64);
     status_32 = val_is_ffa_feature_supported(FFA_NOTIFICATION_INFO_GET_32);
-    if (status_64 && status_32 &&
-		    !VAL_IS_ENDPOINT_SECURE(val_get_curr_endpoint_logical_id()))
+    if (status_64 && status_32)
     {
         LOG(TEST, "FFA_NOTIFICATION_INFO_GET not supported, skipping the check\n");
         return VAL_SKIP_CHECK;

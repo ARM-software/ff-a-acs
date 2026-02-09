@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2026, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -13,6 +13,7 @@ uint32_t share_relinquish_input_checks_server(ffa_args_t args)
 {
     ffa_args_t payload;
     uint32_t status = VAL_SUCCESS;
+    uint32_t status_retrieve, status_relinquish;
     ffa_endpoint_id_t sender = args.arg1 & 0xffff;
     ffa_endpoint_id_t receiver = (args.arg1 >> 16) & 0xffff;
     uint32_t fid = (uint32_t)args.arg4;
@@ -52,6 +53,28 @@ uint32_t share_relinquish_input_checks_server(ffa_args_t args)
         LOG(ERROR, "Memory allocation failed\n");
         status = VAL_ERROR_POINT(3);
         goto rxtx_unmap;
+    }
+
+    if (fid == FFA_MEM_SHARE_64) {
+        status_retrieve = val_is_ffa_feature_supported(FFA_MEM_RETRIEVE_REQ_64);
+    }
+    else {
+        status_retrieve = val_is_ffa_feature_supported(FFA_MEM_RETRIEVE_REQ_32);
+    }
+
+    if (status_retrieve)
+    {
+        LOG(TEST, "FFA_MEM_RETRIEVE not supported, skipping the check\n");
+        status = VAL_SKIP_CHECK;
+        goto rxtx_unmap;
+    }
+    else {
+        status_relinquish = val_is_ffa_feature_supported(FFA_MEM_RELINQUISH_32);
+        if (status_relinquish) {
+           LOG(TEST, "FFA_MEM_RELINQUISH_32 not supported, skipping the check\n");
+           status = VAL_SKIP_CHECK;
+           goto rxtx_unmap;
+        }
     }
 
     /* Wait for the message. */
@@ -216,6 +239,8 @@ free_memory:
 
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 =  ((uint32_t)sender << 16) | receiver;
+    if (status)
+        payload.arg3 = status;
     val_ffa_msg_send_direct_resp_64(&payload);
     if (payload.fid == FFA_ERROR_32)
     {
