@@ -19,7 +19,7 @@ const test_suite_info_t test_suite_list[] = {
 
 const test_db_t test_list[] = {
     /* {suite_num, "testname", client_fn_list, server_fn_list} */
-    {0, "", NULL, NULL, NULL, NULL, NULL},
+    {0, "", NULL, NULL, NULL, NULL, NULL, 0},
 
     CLIENT_TEST_FN_ONLY(TESTSUITE_SETUP_DISCOVERY, ffa_features, FFA_FID_SKIP_CHECK),
 
@@ -92,7 +92,7 @@ const test_db_t test_list[] = {
 
 #endif
 
-    {0, "", NULL, NULL, NULL, NULL, NULL},
+    {0, "", NULL, NULL, NULL, NULL, NULL, 0},
 };
 
 const uint32_t total_tests = sizeof(test_list)/sizeof(test_list[0]);

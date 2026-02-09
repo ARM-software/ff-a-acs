@@ -428,26 +428,52 @@ uint32_t ffa_features_client(uint32_t test_run_data)
         (void) status_10;
         (void) status_11;
 
-#if !defined(XEN_SUPPORT) && !(TARGET_LINUX_ENV == 1)
         /* If 64 bit manage ABI supported */
         if (!status_1 || !status_3 || !status_5)
         {
-            if (status_7 || status_9 || status_10 || status_11) {
-               LOG(WARN, "RETRIEVE/RELINQUISH/RECLAIM all must be supported\n");
-               final_test_status = 1;
+	    if (status_11) {
+                LOG(WARN, "RECLAIM must be supported if SHARE/LEND/DONATE is supported\n");
+		final_test_status = 1;
+	    }
+
+	    /* Partial retrieve -> fail */
+            if ((status_7 == 0 && status_9 != 0) ||
+                (status_7 != 0 && status_9 == 0)) {
+                LOG(WARN, "RETRIEVE_REQ and RETRIEVE_RESP both must be supported\n");
+                final_test_status = 1;
             }
+
+            /* Any retrieve supported -> RELINQUISH required */
+            if ((status_7 == 0 || status_9 == 0) && status_10) {
+                LOG(WARN, "RELINQUISH must be supported if RETRIEVE is supported\n");
+                final_test_status = 1;
+            }
+
         }
 
         /* If 32 bit manage ABI supported */
         if (!status_2 || !status_4 || !status_6)
         {
-            if (status_8 || status_9 || status_10 || status_11) {
-               LOG(WARN, "RETRIEVE/RELINQUISH/RECLAIM all must be supported\n");
-               final_test_status = 1;
+           if (status_11) {
+                LOG(WARN, "RECLAIM must be supported if SHARE/LEND/DONATE is supported\n");
+                final_test_status = 1;
             }
 
+	    /* Partial retrieve -> fail */
+            if ((status_8 == 0 && status_9 != 0) ||
+                (status_8 != 0 && status_9 == 0)) {
+                LOG(WARN, "RETRIEVE_REQ and RETRIEVE_RESP both must be supported\n");
+                final_test_status = 1;
+            }
+
+            /* Any retrieve supported -> RELINQUISH required */
+            if ((status_8 == 0 || status_9 == 0) && status_10) {
+                LOG(WARN, "RELINQUISH must be supported if RETRIEVE is supported\n");
+                final_test_status = 1;
+            }
+
+
         }
-#endif
     }
      val_reprogram_watchdog();
 
@@ -680,7 +706,6 @@ uint32_t ffa_features_client(uint32_t test_run_data)
             (status_8 != 0 && status_8 != VAL_SKIP_CHECK))
             return VAL_ERROR_POINT(17);
 #endif
-#if !defined(XEN_SUPPORT) && !(TARGET_LINUX_ENV == 1)
     /* Cross check with manifest field value. Following must be
      * supported if notification is supported */
     if (notification_support & FFA_NOTIFICATION_SUPPORT)
@@ -699,7 +724,6 @@ uint32_t ffa_features_client(uint32_t test_run_data)
             final_test_status = 1;
         }
     }
-#endif
 #endif
 
     val_reprogram_watchdog();
