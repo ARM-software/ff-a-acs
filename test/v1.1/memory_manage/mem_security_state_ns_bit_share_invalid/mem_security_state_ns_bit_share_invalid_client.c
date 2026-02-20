@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2026, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2026, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -7,7 +7,7 @@
 
 #include "test_database.h"
 
-static uint32_t ffa_mem_share_handle_helper(uint32_t test_run_data, uint32_t fid)
+uint32_t mem_security_state_ns_bit_share_invalid_client(uint32_t test_run_data)
 {
     ffa_args_t payload;
     uint32_t status = VAL_SUCCESS;
@@ -18,7 +18,7 @@ static uint32_t ffa_mem_share_handle_helper(uint32_t test_run_data, uint32_t fid
     mb_buf_t mb;
     uint8_t *pages = NULL;
     uint64_t size = 0x1000;
-    ffa_memory_handle_t handle;
+    ffa_memory_region_flags_t flags = 0;
     mem_region_init_t mem_region_init;
     struct ffa_memory_region_constituent constituents[1];
     const uint32_t constituents_count = sizeof(constituents) /
@@ -50,12 +50,7 @@ static uint32_t ffa_mem_share_handle_helper(uint32_t test_run_data, uint32_t fid
         goto rxtx_unmap;
     }
 
-    payload = val_select_server_fn_direct(test_run_data, fid, 0, 0, 0);
-    if (payload.arg3) {
-        LOG(TEST, "Server doesn't support required ABI's\n");
-        goto rxtx_unmap;
-    }
-
+    val_memset(pages, 0x0, size);
     constituents[0].address = val_mem_virt_to_phys((void *)pages);
     constituents[0].page_count = 1;
 
@@ -64,7 +59,7 @@ static uint32_t ffa_mem_share_handle_helper(uint32_t test_run_data, uint32_t fid
     mem_region_init.sender = sender;
     mem_region_init.receiver = recipient;
     mem_region_init.tag = 0;
-    mem_region_init.flags = 0;
+    mem_region_init.flags = flags;
     mem_region_init.data_access = FFA_DATA_ACCESS_RW;
     mem_region_init.instruction_access = FFA_INSTRUCTION_ACCESS_NOT_SPECIFIED;
     mem_region_init.type = FFA_MEMORY_NORMAL_MEM;
@@ -77,106 +72,43 @@ static uint32_t ffa_mem_share_handle_helper(uint32_t test_run_data, uint32_t fid
     mem_region_init.shareability = FFA_MEMORY_OUTER_SHAREABLE;
 #endif
     mem_region_init.multi_share = false;
-    mem_region_init.receiver_count = 1;
 
     val_ffa_memory_region_init(&mem_region_init, constituents, constituents_count);
+
+    /* Set NS-Bit 1 in memory atttributes */
+    ffa_set_memory_security_attr(&mem_region_init.memory_region->attributes, 1);
+
+    /* Try MEM_SHARE with invalid NS-Bit Usage */
     val_memset(&payload, 0, sizeof(ffa_args_t));
     payload.arg1 = mem_region_init.total_length;
     payload.arg2 = mem_region_init.fragment_length;
-
-    if (fid == FFA_MEM_SHARE_64)
-        val_ffa_mem_share_64(&payload);
-    else
-        val_ffa_mem_share_32(&payload);
-
-    if (payload.fid == FFA_ERROR_32)
+    val_ffa_mem_share_32(&payload);
+    if (payload.fid != FFA_ERROR_32 || payload.arg2 != FFA_ERROR_INVALID_PARAMETERS)
     {
-        LOG(ERROR, "Mem_share request failed err %x\n", payload.arg2);
+        LOG(ERROR, "MEM_SHARE request must fail for invalid NS Bit err %x\n", payload.arg2);
         status = VAL_ERROR_POINT(4);
         goto rxtx_unmap;
     }
-    LOG(DBG, "Mem Share Complete\n");
-
-    handle = ffa_mem_success_handle(payload);
-
-    /* Pass memory handle to the server using direct message */
-    val_memset(&payload, 0, sizeof(ffa_args_t));
-    payload.arg1 =  ((uint32_t)sender << 16) | recipient;
-    payload.arg3 =  handle;
-    val_ffa_msg_send_direct_req_64(&payload);
-    if (payload.fid == FFA_ERROR_32)
-    {
-        LOG(ERROR, "Direct request failed err %x\n", payload.arg2);
-        status = VAL_ERROR_POINT(5);
-        goto rxtx_unmap;
-    }
-
-    val_memset(&payload, 0, sizeof(ffa_args_t));
-    payload.arg1 = (uint32_t)handle;
-    payload.arg2 = (uint32_t)(handle >> 32);
-    payload.arg3 = 0;
-    val_ffa_mem_reclaim(&payload);
-    if (payload.fid == FFA_ERROR_32)
-    {
-        LOG(ERROR, "Mem Reclaim failed err %x\n", payload.arg2);
-        status = VAL_ERROR_POINT(6);
-    }
-    LOG(DBG, "Mem Reclaim Complete\n");
-
 rxtx_unmap:
     if (val_rxtx_unmap(sender))
     {
         LOG(ERROR, "RXTX_UNMAP failed\n");
-        status = status ? status : VAL_ERROR_POINT(7);
+        status = status ? status : VAL_ERROR_POINT(5);
     }
 
 free_memory:
     if (val_free(mb.recv) || val_free(mb.send))
     {
         LOG(ERROR, "free_rxtx_buffers failed\n");
-        status = status ? status : VAL_ERROR_POINT(8);
+        status = status ? status : VAL_ERROR_POINT(6);
     }
 
     if (val_free(pages))
     {
         LOG(ERROR, "val_free failed\n");
-        status = status ? status : VAL_ERROR_POINT(9);
-    }
-
-    payload = val_select_server_fn_direct(test_run_data, 0, 0, 0, 0);
-
-    return status ? status : (uint32_t)payload.arg3;
-}
-
-uint32_t share_retrieve_align_hint_check_client(uint32_t test_run_data)
-{
-    uint32_t status_32, status_64, status;
-
-    status_64 = val_is_ffa_feature_supported(FFA_MEM_SHARE_64);
-    status_32 = val_is_ffa_feature_supported(FFA_MEM_SHARE_32);
-    if (status_64 && status_32)
-    {
-        LOG(TEST, "FFA_MEM_SHARE not supported, skipping the check\n");
-        return VAL_SKIP_CHECK;
-    }
-    else if (status_64 && !status_32)
-    {
-        status = ffa_mem_share_handle_helper(test_run_data, FFA_MEM_SHARE_32);
-    }
-    else if (!status_64 && status_32)
-    {
-        status = ffa_mem_share_handle_helper(test_run_data, FFA_MEM_SHARE_64);
-    }
-    else
-    {
-        status = ffa_mem_share_handle_helper(test_run_data, FFA_MEM_SHARE_64);
-        if (status)
-            return status;
-
-        status = ffa_mem_share_handle_helper(test_run_data, FFA_MEM_SHARE_32);
-        if (status)
-            return status;
+        status = status ? status : VAL_ERROR_POINT(7);
     }
 
     return status;
 }
+

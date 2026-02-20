@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2026, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -84,50 +84,60 @@ uint32_t ffa_direct_message_64_server(ffa_args_t args)
 
     /* It is invaild to call non-framwork messages
      * while processing the direct request. */
-    val_memset(&payload, 0, sizeof(ffa_args_t));
-    val_ffa_yield(&payload);
+    if (val_is_ffa_feature_supported(FFA_YIELD_32)) {
+        val_memset(&payload, 0, sizeof(ffa_args_t));
+        val_ffa_yield(&payload);
 #if (PLATFORM_FFA_V == FFA_V_1_0)
-    if (payload.fid != FFA_ERROR_32)
-    {
-        LOG(ERROR, "Call to FFA_YIELD must fail while processing direct msg\n");
+        if (payload.fid != FFA_ERROR_32)
+        {
+            LOG(ERROR, "Call to FFA_YIELD must fail while processing direct msg\n");
 #else
-    if (payload.fid == FFA_ERROR_32)
-    {
-        LOG(ERROR, "Call to FFA_YIELD must not fail %x \n", payload.fid);
+        if (payload.fid == FFA_ERROR_32)
+        {
+            LOG(ERROR, "Call to FFA_YIELD must not fail %x \n", payload.fid);
 #endif
-        status = VAL_ERROR_POINT(6);
-        goto exit;
+            status = VAL_ERROR_POINT(6);
+            goto exit;
+        }
     }
 
 #if (PLATFORM_FFA_V == FFA_V_1_0)
-    val_memset(&payload, 0, sizeof(ffa_args_t));
-    val_ffa_msg_poll(&payload);
-    if (payload.fid != FFA_ERROR_32)
-    {
-        LOG(ERROR, "Call to FFA_MSG_POLL must fail while processing direct msg\n");
-        status = VAL_ERROR_POINT(7);
-        goto exit;
+
+    if (val_is_ffa_feature_supported(FFA_MSG_POLL_32)) {
+        val_memset(&payload, 0, sizeof(ffa_args_t));
+        val_ffa_msg_poll(&payload);
+        if (payload.fid != FFA_ERROR_32)
+        {
+            LOG(ERROR, "Call to FFA_MSG_POLL must fail while processing direct msg\n");
+            status = VAL_ERROR_POINT(7);
+            goto exit;
+        }
     }
 #endif
 
-    val_memset(&payload, 0, sizeof(ffa_args_t));
-    payload.arg1 = ((uint32_t)receiver << 16) | sender;
-    val_ffa_msg_send(&payload);
-    if (payload.fid != FFA_ERROR_32)
-    {
-        LOG(ERROR, "Call to FFA_MSG_SEND must fail while processing direct msg\n");
-        status = VAL_ERROR_POINT(8);
-        goto exit;
+    if (val_is_ffa_feature_supported(FFA_MSG_SEND_32)) {
+        val_memset(&payload, 0, sizeof(ffa_args_t));
+        payload.arg1 = ((uint32_t)receiver << 16) | sender;
+        val_ffa_msg_send(&payload);
+        if (payload.fid != FFA_ERROR_32)
+        {
+            LOG(ERROR, "Call to FFA_MSG_SEND must fail while processing direct msg\n");
+            status = VAL_ERROR_POINT(8);
+            goto exit;
+        }
     }
 
-    val_memset(&payload, 0, sizeof(ffa_args_t));
-    val_ffa_msg_wait(&payload);
-    if (payload.fid != FFA_ERROR_32 || (payload.arg2 != FFA_ERROR_DENIED))
-    {
-        LOG(ERROR, "Call to FFA_MSG_WAIT must fail while processing direct msg\n");
-        status = VAL_ERROR_POINT(9);
-        goto exit;
+    if (val_is_ffa_feature_supported(FFA_MSG_WAIT_32)) {
+        val_memset(&payload, 0, sizeof(ffa_args_t));
+        val_ffa_msg_wait(&payload);
+        if (payload.fid != FFA_ERROR_32 || (payload.arg2 != FFA_ERROR_DENIED))
+        {
+            LOG(ERROR, "Call to FFA_MSG_WAIT must fail while processing direct msg\n");
+            status = VAL_ERROR_POINT(9);
+            goto exit;
+        }
     }
+
 exit:
     val_memset(&payload, 0, sizeof(ffa_args_t));
     val_memcpy(&payload, &resp_data_64, sizeof(ffa_args_t));

@@ -1,6 +1,6 @@
 #!/bin/bash
 #-------------------------------------------------------------------------------
-# Copyright (c) 2025, Arm Limited or its affiliates. All rights reserved.
+# Copyright (c) 2025-2026, Arm Limited or its affiliates. All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
@@ -25,8 +25,8 @@ check_tool_exists() {
 # --------------------------------------------------------------------------------------------------
 # Precompile Checks
 if [ -z "${WORKSPACE}" ]; then
-  echo "WORKSPACE is not set. Please set the variable and try again."
-  exit 1
+    echo "WORKSPACE is not set. Please set the variable and try again."
+    exit 1
 fi
 
 check_tool_exists git;
@@ -58,39 +58,48 @@ BUILD_DIR_LINUX="$ACS_DIR/build-linux"
 BUILD_DIR_BAREMETAL="$ACS_DIR/build-baremetal"
 MANIFEST_DIR="$ACS_DIR/platform/manifest/tgt_tfa_fvp"
 
+#------------------------------ Multi Support ---------------------------------
+# Enable backward compatibility testing by setting PLATFORM_FFA_V_MULTI=1.
+# Configure per-endpoint FF-A versions via VM1_FFA_V and SP1_FFA_V–SP4_FFA_V.
+# SP_LAYOUT selects the Secure Partition layout to be used.
+#
+# Default behavior uses FF-A v1.2 for all endpoints.
+#------------------------------------------------------------------------------
+
 # Modify here for manifest version switch
 SPMC_MANIFEST_DTS="$MANIFEST_DIR/fvp_spmc_manifest_linux_xen.dts"
 SP_LAYOUT="$MANIFEST_DIR/sp_layout_v12.json"
-SP_MANIFEST="$MANIFEST_DIR/v12"
+SP_MANIFEST_V12="$MANIFEST_DIR/v12"
+SP_MANIFEST_V11="$MANIFEST_DIR/v11"
 
 # Modify here for ACS configurations
 CMD_ACS_LINUX="-DCROSS_COMPILE=$TOOLCHAIN \
-               -DPLATFORM_NS_HYPERVISOR_PRESENT=1 \
-               -DTARGET_LINUX=1\
-               -DENABLE_BTI=ON \
-               -DVERBOSE=1 \
-               -DCMAKE_BUILD_TYPE=Debug \
-               -DPLATFORM_FFA_V_1_0=0 \
-               -DPLATFORM_FFA_V_1_1=0 \
-               -DPLATFORM_FFA_V_1_2=0 \
-               -DPLATFORM_FFA_V_ALL=1 \
-               -DPLATFORM_FFA_V_MULTI=0 \
-               -DPLATFORM_SPMC_EL=$SPM_EL_LEVEL \
-               -DPLATFORM_SP_EL=1"
+                -DPLATFORM_NS_HYPERVISOR_PRESENT=1 \
+                -DTARGET_LINUX=1\
+                -DENABLE_BTI=ON \
+                -DVERBOSE=1 \
+                -DCMAKE_BUILD_TYPE=Debug \
+                -DPLATFORM_FFA_V_1_0=0 \
+                -DPLATFORM_FFA_V_1_1=0 \
+                -DPLATFORM_FFA_V_1_2=0 \
+                -DPLATFORM_FFA_V_ALL=1 \
+                -DPLATFORM_FFA_V_MULTI=0 \
+                -DPLATFORM_SPMC_EL=$SPM_EL_LEVEL \
+                -DPLATFORM_SP_EL=1"
 
 CMD_ACS_BAREMETAL="-DCROSS_COMPILE=$TOOLCHAIN \
-                   -DPLATFORM_NS_HYPERVISOR_PRESENT=1 \
-                   -DXEN_SUPPORT=1\
-                   -DENABLE_BTI=ON \
-                   -DVERBOSE=1 \
-                   -DCMAKE_BUILD_TYPE=Debug \
-                   -DPLATFORM_FFA_V_1_0=0 \
-                   -DPLATFORM_FFA_V_1_1=0 \
-                   -DPLATFORM_FFA_V_1_2=0 \
-                   -DPLATFORM_FFA_V_ALL=1 \
-                   -DPLATFORM_FFA_V_MULTI=0 \
-                   -DPLATFORM_SPMC_EL=$SPM_EL_LEVEL \
-                   -DPLATFORM_SP_EL=1"
+                    -DPLATFORM_NS_HYPERVISOR_PRESENT=1 \
+                    -DXEN_SUPPORT=1\
+                    -DENABLE_BTI=ON \
+                    -DVERBOSE=1 \
+                    -DCMAKE_BUILD_TYPE=Debug \
+                    -DPLATFORM_FFA_V_1_0=0 \
+                    -DPLATFORM_FFA_V_1_1=0 \
+                    -DPLATFORM_FFA_V_1_2=0 \
+                    -DPLATFORM_FFA_V_ALL=1 \
+                    -DPLATFORM_FFA_V_MULTI=0 \
+                    -DPLATFORM_SPMC_EL=$SPM_EL_LEVEL \
+                    -DPLATFORM_SP_EL=1"
 
 # --------------------------------------------------------------------------------------------------
 # Build
@@ -139,8 +148,13 @@ rsync -av $BUILD_DIR_BAREMETAL/output/vm1.bin $WORKSPACE/output/
 rsync -av $SPMC_MANIFEST_DTS $WORKSPACE/output/
 
 # Copy SP Layout Json
-cat $SP_LAYOUT | sed -e "s,\.\..*/output/,," > "$WORKSPACE/output/sp_layout.json"
+cat "$SP_LAYOUT" | sed -e "s,\.\..*/output/,," \
+                    -e "s|\.\./\.\./\.\./platform/manifest/tgt_tfa_fvp/\(v1[12]\)/|\1/|g" \
+                    > "$WORKSPACE/output/sp_layout.json"
+
+
 
 # Copy SP Manifest
-rsync -av $SP_MANIFEST $WORKSPACE/output/
+rsync -av $SP_MANIFEST_V12 $WORKSPACE/output/
+rsync -av $SP_MANIFEST_V11 $WORKSPACE/output/
 

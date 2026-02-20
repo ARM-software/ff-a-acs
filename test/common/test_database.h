@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2026, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -25,13 +25,13 @@
     extern uint32_t testname##_sec_cpu_client(uint32_t test_num);\
     extern uint32_t testname##_sec_cpu_server(ffa_args_t args);
 
-#define CLIENT_TEST_FN_ONLY(suite_num, testname) \
+#define CLIENT_TEST_FN_ONLY(suite_num, testname, test_fid) \
     {suite_num, " "#testname, testname##_testentry, \
-        testname##_client, NULL, NULL, NULL}
+        testname##_client, NULL, NULL, NULL, test_fid}
 
-#define CLIENT_SERVER_TEST_FN(suite_num, testname) \
+#define CLIENT_SERVER_TEST_FN(suite_num, testname, test_fid) \
     {suite_num, " "#testname, testname##_testentry, \
-        testname##_client, testname##_server, NULL, NULL}
+        testname##_client, testname##_server, NULL, NULL, test_fid}
 
 #define CLIENT_SEC_CPU_CLIENT_TEST_FN(suite_num, testname) \
     {suite_num, " "#testname, testname##_testentry, \
@@ -43,15 +43,15 @@
         testname##_client, NULL, NULL, \
         testname##_sec_cpu_server}
 
-#define CLIENT_SEC_CPU_CLIENT_SERVER_TEST_FN(suite_num, testname) \
+#define CLIENT_SEC_CPU_CLIENT_SERVER_TEST_FN(suite_num, testname, test_fid) \
     {suite_num, " "#testname, testname##_testentry, \
         testname##_client, NULL, testname##_sec_cpu_client, \
-        testname##_sec_cpu_server}
+        testname##_sec_cpu_server, test_fid}
 
-#define CLIENT_SERVER_SEC_CPU_CLIENT_TEST_FN(suite_num, testname) \
+#define CLIENT_SERVER_SEC_CPU_CLIENT_TEST_FN(suite_num, testname, test_fid) \
     {suite_num, " "#testname, testname##_testentry, \
         testname##_client, testname##_server, testname##_sec_cpu_client, \
-        NULL}
+        NULL, test_fid}
 
 #define CLIENT_SERVER_SEC_CPU_SERVER_TEST_FN(suite_num, testname) \
     {suite_num, " "#testname, testname##_testentry, \
@@ -232,7 +232,10 @@ DECLARE_TEST_FN(relinquish_mem_unmap_check_vmvm);
 DECLARE_TEST_FN(relinquish_mem_unmap_check_spsp);
 DECLARE_TEST_FN(reclaim_input_error_checks);
 DECLARE_TEST_FN(reclaim_zero_flag);
-DECLARE_TEST_FN(mem_security_state_ns_bit);
+DECLARE_TEST_FN(mem_security_state_ns_bit_retrieve_check);
+DECLARE_TEST_FN(mem_security_state_ns_bit_share_invalid);
+DECLARE_TEST_FN(mem_security_state_ns_bit_lend_invalid);
+DECLARE_TEST_FN(mem_security_state_ns_bit_donate_invalid);
 DECLARE_TEST_FN(ffa_mem_perm_set);
 DECLARE_TEST_FN(ffa_mem_perm_get);
 DECLARE_TEST_FN(static_mapping_dma);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2026, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -7,6 +7,9 @@
 
 #include "val_framework.h"
 #include "val_interfaces.h"
+
+/* Function check array: all false by default */
+static uint32_t ffa_fid_state[FFA_SUPPORTED_FID_COUNT];
 
 /**
  * Initialises the header of the given `ffa_memory_region`, not including the
@@ -305,15 +308,32 @@ uint32_t val_ffa_memory_retrieve_request_init(mem_region_init_t *mem_region_init
 **/
 uint32_t val_is_ffa_feature_supported(uint32_t fid)
 {
-    ffa_args_t payload;
-
-    val_memset(&payload, 0, sizeof(ffa_args_t));
-    payload.arg1 = fid;
-    val_ffa_features(&payload);
-    if (payload.fid == FFA_ERROR_32)
-        return VAL_ERROR;
-    else
-        return VAL_SUCCESS;
+    for (size_t i = 0; i < FFA_SUPPORTED_FID_COUNT; i++) {
+        if (ffa_supported_fids[i] == fid) {
+            if (ffa_fid_state[i] == 1) {
+		  return VAL_SUCCESS;  /* return current state */
+	    } else if (ffa_fid_state[i] == 0xff) {
+		 return VAL_ERROR;
+            }
+            else {
+                ffa_args_t payload;
+                val_memset(&payload, 0, sizeof(ffa_args_t));
+                payload.arg1 = fid;
+#if (PLATFORM_FFA_V >= FFA_V_1_1)
+                if (fid == FFA_MEM_RETRIEVE_REQ_32 || fid == FFA_MEM_RETRIEVE_REQ_64)
+                {
+                    payload.arg2 = 0x2;
+                }
+#endif
+                val_ffa_features(&payload);
+                if (payload.fid == FFA_ERROR_32)
+                    return VAL_ERROR;
+                else
+                    return VAL_SUCCESS;
+            }
+         }
+     }
+    return VAL_ERROR;  /* FID not found - default false */
 }
 
 /**
@@ -340,4 +360,22 @@ uint32_t val_ffa_mem_handle_share(ffa_endpoint_id_t sender, ffa_endpoint_id_t re
     }
     else
         return VAL_SUCCESS;
+}
+
+/**
+ * @brief  - Mark an FF-A function ID as supported or not supported.
+ * @param  fid       - FF-A function ID to mark
+ * @param  supported - true = supported, false = not supported
+ **/
+
+void val_ffa_mark_supported_fid(ffa_func_id_t fid, bool supported)
+{
+     uint32_t state = supported ? 1 : 0xff;
+
+     for (size_t i = 0; i < FFA_SUPPORTED_FID_COUNT; i++) {
+         if (ffa_supported_fids[i] == fid) {
+            ffa_fid_state[i] = state;  /* mark supported (1) or not supported (0xff) */
+            break;  /* stop after first match */
+         }
+     }
 }

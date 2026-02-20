@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2025, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2024-2026, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -166,7 +166,10 @@ uint32_t ffa_partition_info_get_regs_client(uint32_t test_run_data)
 
      /* Unused argument */
      (void)test_run_data;
-
+#if PLATFORM_FFA_V <= FFA_V_1_1
+     LOG(WARN, "Endpoint Version does not support FFA_PARTITION_INFO_GET_REGS ABI\n");
+     return VAL_SKIP_CHECK;
+#endif
     ep_info = val_get_endpoint_info();
     if (!ep_info)
     {

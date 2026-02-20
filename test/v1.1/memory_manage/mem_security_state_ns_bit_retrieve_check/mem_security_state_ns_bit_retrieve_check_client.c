@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2025, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2024-2026, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -7,7 +7,7 @@
 
 #include "test_database.h"
 
-uint32_t mem_security_state_ns_bit_client(uint32_t test_run_data)
+uint32_t mem_security_state_ns_bit_retrieve_check_client(uint32_t test_run_data)
 {
     ffa_args_t payload;
     uint32_t status = VAL_SUCCESS;
@@ -78,69 +78,6 @@ uint32_t mem_security_state_ns_bit_client(uint32_t test_run_data)
 
     val_ffa_memory_region_init(&mem_region_init, constituents, constituents_count);
 
-    /* Set NS-Bit 1 in memory atttributes */
-    ffa_set_memory_security_attr(&mem_region_init.memory_region->attributes, 1);
-
-    /* Try MEM_SHARE with invalid NS-Bit Usage */
-    val_memset(&payload, 0, sizeof(ffa_args_t));
-    payload.arg1 = mem_region_init.total_length;
-    payload.arg2 = mem_region_init.fragment_length;
-    val_ffa_mem_share_32(&payload);
-    if (payload.fid != FFA_ERROR_32 || payload.arg2 != FFA_ERROR_INVALID_PARAMETERS)
-    {
-        LOG(ERROR, "MEM_SHARE request must fail for invalid NS Bit err %x\n", payload.arg2);
-        status = VAL_ERROR_POINT(4);
-        goto rxtx_unmap;
-    }
-
-    /* Try MEM_LEND with invalid NS-Bit Usage */
-    val_memset(&payload, 0, sizeof(ffa_args_t));
-    payload.arg1 = mem_region_init.total_length;
-    payload.arg2 = mem_region_init.fragment_length;
-    val_ffa_mem_lend_32(&payload);
-    if (payload.fid != FFA_ERROR_32 || payload.arg2 != FFA_ERROR_INVALID_PARAMETERS)
-    {
-        LOG(ERROR, "MEM_LEND request must fail for invalid NS Bit err %x\n", payload.arg2);
-        status = VAL_ERROR_POINT(5);
-        goto rxtx_unmap;
-    }
-
-    mem_region_init.data_access = FFA_DATA_ACCESS_NOT_SPECIFIED;
-    mem_region_init.instruction_access = FFA_INSTRUCTION_ACCESS_NOT_SPECIFIED;
-    mem_region_init.type = FFA_MEMORY_NOT_SPECIFIED_MEM;
-    mem_region_init.cacheability = 0;
-    mem_region_init.shareability = 0;
-    val_ffa_memory_region_init(&mem_region_init, constituents, constituents_count);
-
-    /* Set NS-Bit 1 in memory atttributes post init*/
-    ffa_set_memory_security_attr(&mem_region_init.memory_region->attributes, 1);
-
-    /* Try MEM_DONATE with invalid NS-Bit Usage */
-    val_memset(&payload, 0, sizeof(ffa_args_t));
-    payload.arg1 = mem_region_init.total_length;
-    payload.arg2 = mem_region_init.fragment_length;
-    val_ffa_mem_donate_32(&payload);
-    if (payload.fid != FFA_ERROR_32 || payload.arg2 != FFA_ERROR_INVALID_PARAMETERS)
-    {
-        LOG(ERROR, "MEM_DONATE request must fail for invalid NS Bit err %x\n", payload.arg2);
-        status = VAL_ERROR_POINT(6);
-        goto rxtx_unmap;
-    }
-
-    mem_region_init.data_access = FFA_DATA_ACCESS_RW;
-    mem_region_init.instruction_access = FFA_INSTRUCTION_ACCESS_NOT_SPECIFIED;
-    mem_region_init.type = FFA_MEMORY_NORMAL_MEM;
-    mem_region_init.cacheability = FFA_MEMORY_CACHE_WRITE_BACK;
-#if (PLATFORM_OUTER_SHAREABLE_SUPPORT_ONLY == 1)
-    mem_region_init.shareability = FFA_MEMORY_OUTER_SHAREABLE;
-#elif (PLATFORM_INNER_SHAREABLE_SUPPORT_ONLY == 1)
-    mem_region_init.shareability = FFA_MEMORY_INNER_SHAREABLE;
-#elif (PLATFORM_INNER_OUTER_SHAREABLE_SUPPORT == 1)
-    mem_region_init.shareability = FFA_MEMORY_OUTER_SHAREABLE;
-#endif
-    mem_region_init.multi_share = false;
-    val_ffa_memory_region_init(&mem_region_init, constituents, constituents_count);
-
     /* Reset NS-Bit 1 in memory atttributes */
     ffa_set_memory_security_attr(&mem_region_init.memory_region->attributes, 0);
 
@@ -152,7 +89,7 @@ uint32_t mem_security_state_ns_bit_client(uint32_t test_run_data)
     if (payload.fid == FFA_ERROR_32)
     {
         LOG(ERROR, "Mem_share request failed err %x\n", payload.arg2);
-        status = VAL_ERROR_POINT(7);
+        status = VAL_ERROR_POINT(4);
         goto rxtx_unmap;
     }
     LOG(DBG, "Mem Share Complete\n");
@@ -170,7 +107,7 @@ uint32_t mem_security_state_ns_bit_client(uint32_t test_run_data)
     if (payload.fid == FFA_ERROR_32)
     {
         LOG(ERROR, "Direct request failed err %x\n", payload.arg2);
-        status = VAL_ERROR_POINT(9);
+        status = VAL_ERROR_POINT(5);
         goto rxtx_unmap;
     }
 
@@ -181,7 +118,7 @@ uint32_t mem_security_state_ns_bit_client(uint32_t test_run_data)
     if (payload.fid == FFA_ERROR_32)
     {
         LOG(ERROR, "Direct request failed err %x\n", payload.arg2);
-        status = VAL_ERROR_POINT(11);
+        status = VAL_ERROR_POINT(6);
         goto rxtx_unmap;
     }
 
@@ -193,7 +130,7 @@ uint32_t mem_security_state_ns_bit_client(uint32_t test_run_data)
     if (payload.fid == FFA_ERROR_32)
     {
         LOG(ERROR, "Mem Reclaim failed err %x\n", payload.arg2);
-        status = VAL_ERROR_POINT(12);
+        status = VAL_ERROR_POINT(7);
         goto rxtx_unmap;
     }
     LOG(DBG, "Mem Reclaim Complete\n");
@@ -202,20 +139,20 @@ rxtx_unmap:
     if (val_rxtx_unmap(sender))
     {
         LOG(ERROR, "RXTX_UNMAP failed\n");
-        status = status ? status : VAL_ERROR_POINT(14);
+        status = status ? status : VAL_ERROR_POINT(8);
     }
 
 free_memory:
     if (val_free(mb.recv) || val_free(mb.send))
     {
         LOG(ERROR, "free_rxtx_buffers failed\n");
-        status = status ? status : VAL_ERROR_POINT(15);
+        status = status ? status : VAL_ERROR_POINT(8);
     }
 
     if (val_free(pages))
     {
         LOG(ERROR, "val_free failed\n");
-        status = status ? status : VAL_ERROR_POINT(16);
+        status = status ? status : VAL_ERROR_POINT(10);
     }
 
     payload = val_select_server_fn_direct(test_run_data, 0, 0, 0, 0);

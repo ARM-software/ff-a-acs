@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2026, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -53,7 +53,11 @@ static uint32_t ffa_mem_share_helper(uint32_t test_run_data, uint32_t fid)
         goto rxtx_unmap;
     }
 
-    val_select_server_fn_direct(test_run_data, fid, 0, 0, 0);
+    payload = val_select_server_fn_direct(test_run_data, 0, 0, 0, 0);
+    if (payload.arg3) {
+        LOG(TEST, "Server doesn't support required ABI's\n");
+        goto rxtx_unmap;
+    }
 
     val_memset(pages, 0xab, size);
     constituents[0].address = val_mem_virt_to_phys((void *)pages);
@@ -168,7 +172,6 @@ free_memory:
         LOG(ERROR, "val_free failed\n");
         status = status ? status : VAL_ERROR_POINT(11);
     }
-
     payload = val_select_server_fn_direct(test_run_data, 0, 0, 0, 0);
 
     return status ? status : (uint32_t)payload.arg3;

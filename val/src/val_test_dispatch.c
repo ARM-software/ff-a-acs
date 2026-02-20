@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2026, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -171,6 +171,79 @@ static void val_print_acs_header(void)
 }
 
 /**
+ * @brief  - Convert an FF-A function ID to its string name.
+ * @param  fid - FF-A function ID.
+ * @return - String representation of the function ID.
+ **/
+static const char *val_ffa_fid_to_string(uint64_t fid)
+{
+    switch (fid) {
+
+#define X(name, value) \
+    case (value):  {   \
+        return #name;  \
+    }
+
+    FFA_FID_LIST(X)
+
+#undef X
+
+    default :
+        return "UNKNOWN_FFA_FID";
+    }
+}
+
+/**
+ * @brief  - Check if the FF-A ABI required for a test is supported.
+ * @param  test_index - Index of the test in the test database.
+ * @return - Returns true if supported or skipped, false otherwise.
+ **/
+static bool val_check_test_abi_support(uint32_t test_index)
+{
+
+    const test_db_t *test = &test_list[test_index];
+    uint32_t fid_32, fid_64;
+    const char *name_ptr = test->test_name;
+    int check = 0;
+
+    /* Advance one character to ignore empty space from test fixture macro*/
+    name_ptr++;
+
+    if (test->test_fid == FFA_FID_SKIP_CHECK) {
+        return true;
+    }
+
+    if ((test->test_fid & FFA_FID_UPPER_MASK) != 0) {
+        /* Give FID must be present */
+        if (!(val_is_ffa_feature_supported(test->test_fid)))
+		return true;
+    }
+    else {
+        /* Dual-ABI allowed: at least one of 32 or 64 must be supported */
+        check = 1;
+	fid_32 = (test->test_fid | FFA_FID_ABI32_PREFIX);
+	fid_64 = (test->test_fid | FFA_FID_ABI64_PREFIX);
+
+        if (!val_is_ffa_feature_supported(fid_32) ||
+            !val_is_ffa_feature_supported(fid_64)) {
+            return true;
+        }
+    }
+    LOG(ALWAYS, "Suite=%s : Test=%s\n",
+                test_suite_list[test_list[test_index].suite_num].suite_desc, name_ptr);
+
+    if (check) {
+           LOG(DBG, "Required %s/64 is not supported \n", val_ffa_fid_to_string(fid_32));
+    }
+    else
+           LOG(DBG, "%s is not supported \n", val_ffa_fid_to_string(test->test_fid));
+
+
+    val_printf(ALWAYS, "***********************************\n");
+    return false;
+}
+
+/**
  *   @brief    - Query test database and execute test from each suite one by one
  *   @param    - void
  *   @return   - void
@@ -297,6 +370,9 @@ void val_test_dispatch(void)
             * */
            g_mp_state.g_current_test_num = i;
            val_dataCacheCleanInvalidateVA((uint64_t)&g_mp_state);
+
+	   if (!(val_check_test_abi_support(i)))
+                   continue;
 
            val_test_init(i);
 

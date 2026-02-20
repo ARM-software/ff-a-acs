@@ -1,0 +1,13 @@
+diff --git a/src/ffa_memory.c b/src/ffa_memory.c
+index c420c79..4f49fe8 100644
+--- a/src/ffa_memory.c
++++ b/src/ffa_memory.c
+@@ -2944,7 +2944,7 @@ static bool ffa_partition_retrieve_response_init(
+ 	}
+ 
+ 	/* Prepare the response based on the version of the partition. */
+-	if (caller_version <= FFA_VERSION_1_1) {
++	if (caller_version < FFA_VERSION_1_1) {
+ 		struct ffa_memory_access_v1_0 *receivers_v1_0;
+ 
+ 		/*

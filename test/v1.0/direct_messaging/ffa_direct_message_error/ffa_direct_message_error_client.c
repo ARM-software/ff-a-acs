@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2026, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -97,7 +97,7 @@ uint32_t ffa_direct_message_error_client(uint32_t test_run_data)
             status = VAL_ERROR_POINT(4);
         }
     }
-    else if (val_is_ffa_feature_supported(FFA_MSG_SEND_DIRECT_REQ_64) == VAL_SUCCESS)
+    else
     {
         val_memset(&payload, 0, sizeof(ffa_args_t));
         payload.arg1 = val_get_endpoint_id(client_logical_id | (uint32_t)info[i].id << 16);
@@ -109,11 +109,6 @@ uint32_t ffa_direct_message_error_client(uint32_t test_run_data)
                 payload.fid, payload.arg2);
             status = VAL_ERROR_POINT(5);
         }
-    }
-    else
-    {
-        LOG(TEST, "Skipping the check, direct_msg_req is not supported\n");
-        status = VAL_SKIP_CHECK;
     }
 
 rx_release:

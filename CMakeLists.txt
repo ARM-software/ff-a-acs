@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
+# Copyright (c) 2021-2026, Arm Limited or its affiliates. All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
@@ -336,13 +336,28 @@ add_definitions(-DSUITE=${SUITE})
 
 if(${PLATFORM_FFA_V_MULTI} EQUAL 1)
     # Set EP Specific Version Flags
-    set(SP1_FFA_V ${FFA_V_1_2})
-    set(SP2_FFA_V ${FFA_V_1_1})
-    set(SP3_FFA_V ${FFA_V_1_2})
-    set(SP4_FFA_V ${FFA_V_1_1})
-    set(VM1_FFA_V ${FFA_V_1_2})
-    set(VM2_FFA_V ${FFA_V_1_1})
-    set(VM3_FFA_V ${FFA_V_1_2})
+    set(SUPPORTED_FFA_V_LIST FFA_V_1_1 FFA_V_1_2)
+
+    # Helper macro to validate or default version
+    macro(handle_version VAR DEFAULT)
+        if(NOT DEFINED ${VAR})
+            set(${VAR} ${DEFAULT} CACHE INTERNAL "Default ${VAR}" FORCE)
+            message(STATUS "[ACS] : Defaulting ${VAR} to ${${VAR}}")
+        else()
+            if(NOT "${${VAR}}" IN_LIST SUPPORTED_FFA_V_LIST)
+               message(FATAL_ERROR "[ACS] : Invalid value for -D${VAR}=${${VAR}}. Supported values: ${SUPPORTED_FFA_V_LIST}")
+            endif()
+            message(STATUS "[ACS] : ${VAR} set to ${${VAR}}")
+        endif()
+endmacro()
+
+    handle_version(SP1_FFA_V FFA_V_1_2)
+    handle_version(SP2_FFA_V FFA_V_1_2)
+    handle_version(SP3_FFA_V FFA_V_1_2)
+    handle_version(SP4_FFA_V FFA_V_1_2)
+
+    handle_version(VM1_FFA_V FFA_V_1_2)
+
     add_definitions(-DPLATFORM_FFA_V_MULTI=${PLATFORM_FFA_V_MULTI})
 else()
     add_definitions(-DPLATFORM_FFA_V_ALL=${PLATFORM_FFA_V_ALL})
@@ -371,7 +386,7 @@ foreach(clean_item ${CLEAN_LIST})
 endforeach()
 ###
 
-set(MANIFEST_PATHS ${ROOT_DIR}/platform/manifest/tgt_tfa_fvp/v12/)
+set(MANIFEST_PATHS ${ROOT_DIR}/platform/manifest/tgt_tfa_fvp/)
 
 # Ensure Python is available
 find_program(PYTHON_EXECUTABLE python3)
@@ -388,13 +403,35 @@ file(MAKE_DIRECTORY "${FFA_GEN_OUTPUT_DIR}")
 execute_process(
     COMMAND ${PYTHON_EXECUTABLE}
             ${ROOT_DIR}/tools/python/ffa_endpoints.py
-            ${MANIFEST_PATHS} ${PLATFORM_SP_EL} ${FFA_GEN_OUTPUT_DIR}
+            ${MANIFEST_PATHS} ${PLATFORM_SP_EL} ${FFA_GEN_OUTPUT_DIR} ${${VM1_FFA_V}}
+            ${${SP1_FFA_V}} ${${SP2_FFA_V}} ${${SP3_FFA_V}} ${${SP4_FFA_V}}
     RESULT_VARIABLE gen_result
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
 
 if(NOT gen_result EQUAL 0)
     message(FATAL_ERROR "Failed to generate FFA endpoints.")
+endif()
+
+if(${PLATFORM_FFA_V_MULTI} EQUAL 1)
+# ----------------------------------------------------
+# Run generate-multi-sp-manifest.py at configure time
+# ----------------------------------------------------
+execute_process(
+    COMMAND ${PYTHON_EXECUTABLE}
+            ${ROOT_DIR}/tools/python/generate-multi-sp-manifest.py
+            --el ${PLATFORM_SP_EL}
+            --sp ${${SP1_FFA_V}} ${${SP2_FFA_V}} ${${SP3_FFA_V}} ${${SP4_FFA_V}}
+    RESULT_VARIABLE gen_result
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+)
+
+# Check result
+if(NOT gen_result EQUAL 0)
+    message(FATAL_ERROR "[ACS] : Failed to generate SP manifest (generate-multi-sp-manifest.py)")
+endif()
+
+message(STATUS "[ACS] : SP manifest generated successfully.")
 endif()
 
 if(NOT(${PLATFORM_SP_EL} STREQUAL -1))

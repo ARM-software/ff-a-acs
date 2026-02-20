@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021, 2026, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -28,5 +28,10 @@ void ffa_features_testentry(uint32_t test_num)
     /* Execute test for EP combination: client=SP3, server=NONE */
     if (IS_TEST_FAIL(val_execute_test(test_num, SP3, NO_SERVER_EP)))
         return;
+
+    /* Execute test for EP combination: client=SP4, server=NONE */
+    if (IS_TEST_FAIL(val_execute_test(test_num, SP4, NO_SERVER_EP)))
+        return;
+
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2026, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -17,15 +17,9 @@ static uint32_t borrower_to_share_memory(ffa_endpoint_id_t recipient, mb_buf_t m
     struct ffa_memory_region_constituent constituents[1];
     const uint32_t constituents_count = sizeof(constituents) /
                 sizeof(struct ffa_memory_region_constituent);
-    uint32_t status_32, status_64;
+    uint32_t status_64;
 
     status_64 = val_is_ffa_feature_supported(FFA_MEM_SHARE_64);
-    status_32 = val_is_ffa_feature_supported(FFA_MEM_SHARE_32);
-    if (status_64 && status_32)
-    {
-        LOG(TEST, "FFA_MEM_SHARE not supported, skipping the check\n");
-        return VAL_SKIP_CHECK;
-    }
 
     constituents[0].address = val_mem_virt_to_phys((void *)pages);
     constituents[0].page_count = 1;
@@ -93,15 +87,9 @@ static uint32_t borrower_to_donate_memory(ffa_endpoint_id_t recipient, mb_buf_t 
     struct ffa_memory_region_constituent constituents[1];
     const uint32_t constituents_count = sizeof(constituents) /
                 sizeof(struct ffa_memory_region_constituent);
-    uint32_t status_32, status_64;
+    uint32_t status_64;
 
     status_64 = val_is_ffa_feature_supported(FFA_MEM_DONATE_64);
-    status_32 = val_is_ffa_feature_supported(FFA_MEM_DONATE_32);
-    if (status_64 && status_32)
-    {
-        LOG(TEST, "FFA_MEM_DONATE not supported, skipping the check\n");
-        return VAL_SKIP_CHECK;
-    }
 
     constituents[0].address = val_mem_virt_to_phys((void *)pages);
     constituents[0].page_count = 1;
@@ -296,21 +284,26 @@ uint32_t ffa_mem_lend_server(ffa_args_t args)
     {
         recipient_1 = val_get_endpoint_id(SP3);
     }
-
-    /* Check that borrower can't share memory to others */
-    status = borrower_to_share_memory(recipient_1, mb, ptr);
-    if (status)
-    {
-        status = VAL_ERROR_POINT(11);
-        goto relinquish_mem;
+    if (val_is_ffa_feature_supported(FFA_MEM_SHARE_32) ||
+        val_is_ffa_feature_supported(FFA_MEM_SHARE_64)) {
+        /* Check that borrower can't share memory to others */
+        status = borrower_to_share_memory(recipient_1, mb, ptr);
+        if (status)
+        {
+            status = VAL_ERROR_POINT(11);
+            goto relinquish_mem;
+        }
+        LOG(DBG, "Borrower Share Memory Check Complete\n");
     }
-    LOG(DBG, "Borrower Share Memory Check Complete\n");
 
-    /* Check that borrower can't donate memory to others */
-    status = borrower_to_donate_memory(recipient_1, mb, ptr);
-    if (status)
-        status = VAL_ERROR_POINT(12);
-    LOG(DBG, "Borrower Donate Memory Check Complete\n");
+    if (val_is_ffa_feature_supported(FFA_MEM_DONATE_32) ||
+        val_is_ffa_feature_supported(FFA_MEM_DONATE_64)) {
+        /* Check that borrower can't donate memory to others */
+        status = borrower_to_donate_memory(recipient_1, mb, ptr);
+        if (status)
+            status = VAL_ERROR_POINT(12);
+        LOG(DBG, "Borrower Donate Memory Check Complete\n");
+    }
 
 relinquish_mem:
     /* relinquish the memory and notify the sender. */
