@@ -1,6 +1,6 @@
 #!/bin/bash
 #-------------------------------------------------------------------------------
-# Copyright (c) 2025, Arm Limited or its affiliates. All rights reserved.
+# Copyright (c) 2025, 2026, Arm Limited or its affiliates. All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
@@ -18,7 +18,8 @@ check_tool_exists() {
         echo "$1 is installed."
         return 0
     else
-        echo "$1 is not installed, please install the missing toolchain and retry"
+        echo "$1 is not installed."
+        echo "please install the missing toolchain and retry"
         exit 0
     fi
 }
@@ -39,8 +40,8 @@ CONFIG_FILE="$WORKSPACE/configs/xen/xen-base.config"
 
 # Precompile Checks
 if [ -z "${WORKSPACE}" ]; then
-  echo "WORKSPACE is not set. Please set the variable and try again."
-  exit 1
+    echo "WORKSPACE is not set. Please set the variable and try again."
+    exit 1
 fi
 check_dependency $CONFIG_FILE;
 check_tool_exists git;
@@ -50,7 +51,7 @@ check_tool_exists aarch64-none-linux-gnu-gcc;
 # --------------------------------------------------------------------------------------------------
 # Build Setup
 REPO_URL="https://gitlab.com/xen-project/people/bmarquis/xen-ffa-research.git"
-BRANCH="ffa-virtio/v2/ffa-v1.2"
+BRANCH="ffa-virtio/vmtovm-share/v10"
 
 BUILD_DIR="$WORKSPACE/xen-build/build"
 XEN_DIR="$WORKSPACE/xen-build/xen-ffa-research"
