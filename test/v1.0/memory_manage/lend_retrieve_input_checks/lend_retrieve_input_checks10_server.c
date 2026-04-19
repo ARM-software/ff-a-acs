@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2026, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -14,8 +14,8 @@ ffa_endpoint_id_t recipient, mb_buf_t mb, void *pages)
     uint32_t status = VAL_ERROR_POINT(1);
     ffa_endpoint_id_t sender = val_get_curr_endpoint_id();
     ffa_memory_handle_t handle;
-    mem_region_init_t mem_region_init;
-    struct ffa_memory_region_constituent constituents[1];
+    mem_region_init_t mem_region_init = {0};
+    struct ffa_memory_region_constituent constituents[1] = {0};
     const uint32_t constituents_count = sizeof(constituents) /
                 sizeof(struct ffa_memory_region_constituent);
 
@@ -86,7 +86,7 @@ uint32_t lend_retrieve_input_checks10_server(ffa_args_t args)
     mb_buf_t mb;
     uint8_t *ptr;
     uint64_t size = 0x1000;
-    mem_region_init_t mem_region_init;
+    mem_region_init_t mem_region_init = {0};
     struct ffa_memory_region *memory_region;
     struct ffa_composite_memory_region *composite;
     ffa_memory_handle_t handle;

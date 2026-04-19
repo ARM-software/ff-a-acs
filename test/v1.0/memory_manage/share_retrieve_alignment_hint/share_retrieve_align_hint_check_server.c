@@ -29,7 +29,7 @@ static uint32_t retrieve_align_hint_err_check(ffa_memory_handle_t handle, uint32
                 void *tx_buf, ffa_endpoint_id_t sender, ffa_endpoint_id_t receiver,
                 ffa_memory_region_flags_t flags)
 {
-    mem_region_init_t mem_region_init;
+    mem_region_init_t mem_region_init = {0};
     uint32_t msg_size;
     ffa_args_t payload;
     uint32_t status = VAL_SUCCESS;
@@ -82,7 +82,7 @@ static uint32_t retrieve_align_hint_check(ffa_memory_handle_t handle, uint32_t f
                 mb_buf_t mb, ffa_endpoint_id_t sender, ffa_endpoint_id_t receiver,
                 ffa_memory_region_flags_t flags)
 {
-    mem_region_init_t mem_region_init;
+    mem_region_init_t mem_region_init = {0};
     uint32_t msg_size;
     ffa_args_t payload;
     uint32_t status = VAL_SUCCESS;

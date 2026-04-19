@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2026, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -21,8 +21,8 @@ static uint32_t donate_state_machine_5_helper(uint32_t test_run_data, uint32_t f
     uint8_t *pages = NULL;
     uint64_t size = 0x1000;
     ffa_memory_handle_t handle;
-    mem_region_init_t mem_region_init;
-    struct ffa_memory_region_constituent constituents[1];
+    mem_region_init_t mem_region_init = {0};
+    struct ffa_memory_region_constituent constituents[1] = {0};
     const uint32_t constituents_count = sizeof(constituents) /
                 sizeof(struct ffa_memory_region_constituent);
     uint32_t status_32, status_64;

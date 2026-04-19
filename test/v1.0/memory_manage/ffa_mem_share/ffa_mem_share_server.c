@@ -13,8 +13,8 @@ static uint32_t borrower_to_lend_memory(ffa_endpoint_id_t recipient, mb_buf_t mb
     uint32_t status = VAL_ERROR_POINT(1);
     ffa_endpoint_id_t sender = val_get_curr_endpoint_id();
     ffa_memory_handle_t handle;
-    mem_region_init_t mem_region_init;
-    struct ffa_memory_region_constituent constituents[1];
+    mem_region_init_t mem_region_init = {0};
+    struct ffa_memory_region_constituent constituents[1] = {0};
     const uint32_t constituents_count = sizeof(constituents) /
                 sizeof(struct ffa_memory_region_constituent);
     uint32_t status_64;
@@ -79,8 +79,8 @@ static uint32_t borrower_to_donate_memory(ffa_endpoint_id_t recipient, mb_buf_t 
     ffa_args_t payload;
     uint32_t status = VAL_ERROR_POINT(2);
     ffa_endpoint_id_t sender = val_get_curr_endpoint_id();
-    mem_region_init_t mem_region_init;
-    struct ffa_memory_region_constituent constituents[1];
+    mem_region_init_t mem_region_init = {0};
+    struct ffa_memory_region_constituent constituents[1] = {0};
     const uint32_t constituents_count = sizeof(constituents) /
                 sizeof(struct ffa_memory_region_constituent);
     uint32_t status_64;
@@ -139,7 +139,7 @@ uint32_t ffa_mem_share_server(ffa_args_t args)
     uint8_t *ptr;
     uint32_t i;
     uint64_t size = 0x1000;
-    mem_region_init_t mem_region_init;
+    mem_region_init_t mem_region_init = {0};
     ffa_memory_access_permissions_t permissions;
     ffa_memory_region_flags_t flags;
     struct ffa_memory_region *memory_region;

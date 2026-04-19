@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2026, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -18,8 +18,8 @@ static uint32_t mem_donate_invalid_epid_check(void *tx_buf,
     uint32_t status = VAL_SUCCESS;
     uint8_t *pages = NULL;
     uint64_t size = 0x1000;
-    mem_region_init_t mem_region_init;
-    struct ffa_memory_region_constituent constituents[1];
+    mem_region_init_t mem_region_init = {0};
+    struct ffa_memory_region_constituent constituents[1] = {0};
     const uint32_t constituents_count = sizeof(constituents) /
                 sizeof(struct ffa_memory_region_constituent);
 
@@ -86,8 +86,8 @@ static uint32_t mem_donate_data_access_perm_check(void *tx_buf, ffa_endpoint_id_
 #endif
     uint8_t *pages = NULL;
     uint64_t size = 0x1000;
-    mem_region_init_t mem_region_init;
-    struct ffa_memory_region_constituent constituents[1];
+    mem_region_init_t mem_region_init = {0};
+    struct ffa_memory_region_constituent constituents[1] = {0};
     const uint32_t constituents_count = sizeof(constituents) /
                 sizeof(struct ffa_memory_region_constituent);
 
@@ -155,8 +155,8 @@ static uint32_t mem_donate_mem_attribute_check(void *tx_buf, ffa_endpoint_id_t s
 #endif
     uint8_t *pages = NULL;
     uint64_t size = 0x1000;
-    mem_region_init_t mem_region_init;
-    struct ffa_memory_region_constituent constituents[1];
+    mem_region_init_t mem_region_init = {0};
+    struct ffa_memory_region_constituent constituents[1] = {0};
     const uint32_t constituents_count = sizeof(constituents) /
                 sizeof(struct ffa_memory_region_constituent);
 
@@ -222,8 +222,8 @@ static uint32_t mem_donate_mmio_check(void *tx_buf, ffa_endpoint_id_t sender, ui
 #else
     ffa_endpoint_id_t recipient = val_get_endpoint_id(SP2);
 #endif
-    mem_region_init_t mem_region_init;
-    struct ffa_memory_region_constituent constituents[1];
+    mem_region_init_t mem_region_init = {0};
+    struct ffa_memory_region_constituent constituents[1] = {0};
     const uint32_t constituents_count = sizeof(constituents) /
                 sizeof(struct ffa_memory_region_constituent);
 
@@ -283,8 +283,8 @@ static uint32_t mem_donate_instruction_access_perm_check(void *tx_buf, ffa_endpo
 #endif
     uint8_t *pages = NULL;
     uint64_t size = 0x1000;
-    mem_region_init_t mem_region_init;
-    struct ffa_memory_region_constituent constituents[1];
+    mem_region_init_t mem_region_init = {0};
+    struct ffa_memory_region_constituent constituents[1] = {0};
     const uint32_t constituents_count = sizeof(constituents) /
                 sizeof(struct ffa_memory_region_constituent);
 
@@ -355,8 +355,8 @@ static uint32_t mem_donate_invalid_ep_count_check(void *tx_buf, ffa_endpoint_id_
     uint8_t *pages = NULL;
     uint64_t size = 0x1000;
     struct ffa_memory_region *memory_region;
-    mem_region_init_t mem_region_init;
-    struct ffa_memory_region_constituent constituents[1];
+    mem_region_init_t mem_region_init = {0};
+    struct ffa_memory_region_constituent constituents[1] = {0};
     const uint32_t constituents_count = sizeof(constituents) /
                 sizeof(struct ffa_memory_region_constituent);
 
@@ -429,8 +429,8 @@ static uint32_t mem_donate_invalid_ep_desc_offset_check(void *tx_buf, ffa_endpoi
     uint8_t *pages = NULL;
     uint64_t size = 0x1000;
     struct ffa_memory_region *memory_region;
-    mem_region_init_t mem_region_init;
-    struct ffa_memory_region_constituent constituents[1];
+    mem_region_init_t mem_region_init = {0};
+    struct ffa_memory_region_constituent constituents[1] = {0};
     const uint32_t constituents_count = sizeof(constituents) /
                 sizeof(struct ffa_memory_region_constituent);
 
