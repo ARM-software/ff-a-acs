@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2026, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -64,8 +64,9 @@ uint32_t ffa_msg_send_error_client(uint32_t test_run_data)
         goto rxtx_unmap;
     }
 
-    info = (ffa_partition_info_t *)rx_buff;
     count = (uint32_t)payload.arg2;
+    info = val_malloc(count * sizeof(ffa_partition_info_t));
+    val_ffa_partition_descriptor_info_parser(info, rx_buff, payload.arg3, count);
 
     LOG(DBG, "Partition info count %x\n", (uint32_t)payload.arg2);
 

@@ -59,8 +59,10 @@ uint32_t ffa_direct_message_error1_client(uint32_t test_run_data)
         goto rx_release;
     }
 
-    info = (ffa_partition_info_t *)rx_buff;
     count = (uint32_t)payload.arg2;
+    info = val_malloc(count * sizeof(ffa_partition_info_t));
+    val_ffa_partition_descriptor_info_parser(info, rx_buff, payload.arg3, count);
+
 
     LOG(DBG, "Partition info count %x\n", (uint32_t)payload.arg2);
 

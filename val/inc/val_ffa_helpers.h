@@ -537,4 +537,6 @@ uint32_t val_ffa_mem_handle_share(ffa_endpoint_id_t sender, ffa_endpoint_id_t re
 
 void val_ffa_mark_supported_fid(ffa_func_id_t fid, bool supported);
 
+void val_ffa_partition_descriptor_info_parser(ffa_partition_info_t *out, const void *rx_buf,
+                          uint64_t desc_size, uint64_t count);
 #endif /* VAL_FFA_HELPERS_H */
