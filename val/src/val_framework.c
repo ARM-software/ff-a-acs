@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2026, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -446,7 +446,7 @@ void val_ep_info_relayer_sync(void)
     const uint32_t null_uuid[4] = {0};
     uint64_t size = PAGE_SIZE_4K;
     uint32_t i = 0, j = 0;
-    uint32_t desc_count = 0;
+    uint32_t desc_size, desc_count = 0;
     uint32_t ep_count = 5;//val_get_endpoint_info_table_count();
     ffa_args_t payload;
 
@@ -487,7 +487,9 @@ void val_ep_info_relayer_sync(void)
         goto rx_release;
     }
     desc_count = (uint32_t)payload.arg2;
-    ret_info = (ffa_partition_info_t *)rx_buff;
+    desc_size = (uint32_t)payload.arg3;
+    ret_info = val_malloc(desc_count * sizeof(ffa_partition_info_t));
+    val_ffa_partition_descriptor_info_parser(ret_info, rx_buff, desc_size, desc_count);
 
     /* Print all rx descriptors */
     LOG(DBG, "Partition Descriptor count: %d\n", (int)payload.arg2);
@@ -503,14 +505,12 @@ void val_ep_info_relayer_sync(void)
         LOG(DBG, "+----------------------------------------------------------+\n");
     }
 
-    /* Validate returned descriptor size */
-    if (payload.arg3 != sizeof(ffa_partition_info_t))
-    {
-        LOG(ERROR, "Expected desc size %zu, got %d\n",
-            sizeof(ffa_partition_info_t), payload.arg2);
-        goto rx_release;
+    if (desc_size != FFA_PARTITION_INFO_V1_0_SIZE &&
+        desc_size != FFA_PARTITION_INFO_V1_1_SIZE &&
+        desc_size != FFA_PARTITION_INFO_V1_3_SIZE) {
+        LOG(ERROR, "Invalid descriptor size %u\n", desc_size);
+	goto rx_release;
     }
-
     /* Match each known endpoint against returned partition descriptors */
     for (i = 1; i < ep_count; i++)
     {

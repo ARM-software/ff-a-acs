@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2026, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -169,7 +169,8 @@ static uint32_t ffa_partition_info_helper(void *rx_buff, const uint32_t uuid[4],
 
     if (flags == FFA_PARTITION_INFO_FLAG_RETDESC)
     {
-        info = (ffa_partition_info_t *)rx_buff;
+        info = val_malloc(payload.arg2 * sizeof(ffa_partition_info_t));
+        val_ffa_partition_descriptor_info_parser(info, rx_buff, payload.arg3, payload.arg2);
         for (i = 0; i < expected_count; i++)
         {
             if (!is_matching_endpoint_found(&expected[i], &info[0], payload.arg2))

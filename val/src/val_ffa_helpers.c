@@ -379,3 +379,31 @@ void val_ffa_mark_supported_fid(ffa_func_id_t fid, bool supported)
          }
      }
 }
+
+/**
+ * @brief  - Parse FF-A partition descriptors from RX buffer into recent format
+ * @param  out       - Output array of ffa_partition_info_t
+ * @param  rx_buf    - Pointer to RX buffer containing descriptors
+ * @param  desc_size - Size of each descriptor in bytes (8 / 24 / 48)
+ * @param  count     - Number of descriptors in RX buffer
+ **/
+
+void val_ffa_partition_descriptor_info_parser(ffa_partition_info_t *out, const void *rx_buf,
+                          uint64_t desc_size, uint64_t count)
+{
+    const uint8_t *src = (const uint8_t *)rx_buf;
+
+    LOG(DBG, "Partition Descriptor size: %d\n", desc_size, 0);
+
+    for (uint32_t i = 0; i < count; i++) {
+
+        /* Clear full struct (ensures missing fields = 0) */
+        val_memset(&out[i], 0, sizeof(ffa_partition_info_t));
+
+        /* Copy only descriptor-sized data */
+        val_memcpy(&out[i], src, desc_size);
+
+        /* Move to next descriptor in buffer */
+        src += desc_size;
+    }
+}

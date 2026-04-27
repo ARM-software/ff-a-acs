@@ -150,6 +150,11 @@ static const ffa_func_id_t ffa_supported_fids[] = {
 
 #define VAL_EXTRACT_BITS(data, start, end) ((data >> start) & ((1ul << (end - start + 1)) - 1))
 
+#define FFA_PARTITION_INFO_V1_0_SIZE   8U
+#define FFA_PARTITION_INFO_V1_1_SIZE   24U
+#define FFA_PARTITION_INFO_V1_2_SIZE   24U
+#define FFA_PARTITION_INFO_V1_3_SIZE   48U
+
 /* 16-bit ID of FF-A component */
 typedef uint16_t ffa_endpoint_id_t;
 
@@ -182,16 +187,41 @@ typedef struct mailbox_buffers {
     void *send;
 } mb_buf_t;
 
+
+/*
+ * FF-A Partition Information Descriptor
+ *
+ * Based on:
+ *  - FF-A v1.0  : Basic partition identity
+ *  - FF-A v1.1+ : Adds protocol UUID
+ *  - FF-A v1.3  : Adds extended metadata (image UUID, versioning)
+ *
+ * Descriptor size by version:
+ *  - v1.0 : 8 bytes
+ *  - v1.1 / v1.2 : 24 bytes
+ *  - v1.3 : 48 bytes
+ *
+ * NOTE:
+ *  - Newer implementations (e.g., SPMC v1.3) may return larger descriptors
+ *    even if the endpoint supports an older version.
+ *  - Consumers MUST use the descriptor size returned by the ABI rather than
+ *    assuming a fixed version.
+ */
+
 typedef struct ffa_partition_info {
-    /** The ID of the VM the information is about */
-    ffa_endpoint_id_t id;
-    /** The number of execution contexts implemented by the partition */
-    uint16_t exec_context;
-    /** The Partition's properties, e.g. supported messaging methods */
-    uint32_t properties;
-#if (PLATFORM_FFA_V >= FFA_V_1_1)
-	uint32_t uuid[4];
-#endif
+
+        /* v1.0 */
+        ffa_endpoint_id_t id;   /* VM ID */
+        uint16_t exec_context;  /* vCPU count */
+        uint32_t properties;    /* flags */
+
+        /* v1.1 v1.2 */
+        uint32_t uuid[4];     /* protocol UUID */
+
+        /* v1.3 */
+        uint32_t image_uuid[4];        /* image UUID */
+        uint32_t partition_ffa_version;    /* FF-A version */
+        uint32_t reserved_0;               /* reserved */
 } ffa_partition_info_t;
 
 void val_call_conduit(ffa_args_t *args);
