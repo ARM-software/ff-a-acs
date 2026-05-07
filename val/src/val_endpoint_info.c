@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2026, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -19,8 +19,13 @@ ffa_endpoint_id_t val_get_endpoint_id(uint32_t logical_id)
 {
     uint32_t total = val_get_endpoint_info_table_count();
 
-    // Validate the logical ID against the table bounds
+    /* Validate the logical ID against the table bounds */
     assert(logical_id < total);
+    if (logical_id >= total)
+    {
+        LOG(ERROR, "Invalid logical_id %u (total %u)\n", logical_id, total);
+        return NO_SERVER_EP;
+    }
     return endpoint_info_table[logical_id].id;
 }
 
@@ -113,8 +118,13 @@ void val_set_endpoint_tt_tg0(uint32_t logical_id, uint8_t tg0)
 {
     uint32_t total = val_get_endpoint_info_table_count();
 
-    // Validate the logical ID against the table bounds
+    /* Validate the logical ID against the table bounds */
     assert(logical_id < total);
+    if (logical_id >= total)
+    {
+        LOG(ERROR, "Invalid logical_id %u (total %u)\n", logical_id, total);
+        return;
+    }
     endpoint_info_table[logical_id].tg0 = tg0;
 }
 

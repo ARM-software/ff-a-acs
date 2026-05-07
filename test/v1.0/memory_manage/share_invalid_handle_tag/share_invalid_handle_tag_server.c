@@ -28,7 +28,7 @@ static void mem_relinquish(ffa_memory_handle_t handle, void *tx_buf, ffa_endpoin
 static uint32_t mem_share_invalid_handle_tag_check(ffa_memory_handle_t handle, uint32_t fid,
                 uint32_t tag, void *tx_buf, ffa_endpoint_id_t sender, ffa_endpoint_id_t receiver)
 {
-    mem_region_init_t mem_region_init;
+    mem_region_init_t mem_region_init = {0};
     uint32_t msg_size;
     ffa_args_t payload;
     uint32_t status = VAL_SUCCESS;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2026, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -14,13 +14,13 @@ static uint32_t mem_share_shareability_attr_check(uint32_t test_run_data, uint32
     uint32_t server_logical_id = GET_SERVER_LOGIC_ID(test_run_data);
     ffa_endpoint_id_t sender = val_get_endpoint_id(client_logical_id);
     ffa_endpoint_id_t receiver = val_get_endpoint_id(server_logical_id);
-    mem_region_init_t mem_region_init;
+    mem_region_init_t mem_region_init = {0};
     ffa_memory_handle_t handle;
     ffa_args_t payload;
     uint32_t status = VAL_SUCCESS;
     uint8_t *pages = NULL;
     uint64_t size = 0x1000;
-    struct ffa_memory_region_constituent constituents[1];
+    struct ffa_memory_region_constituent constituents[1] = {0};
     const uint32_t constituents_count = sizeof(constituents) /
                 sizeof(struct ffa_memory_region_constituent);
 

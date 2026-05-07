@@ -354,6 +354,7 @@ void val_test_dispatch(void)
                 suite_num = test_list[i].suite_num;
             }
 
+            test_num = i;
             if ((val_nvmem_write(VAL_NVM_OFFSET(NVM_CUR_SUITE_NUM_INDEX),
                     &suite_num, sizeof(suite_num))) ||
                 (val_nvmem_write(VAL_NVM_OFFSET(NVM_CUR_TEST_NUM_INDEX),

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2026, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -23,7 +23,7 @@ void val_main(void)
 
 /* SPMD/Hypervisor expects Version Negotiation During Boot */
 #if ((defined(VM1_COMPILE)) || (defined(VM2_COMPILE)) || (defined(VM3_COMPILE)))
-    ffa_args_t payload;
+    ffa_args_t payload = {0};
     payload.arg1 = (FFA_VERSION_MAJOR << 16) | FFA_VERSION_MINOR;
     val_ffa_version(&payload);
     if (payload.fid == FFA_ERROR_NOT_SUPPORTED)
@@ -72,8 +72,7 @@ exit:
 #else
 void val_main(void)
 {
-    ffa_args_t payload;
-
+    ffa_args_t payload = {0};
     val_memset(&payload, 0, sizeof(ffa_args_t));
 
     /* FFA_SUCCESS case: Returns 16-bit ID of calling FF-A component. */

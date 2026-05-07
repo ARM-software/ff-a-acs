@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2026, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -10,13 +10,13 @@
 static uint32_t mem_donate_back_to_sender(ffa_memory_handle_t handle, uint32_t fid,
                  mb_buf_t mb, ffa_endpoint_id_t sender, ffa_endpoint_id_t receiver)
 {
-    mem_region_init_t mem_region_init;
+    mem_region_init_t mem_region_init = {0};
     uint32_t msg_size;
     ffa_args_t payload;
     uint32_t status = VAL_SUCCESS;
     struct ffa_memory_region *memory_region;
     struct ffa_composite_memory_region *composite;
-    struct ffa_memory_region_constituent constituents[1];
+    struct ffa_memory_region_constituent constituents[1] = {0};
     const uint32_t constituents_count = sizeof(constituents) /
                 sizeof(struct ffa_memory_region_constituent);
 
@@ -119,7 +119,7 @@ static uint32_t retrieve_align_hint_err_check(ffa_memory_handle_t handle, uint32
                 mb_buf_t mb, ffa_endpoint_id_t sender, ffa_endpoint_id_t receiver,
                 ffa_memory_region_flags_t flags)
 {
-    mem_region_init_t mem_region_init;
+    mem_region_init_t mem_region_init = {0};
     uint32_t msg_size;
     ffa_args_t payload;
     uint32_t status = VAL_SUCCESS;
@@ -173,7 +173,7 @@ static uint32_t retrieve_align_hint_check(ffa_memory_handle_t handle, uint32_t f
                 mb_buf_t mb, ffa_endpoint_id_t sender, ffa_endpoint_id_t receiver,
                 ffa_memory_region_flags_t flags)
 {
-    mem_region_init_t mem_region_init;
+    mem_region_init_t mem_region_init = {0};
     uint32_t msg_size;
     ffa_args_t payload;
     uint32_t status = VAL_SUCCESS;

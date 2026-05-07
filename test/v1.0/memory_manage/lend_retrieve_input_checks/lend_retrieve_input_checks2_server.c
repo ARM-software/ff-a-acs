@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2021-2026, Arm Limited or its affiliates. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -29,7 +29,7 @@ static uint32_t retrieve_zero_flag_check(ffa_memory_handle_t handle, uint32_t fi
                 void *tx_buf, ffa_endpoint_id_t sender, ffa_endpoint_id_t receiver,
                 ffa_memory_region_flags_t flags)
 {
-    mem_region_init_t mem_region_init;
+    mem_region_init_t mem_region_init = {0};
     uint32_t msg_size;
     ffa_args_t payload;
     uint32_t status = VAL_SUCCESS;
@@ -86,7 +86,7 @@ static uint32_t retrieve_zero_flag_check(ffa_memory_handle_t handle, uint32_t fi
 static uint32_t retrieve_with_invalid_mem_transaction_type_check(ffa_memory_handle_t handle,
         uint32_t fid, void *tx_buf, ffa_endpoint_id_t sender, ffa_endpoint_id_t receiver)
 {
-    mem_region_init_t mem_region_init;
+    mem_region_init_t mem_region_init = {0};
     uint32_t msg_size;
     ffa_args_t payload;
     uint32_t status = VAL_SUCCESS;
@@ -155,7 +155,7 @@ uint32_t lend_retrieve_input_checks2_server(ffa_args_t args)
     uint8_t *pages = NULL;
     uint8_t *ptr;
     uint64_t size = 0x1000;
-    mem_region_init_t mem_region_init;
+    mem_region_init_t mem_region_init = {0};
     ffa_memory_region_flags_t flags;
     struct ffa_memory_region *memory_region;
     struct ffa_composite_memory_region *composite;
