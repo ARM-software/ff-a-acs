@@ -1,0 +1,115 @@
+name: FF-A ACS Workflow
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-22.04
+    timeout-minutes: 180
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: ffa_acs_el1
+            build_dir: build_el1
+            suite: all
+            enable_tpm_crb: 0
+            enable_edk2_stmm: 0
+            expected_outputs: "sp1.bin sp2.bin sp3.bin sp4.bin vm1.bin"
+          - name: ffa_tpm_crb
+            build_dir: ffa_tpm_crb
+            suite: tpm_crb
+            enable_tpm_crb: 1
+            enable_edk2_stmm: 1
+            expected_outputs: "vm1.bin tpm_sp.bin"
+
+    env:
+      TOOLCHAIN_NAME: arm-gnu-toolchain-15.2.rel1-x86_64-aarch64-none-elf
+      TOOLCHAIN_URL: https://developer.arm.com/-/media/Files/downloads/gnu/15.2.rel1/binrel/arm-gnu-toolchain-15.2.rel1-x86_64-aarch64-none-elf.tar.xz
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Install host packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            bc \
+            bison \
+            cmake \
+            device-tree-compiler \
+            flex \
+            git \
+            make \
+            ninja-build \
+            python3 \
+            python3-pip \
+            uuid-dev \
+            wget \
+            xz-utils
+
+      - name: Cache Arm GNU toolchain
+        id: cache-toolchain
+        uses: actions/cache@v5
+        with:
+          path: ${{ runner.tool_cache }}/${{ env.TOOLCHAIN_NAME }}
+          key: ${{ runner.os }}-${{ env.TOOLCHAIN_NAME }}
+
+      - name: Download Arm GNU toolchain
+        if: steps.cache-toolchain.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          mkdir -p "${{ runner.tool_cache }}"
+          wget -q "${TOOLCHAIN_URL}" -O "${{ runner.temp }}/${TOOLCHAIN_NAME}.tar.xz"
+          tar -xf "${{ runner.temp }}/${TOOLCHAIN_NAME}.tar.xz" -C "${{ runner.tool_cache }}"
+
+      - name: Configure build
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          CROSS_COMPILE="${{ runner.tool_cache }}/${TOOLCHAIN_NAME}/bin/aarch64-none-elf-"
+          test -x "${CROSS_COMPILE}gcc"
+          test -x "${CROSS_COMPILE}g++"
+
+          cmake -S . -B "${{ matrix.build_dir }}" -Wno-dev -G"Unix Makefiles" \
+            -DCROSS_COMPILE="$CROSS_COMPILE" \
+            -DTARGET=tgt_tfa_fvp \
+            -DPLATFORM_NS_HYPERVISOR_PRESENT=0 \
+            -DPLATFORM_SPMC_EL=2 \
+            -DPLATFORM_SP_EL=1 \
+            -DPLATFORM_FFA_V_ALL=1 \
+            -DSUITE=${{ matrix.suite }} \
+            -DENABLE_TPM_CRB=${{ matrix.enable_tpm_crb }} \
+            -DENABLE_EDK2_STMM=${{ matrix.enable_edk2_stmm }}
+
+      - name: Build
+        run: cmake --build "${{ matrix.build_dir }}"
+
+      - name: Check build outputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          for binary in ${{ matrix.expected_outputs }}; do
+            test -s "${{ matrix.build_dir }}/output/${binary}"
+            ls -l "${{ matrix.build_dir }}/output/${binary}"
+          done
+
+      - name: Upload build outputs
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.name }}
+          path: |
+            ${{ matrix.build_dir }}/output/*.bin
+            ${{ matrix.build_dir }}/generated/val_endpoints.*
+          if-no-files-found: error
